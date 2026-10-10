@@ -1,0 +1,647 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_dashboard" name="shell-type"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "error": "#ba1a1a", "tertiary-fixed": "#dae2fd", "on-primary": "#ffffff", "on-secondary": "#ffffff", "on-surface-variant": "#424936", "on-tertiary": "#ffffff", "primary": "#416900", "on-tertiary-fixed": "#131b2e", "secondary-container": "#6063ee", "secondary-fixed-dim": "#c0c1ff", "on-background": "#191c1e", "on-secondary-fixed-variant": "#2f2ebe", "on-error": "#ffffff", "primary-fixed": "#acf847", "on-surface": "#191c1e", "on-primary-container": "#315200", "inverse-primary": "#91db2a", "on-secondary-container": "#fffbff", "primary-container": "#84cc16", "inverse-surface": "#2d3133", "on-error-container": "#93000a", "surface-container-high": "#e6e8ea", "background": "#f7f9fb", "on-tertiary-container": "#41495e", "surface-variant": "#e0e3e5", "on-primary-fixed": "#102000", "secondary": "#4648d4", "surface-dim": "#d8dadc", "tertiary-container": "#b0b8d1", "surface-container-lowest": "#ffffff", "surface-container": "#eceef0", "tertiary": "#565e74", "on-tertiary-fixed-variant": "#3f465c", "inverse-on-surface": "#eff1f3", "surface-tint": "#416900", "on-primary-fixed-variant": "#304f00", "error-container": "#ffdad6", "surface-container-low": "#f2f4f6", "surface-container-highest": "#e0e3e5", "secondary-fixed": "#e1e0ff", "outline-variant": "#c1cab0", "surface-bright": "#f7f9fb", "outline": "#727a64", "tertiary-fixed-dim": "#bec6e0", "surface": "#f7f9fb", "primary-fixed-dim": "#91db2a", "on-secondary-fixed": "#07006c" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-xs": "0.25rem", "margin-mobile": "1rem", "space-md": "1rem", "space-lg": "1.5rem", "gutter-mobile": "0.75rem", "gutter": "1.25rem", "space-2xl": "3rem", "margin": "2rem", "space-sm": "0.5rem", "space-xl": "2rem" }, fontFamily: { "headline-lg": ["Plus Jakarta Sans"], "body-sm": ["Plus Jakarta Sans"], "body-md": ["Plus Jakarta Sans"], "display-lg-mobile": ["Plus Jakarta Sans"], "label-md": ["Inter"], "headline-md": ["Plus Jakarta Sans"], "display-lg": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"], "label-sm": ["Inter"], "headline-sm": ["Plus Jakarta Sans"], "code-sm": ["Inter"], "metric-display": ["Plus Jakarta Sans"] }, fontSize: { "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "display-lg-mobile": ["30px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "label-md": ["13px", { "lineHeight": "18px", "letterSpacing": "0.01em", "fontWeight": "500" }], "headline-md": ["22px", { "lineHeight": "30px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "display-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.03em", "fontWeight": "700" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "600" }], "headline-sm": ["18px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "code-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }], "metric-display": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.025em", "fontWeight": "700" }] } } } };</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-screen w-64 bg-surface-container-lowest z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex flex-col"><div class="h-16 px-space-lg flex items-center gap-space-sm"><img alt="Brand logo. - Primary color: #84cc16
+- Font: plusJakartaSans
+- Mode: light
+- Roundness: rounded-md
+" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1Xzd2vsISROWw9pccgCbU1LjIb6LV7EBj0RE8_phn39lHjAqad5fJGkQVq7l9bNK85w85kbjHErrehShNmHEPyLzLBFrTEGxdBmliQZSMRTJedh-YpnojF5dqXqgMU7gMn0KZLntPdLk8wn8JnQDfzSBirIoZlPDnnVyVfTHFk50kbwIfUGuGEHY72GwShzljgPPOSnsq1lbB6csr6hMM0KYw-2W0kqUc-x3p4WVd0cq_7jzkGlrN4jFgU"><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight">Agent Travel</span></div><div class="px-space-md py-space-sm"><p class="px-space-sm pb-space-xs font-label-sm text-label-sm uppercase tracking-wider text-outline">Audit Operations</p><nav class="flex flex-col gap-space-xs" data-active-classes="bg-primary-container text-on-primary-container font-semibold shadow-sm"><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="overview" href="#"><span class="material-symbols-outlined text-[20px]">grid_view</span><span class="">Overview</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="bookings" href="#"><span class="material-symbols-outlined text-[20px]">confirmation_number</span><span class="">Bookings</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="refund-investigations" href="#"><span class="material-symbols-outlined text-[20px]">troubleshoot</span><span class="flex-1">Refund Investigations</span><span class="h-2 w-2 rounded-full bg-primary-container"></span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="reviews" href="#"><span class="material-symbols-outlined text-[20px]">rate_review</span><span class="">Reviews</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-xl font-label-md text-label-md bg-primary-container text-on-primary-container font-semibold shadow-sm transition-colors" data-path="analytics" href="#"><span class="material-symbols-outlined text-[20px]">analytics</span><span class="">Analytics</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="settings" href="#"><span class="material-symbols-outlined text-[20px]">settings</span><span class="">Settings</span></a></nav></div></div><div class="p-space-md"><div class="p-space-md rounded-xl bg-surface-container-low flex items-center justify-between"><div class="flex items-center gap-space-sm min-w-0"><div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-secondary text-[18px]">corporate_fare</span></div><div class="min-w-0"><p class="font-label-md text-label-md text-on-surface font-semibold truncate">Acme Travel Corp</p><p class="font-label-sm text-label-sm text-on-surface-variant truncate">Global Tier 1</p></div></div><span class="material-symbols-outlined text-outline text-[18px]">unfold_more</span></div></div></aside><div class="pl-64"><header class="fixed top-0 left-64 right-0 h-16 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-xl"><div class="flex items-center flex-1 max-w-xl"><div class="relative w-full"><span class="material-symbols-outlined absolute left- space-md top-1/2 -translate-y-1/2 text-outline text-[20px] pointer-events-none pl-3">search</span><input class="w-full h-10 pl-10 pr-16 rounded-full bg-surface-container-lowest text-on-surface font-body-md text-body-md placeholder:text-outline focus:outline-none shadow-[0_1px_3px_rgba(15,23,42,0.04)]" placeholder="Search bookings, PNR, carrier, or refund ID..." type="text"><div class="absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded bg-surface-container-high text-on-surface-variant font-code-sm text-code-sm pointer-events-none">⌘K</div></div></div><div class="flex items-center gap-space-md"><button class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors relative" type="button"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-primary-container ring-2 ring-surface"></span></button><div class="h-6 w-px bg-surface-variant"></div><div class="flex items-center gap-space-sm pl-space-xs"><div class="text-right hidden sm:block"><p class="font-label-md text-label-md text-on-surface font-semibold leading-tight">Julian Hayes</p><p class="font-label-sm text-label-sm text-on-surface-variant leading-tight">Lead Auditor</p></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="relative w-full pt-16 px-space-xl bg-surface min-h-screen"><div class="flex flex-col w-full pb-16">
+<!-- Interactive Script to highlight the Analytics nav item -->
+<script>
+    (function () {
+      const navLinks = document.querySelectorAll('aside nav a[data-path]');
+      navLinks.forEach((link) => {
+        if (link.getAttribute('data-path') === 'analytics') {
+          link.className =
+            'flex items-center gap-space-sm px-space-md py-space-sm rounded-xl font-label-md text-label-md bg-primary-container text-on-primary-container font-semibold shadow-sm transition-colors';
+        } else {
+          link.className =
+            'flex items-center gap-space-sm px-space-md py-space-sm rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors';
+        }
+      });
+    })();
+  </script>
+<!-- Top Breadcrumb & Executive Header Controls -->
+<header class="flex flex-col md:flex-row md:items-end justify-between gap-space-md py-space-lg">
+<div class="space-y-1">
+<div class="flex items-center gap-2 font-label-sm text-label-sm uppercase tracking-wider text-outline">
+<span class="hover:text-on-surface cursor-pointer transition-colors">Analytics</span>
+<span class="text-outline-variant">/</span>
+<span class="text-on-surface-variant font-semibold">Refund Operations &amp; Governance</span>
+</div>
+<div class="flex items-center gap-3">
+<h1 class="font-headline-lg text-headline-lg text-on-surface font-bold tracking-tight">
+          Refund Analytics
+        </h1>
+
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl">Monitor refund outcomes, investigation risk, AI recommendations, and human review performance.</p>
+</div>
+<!-- Controls -->
+<div class="flex items-center gap-space-sm shrink-0">
+<!-- Date Range Selector -->
+<div class="relative inline-block text-left" id="date-picker-wrapper">
+<button class="flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container-lowest text-on-surface font-label-md text-label-md shadow-sm hover:bg-surface-container-low transition-all duration-150 cursor-pointer" id="date-picker-btn" type="button">
+<span class="material-symbols-outlined text-outline text-[18px]">calendar_today</span>
+<span class="">Last 30 Days</span>
+<span class="material-symbols-outlined text-outline text-[18px]">expand_more</span>
+</button>
+</div>
+<!-- Export Report Button -->
+<button class="flex items-center gap-2 px-4 py-2 rounded-full bg-inverse-surface text-inverse-on-surface hover:bg-on-surface font-label-md text-label-md shadow-sm transition-all duration-150 cursor-pointer" type="button">
+<span class="material-symbols-outlined text-[18px]">download</span>
+<span class="">Export Report</span>
+</button>
+</div>
+</header>
+<!-- TOP KPI METRIC CARDS (4-Column Bento Grid) -->
+<section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-space-gutter my-space-md">
+<!-- Card 1: Total Investigations -->
+<div class="relative p-6 rounded-2xl bg-surface-container-lowest shadow-sm flex flex-col justify-between overflow-hidden group hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-semibold">Total Investigations</span>
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">troubleshoot</span>
+</div>
+</div>
+<div class="mt-4">
+<div class="flex items-baseline gap-3">
+<span class="font-metric-display text-metric-display text-on-surface font-bold tracking-tight">1,428</span>
+<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-[#f7fee7] text-[#3f6212] font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[14px]">arrow_upward</span>
+            12.4%
+          </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-2 flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span> Investigation cases evaluated</p>
+</div>
+</div>
+<!-- Card 2: Refunds Approved -->
+<div class="relative p-6 rounded-2xl bg-surface-container-lowest shadow-sm flex flex-col justify-between overflow-hidden group hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-semibold">Refunds Approved</span>
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">currency_rupee</span>
+</div>
+</div>
+<div class="mt-4">
+<div class="flex items-baseline gap-3">
+<span class="font-metric-display text-metric-display text-on-surface font-bold tracking-tight">₹56.8L</span>
+<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-[#f7fee7] text-[#3f6212] font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[14px]">arrow_upward</span>
+            8.7%
+          </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-2 flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+          Avg turnaround: 4.2 mins
+        </p>
+</div>
+</div>
+<!-- Card 3: Approval Rate -->
+<div class="relative p-6 rounded-2xl bg-surface-container-lowest shadow-sm flex flex-col justify-between overflow-hidden group hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-semibold">Approval Rate</span>
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+</div>
+</div>
+<div class="mt-4">
+<div class="flex items-baseline gap-3">
+<span class="font-metric-display text-metric-display text-on-surface font-bold tracking-tight">78.4%</span>
+<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-[#f7fee7] text-[#3f6212] font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[14px]">arrow_upward</span>
+            4.2%
+          </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-2 flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span> 1,119 refunds approved</p>
+</div>
+</div>
+<!-- Card 4: High-Risk Cases -->
+<div class="relative p-6 rounded-2xl bg-surface-container-lowest shadow-sm flex flex-col justify-between overflow-hidden group hover:shadow-md transition-shadow">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-semibold">High-Risk Cases</span>
+<div class="w-8 h-8 rounded-lg bg-error-container/40 flex items-center justify-center text-error">
+<span class="material-symbols-outlined text-[18px]">security_update_warning</span>
+</div>
+</div>
+<div class="mt-4">
+<div class="flex items-baseline gap-3">
+<span class="font-metric-display text-metric-display text-on-surface font-bold tracking-tight">3</span>
+<span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-[#f7fee7] text-[#3f6212] font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[14px]">arrow_downward</span>
+            -18%
+          </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-2 flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-error"></span> Requires human review</p>
+</div>
+</div>
+</section>
+<!-- ROW 1: Trends (2/3) + Risk Distribution (1/3) -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-space-gutter my-space-sm">
+<!-- Section 1: Refund Investigation Trend -->
+<div class="lg:col-span-8 p-6 rounded-2xl bg-surface-container-lowest shadow-sm flex flex-col justify-between">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">
+            Refund Investigation Trend
+          </h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            Daily volume of automated investigations vs. approved refund value over the last 30 days
+          </p>
+</div>
+<!-- Legend -->
+<div class="flex items-center gap-4 shrink-0 font-label-sm text-label-sm">
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-3 rounded-full bg-primary-container"></span>
+<span class="text-on-surface-variant">Investigations (Cases)</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-3 rounded-full bg-inverse-surface"></span>
+<span class="text-on-surface-variant">Refund Amount (₹ Lakhs)</span>
+</div>
+</div>
+</div>
+<!-- Rich Chart Container -->
+<div class="relative w-full h-72 pt-4">
+<!-- Peak Date Tooltip Indicator (Interactive Mockup) -->
+<div class="absolute left-[74%] top-6 -translate-x-1/2 z-10 hidden sm:flex flex-col items-center pointer-events-none">
+<div class="px-3 py-1.5 rounded-xl bg-inverse-surface text-inverse-on-surface shadow-xl flex flex-col gap-0.5 items-center text-center">
+<span class="font-code-sm text-code-sm text-primary-fixed-dim">Oct 24 • Peak Session</span>
+<span class="font-label-sm text-label-sm font-semibold">64 investigations, ₹2.4L approved</span>
+</div>
+<div class="w-2 h-2 bg-inverse-surface rotate-45 -mt-1"></div>
+<div class="w-px h-28 bg-primary-container/80 border-dashed border-l border-primary-container"></div>
+<div class="w-3 h-3 rounded-full bg-primary-container ring-4 ring-primary-container/30 -mt-1.5"></div>
+</div>
+<!-- SVG Line/Area Chart -->
+<svg class="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 700 240">
+<defs>
+<linearGradient id="limeAreaGrad" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#84cc16" stop-opacity="0.35"></stop>
+<stop offset="100%" stop-color="#84cc16" stop-opacity="0.0"></stop>
+</linearGradient>
+<linearGradient id="slateAreaGrad" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#2d3133" stop-opacity="0.18"></stop>
+<stop offset="100%" stop-color="#2d3133" stop-opacity="0.0"></stop>
+</linearGradient>
+</defs>
+<!-- Horizontal Grid Lines -->
+<line stroke="#e0e3e5" stroke-dasharray="3 3" stroke-width="1" x1="40" x2="690" y1="20" y2="20"></line>
+<line stroke="#e0e3e5" stroke-dasharray="3 3" stroke-width="1" x1="40" x2="690" y1="70" y2="70"></line>
+<line stroke="#e0e3e5" stroke-dasharray="3 3" stroke-width="1" x1="40" x2="690" y1="120" y2="120"></line>
+<line stroke="#e0e3e5" stroke-dasharray="3 3" stroke-width="1" x1="40" x2="690" y1="170" y2="170"></line>
+<line stroke="#c1cab0" stroke-width="1" x1="40" x2="690" y1="210" y2="210"></line>
+<!-- Y-Axis Labels -->
+<text class="fill-outline font-code-sm text-[10px]" text-anchor="end" x="32" y="24">80</text>
+<text class="fill-outline font-code-sm text-[10px]" text-anchor="end" x="32" y="74">60</text>
+<text class="fill-outline font-code-sm text-[10px]" text-anchor="end" x="32" y="124">40</text>
+<text class="fill-outline font-code-sm text-[10px]" text-anchor="end" x="32" y="174">20</text>
+<text class="fill-outline font-code-sm text-[10px]" text-anchor="end" x="32" y="214">0</text>
+<!-- Area 1: Amount (₹ Lakhs) Behind -->
+<path d="M 50 185 Q 110 160 160 170 T 270 140 T 380 120 T 490 85 T 570 65 T 670 110 L 670 210 L 50 210 Z" fill="url(#slateAreaGrad)"></path>
+<!-- Stroke 1: Dark Slate -->
+<path d="M 50 185 Q 110 160 160 170 T 270 140 T 380 120 T 490 85 T 570 65 T 670 110" fill="none" stroke="#2d3133" stroke-linecap="round" stroke-width="2.5"></path>
+<!-- Area 2: Investigations (Cases) In front -->
+<path d="M 50 170 Q 110 130 160 145 T 270 100 T 380 90 T 490 60 T 570 40 T 670 80 L 670 210 L 50 210 Z" fill="url(#limeAreaGrad)"></path>
+<!-- Stroke 2: Lime Green -->
+<path d="M 50 170 Q 110 130 160 145 T 270 100 T 380 90 T 490 60 T 570 40 T 670 80" fill="none" stroke="#84cc16" stroke-linecap="round" stroke-width="3"></path>
+<!-- Sample plotted points along the lime curve -->
+<circle class="stroke-surface-container-lowest stroke-2" cx="50" cy="170" fill="#84cc16" r="3.5"></circle>
+<circle class="stroke-surface-container-lowest stroke-2" cx="160" cy="145" fill="#84cc16" r="3.5"></circle>
+<circle class="stroke-surface-container-lowest stroke-2" cx="270" cy="100" fill="#84cc16" r="3.5"></circle>
+<circle class="stroke-surface-container-lowest stroke-2" cx="380" cy="90" fill="#84cc16" r="3.5"></circle>
+<circle class="stroke-surface-container-lowest stroke-2" cx="490" cy="60" fill="#84cc16" r="3.5"></circle>
+<circle class="stroke-surface-container-lowest stroke-2 shadow-lg" cx="570" cy="40" fill="#84cc16" r="4.5"></circle>
+<circle class="stroke-surface-container-lowest stroke-2" cx="670" cy="80" fill="#84cc16" r="3.5"></circle>
+</svg>
+<!-- X-Axis Labels -->
+<div class="flex justify-between pl-10 pr-2 pt-2 text-outline font-code-sm text-[11px]">
+<span class="">Oct 1</span>
+<span class="">Oct 5</span>
+<span class="">Oct 10</span>
+<span class="">Oct 15</span>
+<span class="">Oct 20</span>
+<span class="font-semibold text-on-surface">Oct 24</span>
+<span class="">Oct 30</span>
+</div>
+</div>
+</div>
+<!-- Section 2: Risk Distribution -->
+<div class="lg:col-span-4 p-6 rounded-2xl bg-surface-container-lowest shadow-sm flex flex-col justify-between">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">
+          Risk Distribution
+        </h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Case risk classification breakdown</p>
+</div>
+<!-- Donut Chart with Center Metric -->
+<div class="relative flex items-center justify-center my-6">
+<svg class="w-48 h-48 -rotate-90" viewBox="0 0 160 160">
+<!-- Background circle track -->
+<circle cx="80" cy="80" fill="transparent" r="62" stroke="#eceef0" stroke-width="16"></circle>
+<!-- Segment 1: Low Risk (72%) = 0.72 * 389.56 = ~280.5 -->
+<circle cx="80" cy="80" fill="transparent" r="62" stroke="#84cc16" stroke-dasharray="280.5 389.56" stroke-dashoffset="0" stroke-width="16"></circle>
+<!-- Segment 2: Medium Risk (18%) = 0.18 * 389.56 = ~70.1 -->
+<circle cx="80" cy="80" fill="transparent" r="62" stroke="#f59e0b" stroke-dasharray="70.1 389.56" stroke-dashoffset="-280.5" stroke-width="16"></circle>
+<!-- Segment 3: High Risk (4%) = 0.04 * 389.56 = ~15.6 -->
+<circle cx="80" cy="80" fill="transparent" r="62" stroke="#ef4444" stroke-dasharray="15.6 389.56" stroke-dashoffset="-350.6" stroke-width="16"></circle>
+<!-- Segment 4: Insufficient Evidence (6%) = 0.06 * 389.56 = ~23.4 -->
+<circle cx="80" cy="80" fill="transparent" r="62" stroke="#94a3b8" stroke-dasharray="23.4 389.56" stroke-dashoffset="-366.2" stroke-width="16"></circle>
+</svg>
+<!-- Centered Metric Inside Donut -->
+<div class="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+<span class="font-headline-md text-headline-md font-bold text-on-surface">1,428</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Cases Evaluated</span>
+</div>
+</div>
+<!-- Breakdown Legend Items -->
+<div class="space-y-2.5">
+<div class="flex items-center justify-between p-2 rounded-xl bg-surface-container-low">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-primary-container"></span>
+<span class="font-label-md text-label-md text-on-surface font-medium">Low Risk</span>
+</div>
+<div class="flex items-center gap-2 font-code-sm text-code-sm">
+<span class="text-on-surface-variant">1,028 cases</span>
+<span class="font-semibold text-on-surface bg-surface-container-lowest px-2 py-0.5 rounded-full shadow-2xs">72%</span>
+</div>
+</div>
+<div class="flex items-center justify-between p-2 rounded-xl bg-surface-container-low">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-[#f59e0b]"></span>
+<span class="font-label-md text-label-md text-on-surface font-medium">Medium Risk</span>
+</div>
+<div class="flex items-center gap-2 font-code-sm text-code-sm">
+<span class="text-on-surface-variant">257 cases</span>
+<span class="font-semibold text-on-surface bg-surface-container-lowest px-2 py-0.5 rounded-full shadow-2xs">18%</span>
+</div>
+</div>
+<div class="flex items-center justify-between p-2 rounded-xl bg-surface-container-low">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-error"></span>
+<span class="font-label-md text-label-md text-on-surface font-medium">High Risk</span>
+</div>
+<div class="flex items-center gap-2 font-code-sm text-code-sm">
+<span class="text-on-surface-variant">57 cases</span>
+<span class="font-semibold text-error bg-error-container/40 px-2 py-0.5 rounded-full shadow-2xs">4%</span>
+</div>
+</div>
+<div class="flex items-center justify-between p-2 rounded-xl bg-surface-container-low">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-[#94a3b8]"></span>
+<span class="font-label-md text-label-md text-on-surface font-medium">Insufficient Evidence</span>
+</div>
+<div class="flex items-center gap-2 font-code-sm text-code-sm">
+<span class="text-on-surface-variant">86 cases</span>
+<span class="font-semibold text-on-surface bg-surface-container-lowest px-2 py-0.5 rounded-full shadow-2xs">6%</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ROW 2: Refund Outcomes (1/2) + AI Performance (1/2) -->
+<section class="grid grid-cols-1 lg:grid-cols-2 gap-space-gutter my-space-sm">
+<!-- Section 3: Refund Outcomes -->
+<div class="p-6 rounded-2xl bg-surface-container-lowest shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-2">
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">
+            Refund Outcomes
+          </h2>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Final Disposition</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-6">
+          Distribution across final resolution pathways
+        </p>
+<!-- Progress Bars -->
+<div class="space-y-5">
+<!-- Full Refund: 61% -->
+<div>
+<div class="flex justify-between items-center mb-1.5 font-label-md text-label-md">
+<span class="font-medium text-on-surface flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-primary-container"></span>
+                Full Refund
+              </span>
+<div class="flex items-center gap-2">
+<span class="text-on-surface-variant font-code-sm text-code-sm">871 cases</span>
+<span class="font-semibold text-on-primary-container bg-primary-container/20 px-2 py-0.5 rounded-full">61%</span>
+</div>
+</div>
+<div class="w-full h-3 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary-container rounded-full" style="width: 61%"></div>
+</div>
+</div>
+<!-- Partial Refund: 17% -->
+<div>
+<div class="flex justify-between items-center mb-1.5 font-label-md text-label-md">
+<span class="font-medium text-on-surface flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-[#10b981]"></span>
+                Partial Refund
+              </span>
+<div class="flex items-center gap-2">
+<span class="text-on-surface-variant font-code-sm text-code-sm">243 cases</span>
+<span class="font-semibold text-[#065f46] bg-[#d1fae5] px-2 py-0.5 rounded-full">17%</span>
+</div>
+</div>
+<div class="w-full h-3 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-[#10b981] rounded-full" style="width: 17%"></div>
+</div>
+</div>
+<!-- Manual Review: 14% -->
+<div>
+<div class="flex justify-between items-center mb-1.5 font-label-md text-label-md">
+<span class="font-medium text-on-surface flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+                Manual Review
+              </span>
+<div class="flex items-center gap-2">
+<span class="text-on-surface-variant font-code-sm text-code-sm">200 cases</span>
+<span class="font-semibold text-on-secondary-container bg-secondary/15 px-2 py-0.5 rounded-full">14%</span>
+</div>
+</div>
+<div class="w-full h-3 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 14%"></div>
+</div>
+</div>
+<!-- Rejected: 8% -->
+<div>
+<div class="flex justify-between items-center mb-1.5 font-label-md text-label-md">
+<span class="font-medium text-on-surface flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-error"></span>
+                Rejected
+              </span>
+<div class="flex items-center gap-2">
+<span class="text-on-surface-variant font-code-sm text-code-sm">114 cases</span>
+<span class="font-semibold text-error bg-error-container/40 px-2 py-0.5 rounded-full">8%</span>
+</div>
+</div>
+<div class="w-full h-3 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-error rounded-full" style="width: 8%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Quick footnote summary -->
+<div class="mt-6 pt-4 border-t border-surface-container-high/60 flex items-center justify-between text-on-surface-variant font-body-sm text-body-sm">
+<span class="">Straight-through processing index: <strong>78.0%</strong></span>
+<span class="text-primary font-semibold">1,214 Direct Dispatches</span>
+</div>
+</div>
+<!-- Section 4: AI Investigation Performance -->
+<div class="p-6 rounded-2xl bg-surface-container-lowest shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2">
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">
+            AI Investigation Performance
+          </h2>
+<!-- Notice Badge -->
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[15px]">verified_user</span>
+            AI advises, human authorizes
+          </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-5">
+          Investigation &amp; recommendation accuracy prior to human authorization
+        </p>
+<!-- Metric Summary Bento Grid -->
+<div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+<div class="p-3 rounded-xl bg-surface-container-low flex flex-col">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Completed</span>
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface mt-1">1,428</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">100% ingested</span>
+</div>
+<div class="p-3 rounded-xl bg-surface-container-low flex flex-col">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Strong Evidence</span>
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface mt-1">1,214</span>
+<span class="font-body-sm text-body-sm text-primary font-medium mt-0.5">85.0% certainty</span>
+</div>
+<div class="p-3 rounded-xl bg-surface-container-low flex flex-col">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Human Escalations</span>
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface mt-1">186</span>
+<span class="font-body-sm text-body-sm text-secondary font-medium mt-0.5">13.0% flagged</span>
+</div>
+<div class="p-3 rounded-xl bg-surface-container-low flex flex-col">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Evidence Feeds</span>
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface mt-1">4.6 / 5</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Avg cross-checks</span>
+</div>
+<div class="p-3 rounded-xl bg-surface-container-low flex flex-col col-span-2 sm:col-span-2">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Recommendation Acceptance</span>
+<div class="flex items-center gap-3 mt-1">
+<span class="font-headline-sm text-headline-sm font-bold text-primary-container">82%</span>
+<div class="flex-1 h-2 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary-container rounded-full" style="width: 82%"></div>
+</div>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-1">Direct consensus with auditor sign-offs</span>
+</div>
+</div>
+</div>
+<!-- Descriptive Caption -->
+<div class="p-3.5 rounded-xl bg-surface-container-high/40 flex items-start gap-3">
+<span class="material-symbols-outlined text-outline text-[20px] shrink-0 mt-0.5">info</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+          The AI conducts automated data cross-checks (GDS, payment gateway, carrier cancellation bulletins, and fare rules) and generates a structured recommendation. Final disbursement authority remains with accredited human auditors.
+        </p>
+</div>
+</div>
+</section>
+<!-- ROW 3: Human Review Log (2/3) + Insights (1/3) -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-space-gutter my-space-sm">
+<!-- Section 5: Recent Human Review Outcomes (Table) -->
+<div class="lg:col-span-8 p-6 rounded-2xl bg-surface-container-lowest shadow-sm flex flex-col justify-between overflow-hidden">
+<div>
+<div class="flex items-center justify-between pb-2">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">
+              Recent Human Review Outcomes
+            </h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+              Auditor determination log on flagged &amp; escalation cases
+            </p>
+</div>
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider hidden sm:inline-block">5 Most Recent</span>
+</div>
+<!-- Table Container -->
+<div class="overflow-x-auto mt-4">
+<table class="w-full text-left font-body-md text-body-md border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+<th class="py-3 px-4 rounded-l-xl">Case ID</th>
+<th class="py-3 px-4">Recommendation</th>
+<th class="py-3 px-4">Final Outcome</th>
+<th class="py-3 px-4 text-right">Refund Amount</th>
+<th class="py-3 px-4 rounded-r-xl">Auditor Note</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container/60">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3.5 px-4 font-code-sm text-code-sm font-semibold text-secondary hover:underline cursor-pointer">
+                  #AT-9842
+                </td>
+<td class="py-3.5 px-4 font-body-sm text-body-sm text-on-surface">Full Refund</td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#f7fee7] text-[#3f6212] font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+                    Approved
+                  </span>
+</td>
+<td class="py-3.5 px-4 font-code-sm text-code-sm font-semibold text-right text-on-surface">
+                  ₹9,450
+                </td>
+<td class="py-3.5 px-4 font-body-sm text-body-sm text-on-surface-variant truncate max-w-xs" title="Carrier cancellation confirmed via airline advisory">
+                  Carrier cancellation confirmed via airline advisory
+                </td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3.5 px-4 font-code-sm text-code-sm font-semibold text-secondary hover:underline cursor-pointer">
+                  #AT-9837
+                </td>
+<td class="py-3.5 px-4 font-body-sm text-body-sm text-on-surface">Partial Refund</td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#f7fee7] text-[#3f6212] font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+                    Approved
+                  </span>
+</td>
+<td class="py-3.5 px-4 font-code-sm text-code-sm font-semibold text-right text-on-surface">
+                  ₹4,200
+                </td>
+<td class="py-3.5 px-4 font-body-sm text-body-sm text-on-surface-variant truncate max-w-xs" title="Pro-rated non-refundable segment deducted">
+                  Pro-rated non-refundable segment deducted
+                </td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3.5 px-4 font-code-sm text-code-sm font-semibold text-secondary hover:underline cursor-pointer">
+                  #AT-9829
+                </td>
+<td class="py-3.5 px-4 font-body-sm text-body-sm text-on-surface">Full Refund</td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Manual Review
+                  </span>
+</td>
+<td class="py-3.5 px-4 font-code-sm text-code-sm font-semibold text-right text-on-surface">
+                  ₹18,500
+                </td>
+<td class="py-3.5 px-4 font-body-sm text-body-sm text-on-surface-variant truncate max-w-xs" title="High-value corporate ticket routed for senior audit">
+                  High-value corporate ticket routed for senior audit
+                </td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3.5 px-4 font-code-sm text-code-sm font-semibold text-secondary hover:underline cursor-pointer">
+                  #AT-9818
+                </td>
+<td class="py-3.5 px-4 font-body-sm text-body-sm text-on-surface">Full Refund</td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-error-container/40 text-error font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                    Rejected
+                  </span>
+</td>
+<td class="py-3.5 px-4 font-code-sm text-code-sm font-semibold text-right text-on-surface">
+                  ₹12,000
+                </td>
+<td class="py-3.5 px-4 font-body-sm text-body-sm text-on-surface-variant truncate max-w-xs" title="Passenger no-show prior to flight reschedule">
+                  Passenger no-show prior to flight reschedule
+                </td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-3.5 px-4 font-code-sm text-code-sm font-semibold text-secondary hover:underline cursor-pointer">
+                  #AT-9805
+                </td>
+<td class="py-3.5 px-4 font-body-sm text-body-sm text-on-surface">Full Refund</td>
+<td class="py-3.5 px-4">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#f7fee7] text-[#3f6212] font-label-sm text-label-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+                    Approved
+                  </span>
+</td>
+<td class="py-3.5 px-4 font-code-sm text-code-sm font-semibold text-right text-on-surface">
+                  ₹6,800
+                </td>
+<td class="py-3.5 px-4 font-body-sm text-body-sm text-on-surface-variant truncate max-w-xs" title="Weather cancellation verified by air traffic feed">
+                  Weather cancellation verified by air traffic feed
+                </td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Footer Navigation Link -->
+<div class="mt-6 pt-4 border-t border-surface-container-high/60 flex items-center justify-between">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Showing 5 of 186 recent escalations</span>
+<a class="inline-flex items-center gap-1.5 font-label-md text-label-md font-semibold text-secondary hover:text-primary transition-colors" href="#">
+<span class="">View All 186 Reviewed Cases</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</a>
+</div>
+</div>
+<!-- Section 6: Investigation Insights -->
+<div class="lg:col-span-4 p-6 rounded-2xl bg-surface-container-lowest shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-1">
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">
+            Investigation Insights
+          </h2>
+<span class="material-symbols-outlined text-outline text-[20px]">lightbulb</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-5">Case risk classification breakdown</p>
+<!-- 3 Insight Callout Cards -->
+<div class="space-y-4">
+<!-- Insight 1 -->
+<div class="p-4 rounded-xl bg-surface-container-low flex gap-3.5 items-start">
+<div class="w-8 h-8 rounded-lg bg-primary-container/20 flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-on-primary-container text-[18px]">speed</span>
+</div>
+<div>
+<h3 class="font-label-md text-label-md font-semibold text-on-surface">Low Risk Majority</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1 leading-relaxed">
+                Most investigations are classified as Low Risk (72%), enabling rapid straight-through verification workflows.
+              </p>
+</div>
+</div>
+<!-- Insight 2 -->
+<div class="p-4 rounded-xl bg-surface-container-low flex gap-3.5 items-start">
+<div class="w-8 h-8 rounded-lg bg-[#d1fae5] flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[#065f46] text-[18px]">fact_check</span>
+</div>
+<div>
+<h3 class="font-label-md text-label-md font-semibold text-on-surface">Strong Evidence Correlation</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1 leading-relaxed">
+                Strong evidence cases (5/5 verified feeds) have a significantly higher approval rate (96.2%) and near-zero post-settlement dispute rate.
+              </p>
+</div>
+</div>
+<!-- Insight 3 -->
+<div class="p-4 rounded-xl bg-surface-container-low flex gap-3.5 items-start">
+<div class="w-8 h-8 rounded-lg bg-secondary-fixed flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-on-secondary-fixed text-[18px]">gavel</span>
+</div>
+<div>
+<h3 class="font-label-md text-label-md font-semibold text-on-surface">Human Governance Trigger</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1 leading-relaxed">
+                High-value (&gt;₹15,000) or higher-risk refunds are automatically routed to human reviewers for final verification.
+              </p>
+</div>
+</div>
+</div>
+</div>
+<!-- Live Pipeline Health Status Indicator -->
+<div class="mt-6 pt-4 border-t border-surface-container-high/60 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+<span class="font-label-sm text-label-sm text-on-surface font-medium">Investigation System Online</span>
+</div>
+<span class="font-code-sm text-code-sm text-outline">v2.4.1 Auditor Engine</span>
+</div>
+</div>
+</section>
+</div></main></div>
+
+</body></html>

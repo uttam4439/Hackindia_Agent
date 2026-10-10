@@ -1,0 +1,310 @@
+<!DOCTYPE html><html lang="en" style=""><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_standard" name="shell-type"><title>Flyvance | Automated Claims Intelligence</title><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "on-tertiary": "#ffffff",
+          "surface-variant": "#e0e3e5",
+          "tertiary": "#565e74",
+          "inverse-on-surface": "#eff1f3",
+          "on-surface": "#191c1e",
+          "primary-container": "#84cc16",
+          "on-secondary-fixed-variant": "#2f2ebe",
+          "error": "#ba1a1a",
+          "primary-fixed": "#acf847",
+          "tertiary-fixed-dim": "#bec6e0",
+          "background": "#f7f9fb",
+          "on-tertiary-fixed": "#131b2e",
+          "tertiary-fixed": "#dae2fd",
+          "surface-container-low": "#f2f4f6",
+          "surface": "#f7f9fb",
+          "surface-tint": "#416900",
+          "on-secondary-fixed": "#07006c",
+          "primary": "#416900",
+          "outline": "#727a64",
+          "surface-bright": "#f7f9fb",
+          "inverse-primary": "#91db2a",
+          "on-primary-fixed": "#102000",
+          "on-background": "#191c1e",
+          "surface-container-high": "#e6e8ea",
+          "inverse-surface": "#2d3133",
+          "secondary-container": "#6063ee",
+          "surface-container-lowest": "#ffffff",
+          "surface-container-highest": "#e0e3e5",
+          "on-primary-fixed-variant": "#304f00",
+          "on-secondary": "#ffffff",
+          "primary-fixed-dim": "#91db2a",
+          "secondary": "#4648d4",
+          "on-primary-container": "#315200",
+          "on-tertiary-container": "#41495e",
+          "on-secondary-container": "#fffbff",
+          "on-error-container": "#93000a",
+          "surface-container": "#eceef0",
+          "on-tertiary-fixed-variant": "#3f465c",
+          "outline-variant": "#c1cab0",
+          "on-error": "#ffffff",
+          "on-surface-variant": "#424936",
+          "tertiary-container": "#b0b8d1",
+          "secondary-fixed-dim": "#c0c1ff",
+          "surface-dim": "#d8dadc",
+          "secondary-fixed": "#e1e0ff",
+          "on-primary": "#ffffff",
+          "error-container": "#ffdad6"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.25rem",
+          "lg": "0.5rem",
+          "xl": "0.75rem",
+          "full": "9999px"
+        },
+        "spacing": {
+          "gutter-mobile": "0.75rem",
+          "space-md": "1rem",
+          "gutter": "1.25rem",
+          "space-xl": "2rem",
+          "margin-mobile": "1rem",
+          "space-lg": "1.5rem",
+          "space-2xl": "3rem",
+          "space-xs": "0.25rem",
+          "margin": "2rem",
+          "space-sm": "0.5rem"
+        },
+        "fontFamily": {
+          "headline-md": [
+            "Plus Jakarta Sans"
+          ],
+          "metric-display": [
+            "Plus Jakarta Sans"
+          ],
+          "display-lg": [
+            "Plus Jakarta Sans"
+          ],
+          "code-sm": [
+            "Inter"
+          ],
+          "body-sm": [
+            "Plus Jakarta Sans"
+          ],
+          "body-md": [
+            "Plus Jakarta Sans"
+          ],
+          "headline-sm": [
+            "Plus Jakarta Sans"
+          ],
+          "headline-lg": [
+            "Plus Jakarta Sans"
+          ],
+          "label-sm": [
+            "Inter"
+          ],
+          "label-md": [
+            "Inter"
+          ],
+          "body-lg": [
+            "Plus Jakarta Sans"
+          ],
+          "display-lg-mobile": [
+            "Plus Jakarta Sans"
+          ]
+        },
+        "fontSize": {
+          "headline-md": [
+            "22px",
+            {
+              "lineHeight": "30px",
+              "letterSpacing": "-0.015em",
+              "fontWeight": "600"
+            }
+          ],
+          "metric-display": [
+            "32px",
+            {
+              "lineHeight": "38px",
+              "letterSpacing": "-0.025em",
+              "fontWeight": "700"
+            }
+          ],
+          "display-lg": [
+            "40px",
+            {
+              "lineHeight": "48px",
+              "letterSpacing": "-0.03em",
+              "fontWeight": "700"
+            }
+          ],
+          "code-sm": [
+            "12px",
+            {
+              "lineHeight": "16px",
+              "fontWeight": "500"
+            }
+          ],
+          "body-sm": [
+            "12px",
+            {
+              "lineHeight": "18px",
+              "fontWeight": "400"
+            }
+          ],
+          "body-md": [
+            "14px",
+            {
+              "lineHeight": "20px",
+              "fontWeight": "400"
+            }
+          ],
+          "headline-sm": [
+            "18px",
+            {
+              "lineHeight": "26px",
+              "letterSpacing": "-0.01em",
+              "fontWeight": "600"
+            }
+          ],
+          "headline-lg": [
+            "28px",
+            {
+              "lineHeight": "36px",
+              "letterSpacing": "-0.02em",
+              "fontWeight": "600"
+            }
+          ],
+          "label-sm": [
+            "11px",
+            {
+              "lineHeight": "14px",
+              "letterSpacing": "0.04em",
+              "fontWeight": "600"
+            }
+          ],
+          "label-md": [
+            "13px",
+            {
+              "lineHeight": "18px",
+              "letterSpacing": "0.01em",
+              "fontWeight": "500"
+            }
+          ],
+          "body-lg": [
+            "16px",
+            {
+              "lineHeight": "24px",
+              "fontWeight": "400"
+            }
+          ],
+          "display-lg-mobile": [
+            "30px",
+            {
+              "lineHeight": "36px",
+              "letterSpacing": "-0.02em",
+              "fontWeight": "700"
+            }
+          ]
+        }
+      }
+    }
+  };</script></head><body class="bg-surface font-body-md text-on-surface antialiased min-h-screen flex flex-col"><header class="fixed top-0 left-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-b border-surface-container-high shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-20 max-w-7xl mx-auto px-margin flex items-center justify-between"><div class="flex items-center gap-space-md"><img alt="Aeroflux Refund AI Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1VS3k_AiOw2kHPb1rD2ZLiMiG6-FRuqCvMoprTnXPjm8NE-jHnkbIAIOk1pGPi4EnoROBkDB5jWw2w_F8O284tAUJ-4MCBy0jIZkNqlBPI2SVikW1OdZ7yX6CXPinAQgjomyuCdT73NBMDfVXTZ-hdH3TzUuDEleH-VFubhdiyQ5Fg1Tc7yrQZkkI55LByzOGLOICQDKmtdIWnGFU2Qx3mBeaS3i5UP-gLIk8cXUD5IUzTGZ4s8aHzqFiw"><div class="flex items-center gap-space-sm"><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight font-bold">Agent Travel</span></div></div><nav class="hidden md:flex items-center gap-space-xs p-1 rounded-full bg-surface-container-low" data-active-classes="text-on-surface font-semibold bg-surface-container-high rounded-full"><a aria-current="page" class="px-4 py-2 transition-all text-on-surface font-semibold bg-surface-container-high rounded-full" data-path="how-it-works" href="#">How It Works</a><a class="px-4 py-2 rounded-full font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all" data-path="features" href="#">Features</a><a class="px-4 py-2 rounded-full font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all" data-path="refund-engine" href="#">Refund Engine</a></nav><div class="flex items-center gap-space-md"><a class="inline-flex items-center justify-center px-5 py-2.5 rounded-full bg-primary-container text-on-primary-container font-label-md text-label-md font-semibold shadow-sm hover:brightness-105 active:scale-95 transition-all" data-path="claim-engine" href="#">Get Started</a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 w-full pt-20 bg-surface"><div class="flex flex-col w-full">
+<!-- Top Ambient Glow Layer -->
+<div class="relative w-full overflow-hidden">
+<div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[720px] h-[360px] bg-gradient-to-b from-primary-container/20 via-secondary-container/10 to-transparent blur-3xl pointer-events-none rounded-full"></div>
+<!-- Section 1: Hero & Real-time Booking / Trip Query Engine -->
+<section class="relative max-w-7xl mx-auto px-margin pt-space-xl pb-space-2xl flex flex-col items-center text-center">
+<!-- Eyebrow Pill -->
+
+<!-- Hero Headline -->
+<h1 class="font-display-lg text-display-lg text-on-surface tracking-tight mt-space-md max-w-4xl">
+        Your Travel Refund, <span class="bg-gradient-to-r from-on-surface via-primary to-secondary bg-clip-text text-transparent">Simplified by AI.</span>
+</h1>
+<!-- Subtitle -->
+<p class="font-body-lg text-body-lg text-tertiary mt-space-sm max-w-2xl text-balance">Get refunds for cancelled or disrupted travel bookings with help from AI. We check your booking, cancellation details, and refund policy to recommend the right refund action.</p>
+<!-- Central Trip Search / Claim Dispatch Console -->
+<div class="w-full max-w-4xl mt-space-xl bg-surface-container-lowest rounded-full p-2.5 shadow-xl transition-all duration-300"><div class="flex flex-col md:flex-row items-center justify-between gap-space-sm pl-4 pr-1.5 py-1"><div class="flex items-center gap-3 w-full md:w-3/12 text-left"><div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center shrink-0 text-primary"><span class="material-symbols-outlined text-[20px]">flight_takeoff</span></div><div class="flex flex-col min-w-0"><span class="font-label-sm text-label-sm text-tertiary uppercase tracking-wider">From</span><div class="flex items-center gap-1.5 font-headline-sm text-headline-sm text-on-surface truncate"><span class="font-semibold">Delhi</span><span class="text-tertiary text-xs font-mono font-normal">[DEL]</span></div></div></div><div class="flex items-center gap-3 w-full md:w-3/12 text-left pl-0 md:pl-4"><div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center shrink-0 text-primary"><span class="material-symbols-outlined text-[20px]">flight_land</span></div><div class="flex flex-col min-w-0"><span class="font-label-sm text-label-sm text-tertiary uppercase tracking-wider">To</span><div class="flex items-center gap-1.5 font-headline-sm text-headline-sm text-on-surface truncate"><span class="font-semibold">Mumbai</span><span class="text-tertiary text-xs font-mono font-normal">[BOM]</span></div></div></div><div class="flex items-center gap-3 w-full md:w-3/12 text-left pl-0 md:pl-4"><div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center shrink-0 text-secondary"><span class="material-symbols-outlined text-[20px]">calendar_today</span></div><div class="flex flex-col min-w-0"><span class="font-label-sm text-label-sm text-tertiary uppercase tracking-wider">Journey Date</span><span class="font-headline-sm text-headline-sm text-on-surface font-semibold truncate">28 Oct, 2025</span></div></div><button class="w-full md:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-primary-container text-on-primary-container font-headline-sm text-headline-sm font-bold shadow-md hover:brightness-105 active:scale-95 transition-all shrink-0"><span class="">Search Trips</span><span class="material-symbols-outlined text-[20px]">arrow_forward</span></button></div></div>
+<!-- Mode Selector Pills (Flights, Trains, Buses) -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md w-full max-w-4xl mt-space-lg"><div class="p-space-md rounded-2xl bg-surface-container-lowest shadow-sm hover:shadow-md text-left flex items-center gap-space-md cursor-pointer transition-all"><div class="w-11 h-11 rounded-xl bg-surface-container-low flex items-center justify-center text-primary shrink-0"><span class="material-symbols-outlined text-[24px]">flight_takeoff</span></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-on-surface font-bold">Flights</span><p class="font-body-sm text-body-sm text-tertiary mt-0.5">Cancelled or delayed flights</p></div></div><div class="p-space-md rounded-2xl bg-surface-container-lowest shadow-sm hover:shadow-md text-left flex items-center gap-space-md cursor-pointer transition-all"><div class="w-11 h-11 rounded-xl bg-surface-container-low flex items-center justify-center text-secondary shrink-0"><span class="material-symbols-outlined text-[24px]">train</span></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-on-surface font-bold">Trains</span><p class="font-body-sm text-body-sm text-tertiary mt-0.5">Automated refund processing</p></div></div><div class="p-space-md rounded-2xl bg-surface-container-lowest shadow-sm hover:shadow-md text-left flex items-center gap-space-md cursor-pointer transition-all"><div class="w-11 h-11 rounded-xl bg-surface-container-low flex items-center justify-center text-on-surface-variant shrink-0"><span class="material-symbols-outlined text-[24px]">directions_bus</span></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-on-surface font-bold">Buses</span><p class="font-body-sm text-body-sm text-tertiary mt-0.5">Quick route &amp; ticket refunds</p></div></div></div>
+<!-- Live Carrier Auditing Strip -->
+<div class="mt-space-xl flex flex-wrap items-center justify-center gap-x-space-lg gap-y-2 text-tertiary font-label-md text-label-md"><span class="flex items-center gap-1.5 text-on-surface font-semibold"><span class="material-symbols-outlined text-primary text-[18px]">verified</span>Trusted coverage across 450+ airlines, rail networks, and bus operators worldwide</span></div>
+</section>
+</div>
+<!-- Section 2: Visual Preview of AI Refund Investigation (Obsidian Deep Card) -->
+<section class="w-full bg-surface-container-low py-space-2xl">
+<div class="max-w-7xl mx-auto px-margin flex flex-col gap-space-lg">
+<!-- Section Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-sm"><div class="flex flex-col gap-1 max-w-2xl"><h2 class="font-display-lg text-display-lg text-on-surface tracking-tight">AI Refund Investigation System</h2><p class="font-body-md text-body-md text-tertiary">Automated verification and policy checking parsing active disruption claims.</p></div></div>
+<!-- Main High-Contrast Obsidian Glass Panel -->
+<div class="w-full rounded-3xl bg-inverse-surface text-inverse-on-surface p-space-lg lg:p-space-xl shadow-2xl relative overflow-hidden">
+<!-- Ambient Iridescent Spheres behind console -->
+<div class="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-primary/20 blur-3xl pointer-events-none"></div>
+<div class="absolute -bottom-24 left-1/4 w-96 h-96 rounded-full bg-secondary/15 blur-3xl pointer-events-none"></div>
+<div class="relative grid grid-cols-1 lg:grid-cols-12 gap-space-lg"><div class="lg:col-span-7 flex flex-col gap-space-md"><div class="flex flex-wrap items-center justify-between gap-space-sm p-space-md rounded-2xl bg-surface-container-highest/10 backdrop-blur-md"><div class="flex items-center gap-space-sm"><div class="w-12 h-12 rounded-xl bg-primary-container/20 text-primary-fixed flex items-center justify-center font-headline-sm text-headline-sm font-bold">AI</div><div class="flex flex-col"><div class="flex items-center gap-2"><span class="font-headline-sm text-headline-sm font-bold tracking-tight text-white">Flight AI-805</span><span class="px-2 py-0.5 rounded-full bg-red-950/60 text-red-300 font-label-sm text-label-sm font-bold tracking-wider">CANCELLED</span></div><span class="font-body-sm text-body-sm text-tertiary-fixed-dim">Delhi (DEL) → Mumbai (BOM)</span></div></div><div class="flex flex-col text-right"><span class="font-label-sm text-label-sm text-tertiary-fixed-dim">Disruption Notice</span><span class="font-body-sm text-body-sm text-white font-medium">Under 24h Threshold</span></div></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md"><div class="p-space-md rounded-2xl bg-white/[0.04] backdrop-blur-sm flex flex-col gap-2"><div class="flex items-center justify-between"><span class="font-label-sm text-label-sm text-tertiary-fixed-dim uppercase tracking-wider">Disruption Audit</span><span class="material-symbols-outlined text-primary-fixed text-[18px]">verified</span></div><span class="font-headline-sm text-headline-sm font-bold text-white">Clear Conditions</span><p class="font-body-sm text-body-sm text-tertiary-fixed-dim">Weather defense verified clear; carrier liability established.</p></div><div class="p-space-md rounded-2xl bg-white/[0.04] backdrop-blur-sm flex flex-col gap-2"><div class="flex items-center justify-between"><span class="font-label-sm text-label-sm text-tertiary-fixed-dim uppercase tracking-wider">Regulation Rule</span><span class="material-symbols-outlined text-primary-fixed text-[18px]">gavel</span></div><span class="font-headline-sm text-headline-sm font-bold text-white">Passenger Rights</span><p class="font-body-sm text-body-sm text-tertiary-fixed-dim">Applicable for 100% full ticket refund and compensation.</p></div></div><div class="p-space-md rounded-2xl bg-white/[0.04] flex items-center justify-between text-tertiary-fixed-dim"><div class="flex items-center gap-2 text-primary-fixed font-medium"><span class="material-symbols-outlined text-[18px]">check_circle</span><span class="">Passenger ticket and payment receipts verified</span></div><span class="font-label-sm text-label-sm text-tertiary-fixed-dim font-mono">Dossier Ready</span></div></div><div class="lg:col-span-5 flex flex-col justify-between p-space-lg rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl gap-space-md"><div class="flex flex-col gap-space-sm"><div class="flex items-center justify-between"><span class="font-label-sm text-label-sm uppercase tracking-widest text-primary-fixed font-bold">Investigation Verdict</span><div class="flex items-center gap-1 px-3 py-1 rounded-full bg-primary-container/20 text-primary-fixed font-code-sm text-code-sm font-bold"><span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>99.4% Confidence</div></div><div class="flex flex-col mt-space-sm"><span class="font-body-sm text-body-sm text-tertiary-fixed-dim">Verified Restitution Payable:</span><div class="font-display-lg text-display-lg font-bold text-white tracking-tight flex items-baseline gap-2"><span class="">₹9,450</span><span class="font-headline-sm text-headline-sm text-tertiary-fixed font-normal">($120 USD)</span></div><span class="font-label-sm text-label-sm text-primary-fixed font-medium mt-1">Includes full unused ticket refund &amp; statutory compensation</span></div><div class="flex flex-col gap-2.5 mt-space-md pt-space-xs"><div class="flex items-center gap-2.5 text-inverse-on-surface font-body-sm text-body-sm"><span class="w-5 h-5 rounded-full bg-primary-container/20 text-primary-fixed flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-[14px]">check</span></span><span class="">Flight cancellation confirmed</span></div><div class="flex items-center gap-2.5 text-inverse-on-surface font-body-sm text-body-sm"><span class="w-5 h-5 rounded-full bg-primary-container/20 text-primary-fixed flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-[14px]">check</span></span><span class="">Eligible for full fare refund</span></div><div class="flex items-center gap-2.5 text-inverse-on-surface font-body-sm text-body-sm"><span class="w-5 h-5 rounded-full bg-primary-container/20 text-primary-fixed flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-[14px]">check</span></span><span class="">Ready for direct bank transfer</span></div></div></div><button class="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-white text-on-surface font-headline-sm text-headline-sm font-semibold hover:bg-surface-container-high transition-all shadow-md"><span class="material-symbols-outlined text-[18px]">verified</span><span class="">Inspect Refund Details</span></button></div></div>
+</div>
+</div>
+</section>
+<!-- Section 3: The AI Refund Flow Architecture (4-stage Pipeline) -->
+<section class="max-w-7xl mx-auto px-margin py-space-2xl w-full">
+<div class="text-center max-w-3xl mx-auto mb-space-2xl flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm uppercase tracking-widest text-primary font-bold">Autonomous Protocol</span>
+<h2 class="font-display-lg text-display-lg text-on-surface tracking-tight">The AI Refund Flow Architecture</h2>
+<p class="font-body-lg text-body-lg text-tertiary">An unbending, end-to-end automated pipeline connecting passenger itineraries directly to statutory compensation payouts.</p>
+</div>
+<!-- 4 Step Interactive Pipeline Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-md relative"><div class="p-space-lg rounded-3xl bg-surface-container-lowest shadow-sm hover:shadow-lg transition-all flex flex-col justify-between"><div class="flex flex-col"><div class="flex items-center justify-between mb-space-md"><span class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center font-headline-sm text-headline-sm font-bold text-on-surface">01</span></div><h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Booking Sync</h3><p class="font-body-md text-body-md text-tertiary mt-space-xs">Trip search query, e-ticket forward, or instant booking reference lookup.</p></div><div class="mt-space-lg pt-space-md flex items-center gap-2 text-primary font-label-md text-label-md font-semibold"><span class="material-symbols-outlined text-[18px]">sync_alt</span><span class="">Zero-friction sync</span></div></div><div class="p-space-lg rounded-3xl bg-surface-container-lowest shadow-sm hover:shadow-lg transition-all flex flex-col justify-between"><div class="flex flex-col"><div class="flex items-center justify-between mb-space-md"><span class="w-10 h-10 rounded-full bg-primary-container/20 text-primary flex items-center justify-center font-headline-sm text-headline-sm font-bold">02</span></div><h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">AI Investigation</h3><p class="font-body-md text-body-md text-tertiary mt-space-xs">Deep scan of operator schedule logs, flight radar, and passenger rights regulations.</p></div><div class="mt-space-lg pt-space-md flex items-center gap-2 text-primary font-label-md text-label-md font-semibold"><span class="material-symbols-outlined text-[18px]">psychology</span><span class="">Automated Policy Check</span></div></div><div class="p-space-lg rounded-3xl bg-surface-container-lowest shadow-sm hover:shadow-lg transition-all flex flex-col justify-between"><div class="flex flex-col"><div class="flex items-center justify-between mb-space-md"><span class="w-10 h-10 rounded-full bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center font-headline-sm text-headline-sm font-bold">03</span></div><h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Dossier Generation</h3><p class="font-body-md text-body-md text-tertiary mt-space-xs">Assembly of tickets, delay metrics, and undisputed claim documents.</p></div><div class="mt-space-lg pt-space-md flex items-center gap-2 text-secondary font-label-md text-label-md font-semibold"><span class="material-symbols-outlined text-[18px]">folder_special</span><span class="">Verified Dossier</span></div></div><div class="p-space-lg rounded-3xl bg-surface-container-lowest shadow-sm hover:shadow-lg transition-all flex flex-col justify-between"><div class="flex flex-col"><div class="flex items-center justify-between mb-space-md"><span class="w-10 h-10 rounded-full bg-surface-container-highest text-on-surface flex items-center justify-center font-headline-sm text-headline-sm font-bold">04</span></div><h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Refund Decision</h3><p class="font-body-md text-body-md text-tertiary mt-space-xs">Precise settlement calculation and direct transmission to operator portals.</p></div><div class="mt-space-lg pt-space-md flex items-center gap-2 text-primary font-label-md text-label-md font-semibold"><span class="material-symbols-outlined text-[18px]">payments</span><span class="">Fast Restitution</span></div></div></div>
+</section>
+<!-- Section 4: How It Works (Simple 3-Step Section) -->
+<section class="w-full bg-surface-container-low py-space-2xl">
+<div class="max-w-7xl mx-auto px-margin flex flex-col gap-space-xl">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-sm">
+<div class="flex flex-col gap-1 max-w-xl">
+<span class="font-label-sm text-label-sm uppercase tracking-widest text-primary font-bold">Effortless Resolution</span>
+<h2 class="font-display-lg text-display-lg text-on-surface tracking-tight">How Agent Travel Works</h2>
+<p class="font-body-lg text-body-lg text-tertiary">Turning painful carrier dispute forms into a seamless, autonomous financial turnaround.</p>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-lg"><div class="p-space-xl rounded-3xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md"><div class="w-14 h-14 rounded-2xl bg-surface-container-low flex items-center justify-center text-primary"><span class="material-symbols-outlined text-[32px]">travel_explore</span></div><div class="flex flex-col gap-space-xs"><span class="font-label-sm text-label-sm text-tertiary uppercase font-bold tracking-wider">Step 01</span><h3 class="font-headline-md text-headline-md text-on-surface font-bold">Book your trip</h3><p class="font-body-md text-body-md text-tertiary">Search and book flights, trains, or buses directly, or simply paste an existing booking reference (PNR / e-ticket).</p></div></div><div class="p-space-xl rounded-3xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md"><div class="w-14 h-14 rounded-2xl bg-surface-container-low flex items-center justify-center text-secondary"><span class="material-symbols-outlined text-[32px]">report_problem</span></div><div class="flex flex-col gap-space-xs"><span class="font-label-sm text-label-sm text-tertiary uppercase font-bold tracking-wider">Step 02</span><h3 class="font-headline-md text-headline-md text-on-surface font-bold">Request a refund</h3><p class="font-body-md text-body-md text-tertiary">With one click, flag any cancellation, delay, schedule alteration, or disrupted itinerary for instant auditing.</p></div></div><div class="p-space-xl rounded-3xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md"><div class="w-14 h-14 rounded-2xl bg-surface-container-low flex items-center justify-center text-primary-container"><span class="material-symbols-outlined text-[32px]">auto_fix_high</span></div><div class="flex flex-col gap-space-xs"><span class="font-label-sm text-label-sm text-tertiary uppercase font-bold tracking-wider">Step 03</span><h3 class="font-headline-md text-headline-md text-on-surface font-bold">AI investigates &amp; recommends</h3><p class="font-body-md text-body-md text-tertiary">Our neural engine audits operator tariffs, compiles claim evidence, and executes your full refund payout.</p></div></div></div>
+</div>
+</section>
+<!-- Section 5: High-Impact Call To Action Banner -->
+<section class="max-w-7xl mx-auto px-margin py-space-2xl w-full">
+<div class="w-full rounded-3xl bg-inverse-surface text-inverse-on-surface p-space-xl md:p-space-2xl relative overflow-hidden flex flex-col items-center text-center shadow-xl">
+<!-- Ambient Lighting -->
+<div class="absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-gradient-to-b from-primary-container/20 to-transparent blur-3xl pointer-events-none rounded-full"></div>
+<div class="relative z-10 flex flex-col items-center max-w-3xl gap-space-md">
+<span class="px-4 py-1.5 rounded-full bg-white/10 text-primary-fixed font-label-sm text-label-sm font-bold uppercase tracking-wider">
+          Instant Zero-Risk Investigation
+        </span>
+<h2 class="font-display-lg text-display-lg text-white tracking-tight">
+          Have a travel refund issue? <br class="hidden sm:block">
+<span class="text-primary-fixed">Let our AI investigate it.</span>
+</h2>
+<p class="font-body-lg text-body-lg text-tertiary-fixed-dim max-w-xl">
+          No hidden fees. Zero paperwork. Get an instant, mathematically verified refund verdict in under 60 seconds.
+        </p>
+<!-- CTA Action Buttons -->
+<div class="flex flex-col sm:flex-row items-center gap-space-md mt-space-sm w-full sm:w-auto">
+<button class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-primary-container text-on-primary-container font-headline-sm text-headline-sm font-bold shadow-lg hover:brightness-105 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[20px]">bolt</span>
+<span class="">Start Free AI Refund Check</span>
+</button>
+<button class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-white/10 text-white font-headline-sm text-headline-sm font-semibold hover:bg-white/20 transition-all"><span class="material-symbols-outlined text-[20px]">play_circle</span><span class="">Explore Refund Engine</span></button>
+</div>
+<!-- Metric micro-strip -->
+<div class="flex flex-wrap items-center justify-center gap-6 mt-space-lg text-tertiary-fixed-dim font-label-sm text-label-sm">
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary-fixed text-[16px]">check_circle</span>
+            99.2% Claim Resolution Rate
+          </span>
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary-fixed text-[16px]">check_circle</span>
+            Direct Regulatory Enforcement
+          </span>
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary-fixed text-[16px]">check_circle</span>
+            No Recovery, No Fee
+          </span>
+</div>
+</div>
+</div>
+</section>
+</div></main><footer class="w-full bg-surface-container-lowest border-t border-surface-container-high mt-auto"><div class="max-w-7xl mx-auto px-margin py-space-xl flex flex-col md:flex-row items-center justify-between gap-space-lg"><div class="flex flex-col gap-space-xs"><div class="flex items-center gap-space-sm"><img alt="Aeroflux Refund AI Logo" class="h-6 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1VS3k_AiOw2kHPb1rD2ZLiMiG6-FRuqCvMoprTnXPjm8NE-jHnkbIAIOk1pGPi4EnoROBkDB5jWw2w_F8O284tAUJ-4MCBy0jIZkNqlBPI2SVikW1OdZ7yX6CXPinAQgjomyuCdT73NBMDfVXTZ-hdH3TzUuDEleH-VFubhdiyQ5Fg1Tc7yrQZkkI55LByzOGLOICQDKmtdIWnGFU2Qx3mBeaS3i5UP-gLIk8cXUD5IUzTGZ4s8aHzqFiw"><span class="font-headline-sm text-headline-sm text-on-surface font-bold">Agent Travel</span></div><p class="font-body-sm text-body-sm text-on-surface-variant max-w-md">Autonomous flight disruption resolution and regulatory financial restitution engine. Real-time aviation telemetry parsed through automated claim compliance algorithms.</p></div><div class="flex items-center gap-space-lg"><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="how-it-works" href="#">How It Works</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="features" href="#">Features</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="claim-engine" href="#">Refund Engine</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="#">Regulatory Frameworks</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="#">Privacy Policy</a></div></div><div class="border-t border-surface-container-low"><div class="max-w-7xl mx-auto px-margin py-space-md flex flex-col sm:flex-row items-center justify-between gap-space-sm font-label-sm text-label-sm text-tertiary"><span class="">© 2025 Agent Travel Technologies Inc. All rights reserved.</span><span class="">Disclaimers: Flight claim compensation is subject to jurisdiction protocols including EC 261/2004, UK 261, and DOT provisions.</span></div></div></footer>
+
+</body></html>

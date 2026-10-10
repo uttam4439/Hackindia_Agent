@@ -1,0 +1,551 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_dashboard" name="shell-type"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "error": "#ba1a1a", "tertiary-fixed": "#dae2fd", "on-primary": "#ffffff", "on-secondary": "#ffffff", "on-surface-variant": "#424936", "on-tertiary": "#ffffff", "primary": "#416900", "on-tertiary-fixed": "#131b2e", "secondary-container": "#6063ee", "secondary-fixed-dim": "#c0c1ff", "on-background": "#191c1e", "on-secondary-fixed-variant": "#2f2ebe", "on-error": "#ffffff", "primary-fixed": "#acf847", "on-surface": "#191c1e", "on-primary-container": "#315200", "inverse-primary": "#91db2a", "on-secondary-container": "#fffbff", "primary-container": "#84cc16", "inverse-surface": "#2d3133", "on-error-container": "#93000a", "surface-container-high": "#e6e8ea", "background": "#f7f9fb", "on-tertiary-container": "#41495e", "surface-variant": "#e0e3e5", "on-primary-fixed": "#102000", "secondary": "#4648d4", "surface-dim": "#d8dadc", "tertiary-container": "#b0b8d1", "surface-container-lowest": "#ffffff", "surface-container": "#eceef0", "tertiary": "#565e74", "on-tertiary-fixed-variant": "#3f465c", "inverse-on-surface": "#eff1f3", "surface-tint": "#416900", "on-primary-fixed-variant": "#304f00", "error-container": "#ffdad6", "surface-container-low": "#f2f4f6", "surface-container-highest": "#e0e3e5", "secondary-fixed": "#e1e0ff", "outline-variant": "#c1cab0", "surface-bright": "#f7f9fb", "outline": "#727a64", "tertiary-fixed-dim": "#bec6e0", "surface": "#f7f9fb", "primary-fixed-dim": "#91db2a", "on-secondary-fixed": "#07006c" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-xs": "0.25rem", "margin-mobile": "1rem", "space-md": "1rem", "space-lg": "1.5rem", "gutter-mobile": "0.75rem", "gutter": "1.25rem", "space-2xl": "3rem", "margin": "2rem", "space-sm": "0.5rem", "space-xl": "2rem" }, fontFamily: { "headline-lg": ["Plus Jakarta Sans"], "body-sm": ["Plus Jakarta Sans"], "body-md": ["Plus Jakarta Sans"], "display-lg-mobile": ["Plus Jakarta Sans"], "label-md": ["Inter"], "headline-md": ["Plus Jakarta Sans"], "display-lg": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"], "label-sm": ["Inter"], "headline-sm": ["Plus Jakarta Sans"], "code-sm": ["Inter"], "metric-display": ["Plus Jakarta Sans"] }, fontSize: { "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "display-lg-mobile": ["30px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "label-md": ["13px", { "lineHeight": "18px", "letterSpacing": "0.01em", "fontWeight": "500" }], "headline-md": ["22px", { "lineHeight": "30px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "display-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.03em", "fontWeight": "700" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "600" }], "headline-sm": ["18px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "code-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }], "metric-display": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.025em", "fontWeight": "700" }] } } } };</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-screen w-64 bg-surface-container-lowest z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex flex-col"><div class="h-16 px-space-lg flex items-center gap-space-sm"><img alt="Brand logo. - Primary color: #84cc16
+- Font: plusJakartaSans
+- Mode: light
+- Roundness: rounded-md
+" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1Xzd2vsISROWw9pccgCbU1LjIb6LV7EBj0RE8_phn39lHjAqad5fJGkQVq7l9bNK85w85kbjHErrehShNmHEPyLzLBFrTEGxdBmliQZSMRTJedh-YpnojF5dqXqgMU7gMn0KZLntPdLk8wn8JnQDfzSBirIoZlPDnnVyVfTHFk50kbwIfUGuGEHY72GwShzljgPPOSnsq1lbB6csr6hMM0KYw-2W0kqUc-x3p4WVd0cq_7jzkGlrN4jFgU"><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight">Agent Travel</span></div><div class="px-space-md py-space-sm"><p class="px-space-sm pb-space-xs font-label-sm text-label-sm uppercase tracking-wider text-outline">Audit Operations</p><nav class="flex flex-col gap-space-xs" data-active-classes="bg-primary-container text-on-primary-container font-semibold shadow-sm"><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="overview" href="#"><span class="material-symbols-outlined text-[20px]">grid_view</span><span class="">Overview</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="bookings" href="#"><span class="material-symbols-outlined text-[20px]">confirmation_number</span><span class="">Bookings</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="refund-investigations" href="#"><span class="material-symbols-outlined text-[20px]">troubleshoot</span><span class="flex-1">Refund Investigations</span><span class="h-2 w-2 rounded-full bg-primary-container"></span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="reviews" href="#"><span class="material-symbols-outlined text-[20px]">rate_review</span><span class="">Reviews</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="analytics" href="#"><span class="material-symbols-outlined text-[20px]">analytics</span><span class="">Analytics</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-xl font-label-md text-label-md bg-primary-container text-on-primary-container font-semibold shadow-sm transition-colors" data-path="settings" href="#"><span class="material-symbols-outlined text-[20px]">settings</span><span class="">Settings</span></a></nav></div></div><div class="p-space-md"><div class="p-space-md rounded-xl bg-surface-container-low flex items-center justify-between"><div class="flex items-center gap-space-sm min-w-0"><div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-secondary text-[18px]">corporate_fare</span></div><div class="min-w-0"><p class="font-label-md text-label-md text-on-surface font-semibold truncate">Acme Travel Corp</p><p class="font-label-sm text-label-sm text-on-surface-variant truncate">Global Tier 1</p></div></div><span class="material-symbols-outlined text-outline text-[18px]">unfold_more</span></div></div></aside><div class="pl-64"><header class="fixed top-0 left-64 right-0 h-16 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-xl"><div class="flex items-center flex-1 max-w-xl"><div class="relative w-full"><span class="material-symbols-outlined absolute left- space-md top-1/2 -translate-y-1/2 text-outline text-[20px] pointer-events-none pl-3">search</span><input class="w-full h-10 pl-10 pr-16 rounded-full bg-surface-container-lowest text-on-surface font-body-md text-body-md placeholder:text-outline focus:outline-none shadow-[0_1px_3px_rgba(15,23,42,0.04)]" placeholder="Search bookings, PNR, carrier, or refund ID..." type="text"><div class="absolute right-3 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded bg-surface-container-high text-on-surface-variant font-code-sm text-code-sm pointer-events-none">⌘K</div></div></div><div class="flex items-center gap-space-md"><button class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors relative" type="button"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-primary-container ring-2 ring-surface"></span></button><div class="h-6 w-px bg-surface-variant"></div><div class="flex items-center gap-space-sm pl-space-xs"><div class="text-right hidden sm:block"><p class="font-label-md text-label-md text-on-surface font-semibold leading-tight">Julian Hayes</p><p class="font-label-sm text-label-sm text-on-surface-variant leading-tight">Lead Auditor</p></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="relative w-full pt-16 px-space-xl bg-surface min-h-screen"><div class="flex flex-col w-full">
+<!-- Interactive Script to Synchronize Sidebar Active Link -->
+<script>
+    (function syncSidebar() {
+      const links = document.querySelectorAll('aside nav a');
+      links.forEach(l => {
+        if (l.getAttribute('data-path') === 'settings') {
+          l.className = 'flex items-center gap-space-sm px-space-md py-space-sm rounded-xl font-label-md text-label-md bg-primary-container text-on-primary-container font-semibold shadow-sm transition-colors';
+        } else {
+          l.className = 'flex items-center gap-space-sm px-space-md py-space-sm rounded-xl font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors';
+        }
+      });
+    })();
+  </script>
+<!-- Ambient Micro-Gradient Background Depth -->
+<div class="absolute top-0 right-0 w-96 h-96 bg-primary-container/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
+<!-- Header & Breadcrumbs Area -->
+<div class="relative flex flex-col gap-1 pb-space-lg">
+<div class="flex items-center gap-2 font-label-sm text-label-sm text-outline tracking-wider uppercase">
+<span class="">System</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-on-surface font-semibold">Platform Settings</span>
+</div>
+<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mt-1">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Settings</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1 max-w-3xl">
+          Configure refund investigation policies, risk thresholds, human review rules, and platform preferences.
+        </p>
+</div>
+<div class="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-full shrink-0"><span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span><span class="font-label-sm text-label-sm text-on-surface-variant">Refund Policies: Active</span></div>
+</div>
+</div>
+<!-- Main Asymmetric Settings Cockpit -->
+<div class="relative grid grid-cols-1 lg:grid-cols-12 gap-space-xl items-start pb-space-2xl">
+<!-- Sub-navigation Rail (Sticky Column) -->
+<nav class="lg:col-span-3 sticky top-20 flex flex-col gap-1 bg-surface-container-lowest p-space-md rounded-xl shadow-sm">
+<p class="font-label-sm text-label-sm uppercase tracking-wider text-outline px-space-sm pb-space-xs">Preferences</p>
+<a class="settings-nav-item flex items-center justify-between px-space-md py-2.5 rounded-lg font-label-md text-label-md bg-primary-container text-on-primary-container font-semibold transition-all" href="#general">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+<span class="">General</span>
+</div>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</a>
+<a class="settings-nav-item flex items-center justify-between px-space-md py-2.5 rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" href="#refund-policies">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[18px]">balance</span>
+<span class="">Refund Policies</span>
+</div>
+<span class="font-code-sm text-code-sm text-outline">5 Rules</span>
+</a>
+<a class="settings-nav-item flex items-center justify-between px-space-md py-2.5 rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" href="#risk-rules">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[18px]">verified_user</span>
+<span class="">Risk &amp; Human Review</span>
+</div>
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+</a>
+<a class="settings-nav-item flex items-center justify-between px-space-md py-2.5 rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" href="#notifications">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[18px]">notifications_active</span>
+<span class="">Notifications</span>
+</div>
+</a>
+<a class="settings-nav-item flex items-center justify-between px-space-md py-2.5 rounded-lg font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" href="#ai-preferences">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[18px]">smart_toy</span>
+<span class="">AI Preferences</span>
+</div>
+
+</a>
+<!-- Telemetry Widget inside sub-navigation -->
+
+</nav>
+<!-- Detailed Content Columns -->
+<div class="lg:col-span-9 flex flex-col gap-space-xl">
+<!-- SECTION 1: General Settings -->
+<section class="p-space-xl rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-lg transition-all" id="general">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-space-sm">
+<div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[22px]">tune</span>
+<h2 class="font-headline-md text-headline-md text-on-surface tracking-tight">General Settings</h2>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Manage platform localization, reporting formats, and regional operating parameters.</p>
+</div>
+<button class="self-start sm:self-auto px-space-md py-2 rounded-full bg-primary-container text-on-primary-container font-label-md text-label-md font-semibold hover:shadow-md transition-all flex items-center gap-1.5 cursor-pointer" type="button">
+<span class="material-symbols-outlined text-[16px]">save</span>
+<span class="">Save Changes</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+<!-- Field: Org Name -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface font-medium flex items-center justify-between" for="org-name">
+<span class="">Organization Name</span>
+<span class="font-label-sm text-label-sm text-outline">Verified Tenant</span>
+</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">apartment</span>
+<input class="w-full h-11 pl-10 pr-4 rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:bg-surface-container-lowest focus:shadow-sm focus:outline-none transition-all" id="org-name" type="text" value="Agent Travel">
+</div>
+</div>
+<!-- Field: Default Currency -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface font-medium" for="currency-select">Default Currency</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">currency_rupee</span>
+<select class="w-full h-11 pl-10 pr-9 rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:bg-surface-container-lowest focus:shadow-sm focus:outline-none appearance-none transition-all cursor-pointer" id="currency-select">
+<option selected="">INR (₹) - Indian Rupee</option>
+<option>USD ($) - US Dollar</option>
+<option>EUR (€) - Euro</option>
+<option>GBP (£) - British Pound</option>
+<option>SGD (S$) - Singapore Dollar</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline text-[18px] pointer-events-none">expand_more</span>
+</div>
+</div>
+<!-- Field: Investigation Timezone -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface font-medium" for="timezone-select">Investigation Timezone</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">schedule</span>
+<select class="w-full h-11 pl-10 pr-9 rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:bg-surface-container-lowest focus:shadow-sm focus:outline-none appearance-none transition-all cursor-pointer" id="timezone-select">
+<option selected="">Asia/Kolkata (IST, UTC+05:30)</option>
+<option>UTC (Coordinated Universal Time)</option>
+<option>Europe/London (BST, UTC+01:00)</option>
+<option>America/New_York (EST, UTC-05:00)</option>
+<option>Asia/Singapore (SGT, UTC+08:00)</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline text-[18px] pointer-events-none">expand_more</span>
+</div>
+</div>
+<!-- Field: Date Format -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface font-medium" for="date-format-select">Date Format</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">calendar_today</span>
+<select class="w-full h-11 pl-10 pr-9 rounded-lg bg-surface-container-low font-body-md text-body-md text-on-surface focus:bg-surface-container-lowest focus:shadow-sm focus:outline-none appearance-none transition-all cursor-pointer" id="date-format-select">
+<option selected="">DD MMM YYYY (e.g., 24 Oct 2026)</option>
+<option>YYYY-MM-DD (ISO 8601)</option>
+<option>MM/DD/YYYY</option>
+<option>DD/MM/YYYY</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline text-[18px] pointer-events-none">expand_more</span>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 2: Refund Investigation Policies -->
+<section class="p-space-xl rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-lg" id="refund-policies">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[22px]">balance</span>
+<h2 class="font-headline-md text-headline-md text-on-surface tracking-tight">Refund Policies</h2>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Configure refund investigation policies and evidence checks.</p>
+</div>
+<!-- Policy Items Stack -->
+<div class="flex flex-col gap-space-sm">
+<!-- Policy Item 1 -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex items-start justify-between gap-4 transition-colors hover:bg-surface-container">
+<div class="flex items-start gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container-lowest flex items-center justify-center text-primary shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[20px]">currency_exchange</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Full Refund Recommendation</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Allows AI to recommend a full refund when the applicable policy supports it.</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+<input checked="" class="sr-only peer toggle-input" type="checkbox">
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-surface-container-lowest after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface-container-lowest after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<!-- Policy Item 2 -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex items-start justify-between gap-4 transition-colors hover:bg-surface-container">
+<div class="flex items-start gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container-lowest flex items-center justify-center text-secondary shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[20px]">pie_chart</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Partial Refund Recommendation</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Evaluates sector disruptions, non-refundable taxes, and pro-rated fare segments.</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+<input checked="" class="sr-only peer toggle-input" type="checkbox">
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-surface-container-lowest after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface-container-lowest after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<!-- Policy Item 3 -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex items-start justify-between gap-4 transition-colors hover:bg-surface-container">
+<div class="flex items-start gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container-lowest flex items-center justify-center text-on-surface shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[20px]">rule_folder</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Policy Evidence Required</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Checks the applicable refund policy before making a recommendation.</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+<input checked="" class="sr-only peer toggle-input" type="checkbox">
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-surface-container-lowest after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface-container-lowest after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<!-- Policy Item 4 -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex items-start justify-between gap-4 transition-colors hover:bg-surface-container">
+<div class="flex items-start gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container-lowest flex items-center justify-center text-outline shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[20px]">manage_history</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Customer History Check</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Checks customer history for relevant refund and dispute patterns.</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+<input checked="" class="sr-only peer toggle-input" type="checkbox">
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-surface-container-lowest after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface-container-lowest after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<!-- Policy Item 5 -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex items-start justify-between gap-4 transition-colors hover:bg-surface-container">
+<div class="flex items-start gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container-lowest flex items-center justify-center text-primary-container shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[20px]">flight_takeoff</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Cancellation Evidence Check</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Checks booking and cancellation evidence.</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+<input checked="" class="sr-only peer toggle-input" type="checkbox">
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-surface-container-lowest after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface-container-lowest after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+</div>
+<!-- Informational Banner -->
+<div class="p-space-md rounded-xl bg-surface-container flex items-center gap-space-md">
+<div class="w-8 h-8 rounded-full bg-secondary-fixed flex items-center justify-center text-secondary shrink-0">
+<span class="material-symbols-outlined text-[18px]">info</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface">
+            AI uses these policies as investigation inputs. Final refund decisions remain subject to human approval when required.
+          </p>
+</div>
+</section>
+<!-- SECTION 3: Risk & Human Review Rules -->
+<section class="p-space-xl rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-lg" id="risk-rules">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[22px]">security</span>
+<h2 class="font-headline-md text-headline-md text-on-surface tracking-tight">Risk &amp; Human Review Rules</h2>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Automated thresholds and guardrails triggering required human auditor intervention.</p>
+</div>
+<!-- Rules Stack -->
+<div class="flex flex-col gap-space-md">
+<!-- Threshold Slider Card -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<div>
+<span class="font-label-md text-label-md text-on-surface font-semibold">High Risk Threshold</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Scale 0–100 anomaly benchmark score. Investigations exceeding this trigger immediate triage locks.</p>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-surface-container-lowest shadow-sm">
+<span class="font-headline-sm text-headline-sm text-secondary font-bold" id="risk-val">70</span>
+<span class="font-label-sm text-label-sm text-outline">/ 100</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="font-code-sm text-code-sm text-outline">0</span>
+<input class="w-full h-2 bg-surface-container-high rounded-lg appearance-none cursor-pointer accent-secondary" id="risk-slider" max="100" min="0" type="range" value="70">
+<span class="font-code-sm text-code-sm text-outline">100</span>
+</div>
+</div>
+<!-- Human Review Required Toggle -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex items-center justify-between gap-4">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Human Review Required</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Directs cases exceeding risk thresholds into auditor triage queue.</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer shrink-0">
+<input checked="" class="sr-only peer toggle-input" type="checkbox">
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-surface-container-lowest after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface-container-lowest after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<!-- High-Value Refund Review -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<div class="flex flex-col max-w-lg">
+<span class="font-label-md text-label-md text-on-surface font-semibold">High-Value Refund Review</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Any refund recommendation at or exceeding this threshold requires manual sign-off.</p>
+</div>
+<div class="relative w-full sm:w-44 shrink-0">
+<span class="font-body-md text-body-md text-outline absolute left-3 top-1/2 -translate-y-1/2 font-semibold">₹</span>
+<input class="w-full h-10 pl-7 pr-3 rounded-lg bg-surface-container-lowest font-headline-sm text-headline-sm font-semibold text-on-surface focus:outline-none shadow-sm text-right" type="text" value="25,000">
+</div>
+</div>
+<!-- Insufficient Evidence Review -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex items-center justify-between gap-4">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Insufficient Evidence Review</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Automatically escalates investigations missing carrier or payment verification data.</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer shrink-0">
+<input checked="" class="sr-only peer toggle-input" type="checkbox">
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-surface-container-lowest after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface-container-lowest after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<!-- Account or Payment Risk Review -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex items-center justify-between gap-4">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Account or Payment Risk Review</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Flags mismatched settlement accounts or third-party corporate cards.</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer shrink-0">
+<input checked="" class="sr-only peer toggle-input" type="checkbox">
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-surface-container-lowest after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface-container-lowest after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+</div>
+<!-- Helper Note -->
+<div class="p-space-md rounded-xl bg-surface-container-high flex items-center gap-3">
+<span class="material-symbols-outlined text-outline text-[18px]">verified</span>
+<span class="font-body-sm text-body-sm text-on-surface font-medium">Risk signals guide investigation and review. High risk does not automatically mean fraud.</span>
+</div>
+</section>
+<!-- SECTION 4: Notifications -->
+<section class="p-space-xl rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-lg" id="notifications">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[22px]">notifications</span>
+<h2 class="font-headline-md text-headline-md text-on-surface tracking-tight">Notifications</h2>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Configure auditor alerts and escalation dispatch channels.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+<!-- Notification Card 1 -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col justify-between gap-3">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[20px]">assignment_late</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">New Human Review</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer shrink-0">
+<input checked="" class="sr-only peer toggle-input" type="checkbox">
+<div class="w-10 h-5 bg-surface-container-highest rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-surface-container-lowest after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface-container-lowest after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Immediate dispatch to lead auditors whenever manual triage is locked.</p>
+</div>
+<!-- Notification Card 2 -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col justify-between gap-3">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-error text-[20px]">warning</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">High-Risk Detected</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer shrink-0">
+<input checked="" class="sr-only peer toggle-input" type="checkbox">
+<div class="w-10 h-5 bg-surface-container-highest rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-surface-container-lowest after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface-container-lowest after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Priority alert triggered for flight claims scoring ≥ 70 on risk index.</p>
+</div>
+<!-- Notification Card 3 -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col justify-between gap-3">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">fact_check</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Investigation Completed</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer shrink-0">
+<input checked="" class="sr-only peer toggle-input" type="checkbox">
+<div class="w-10 h-5 bg-surface-container-highest rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-surface-container-lowest after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface-container-lowest after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Daily summary digest aggregating automatically resolved refund records.</p>
+</div>
+<!-- Notification Card 4 -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col justify-between gap-3">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline text-[20px]">sync_alt</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Refund Decision Updated</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer shrink-0">
+<input checked="" class="sr-only peer toggle-input" type="checkbox">
+<div class="w-10 h-5 bg-surface-container-highest rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-surface-container-lowest after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface-container-lowest after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Instant webhook notifications upon senior auditor sign-off or carrier rejection.</p>
+</div>
+</div>
+</section>
+<!-- SECTION 5: AI Investigation Preferences -->
+<section class="p-space-xl rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-lg" id="ai-preferences">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[22px]">smart_toy</span>
+<h2 class="font-headline-md text-headline-md text-on-surface tracking-tight">AI Investigation Preferences</h2>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Core intelligence and explainability configuration for the refund engine.</p>
+</div>
+<!-- Obsidian Copilot Engine Status Pill -->
+<div class="p-space-md rounded-xl bg-inverse-surface text-inverse-on-surface flex items-center justify-between shadow-md">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container-highest/20 flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-[20px]">psychology</span>
+</div>
+<div>
+<span class="font-label-md text-label-md font-semibold text-inverse-on-surface">Agent Travel Autonomous Engine</span>
+<p class="font-body-sm text-body-sm text-tertiary-fixed-dim">Zero-loss carrier telemetry reconciler active</p>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-primary-container text-on-primary-container font-label-sm text-label-sm font-bold uppercase tracking-wider">
+            Nominal
+          </span>
+</div>
+<div class="flex flex-col gap-space-sm">
+<!-- Toggle 1 -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex items-center justify-between gap-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-[20px]">neurology</span>
+<div>
+<span class="font-label-md text-label-md text-on-surface font-semibold">AI Investigation</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Autonomous multi-agent parsing of airline PNRs and ticket coupon history.</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer shrink-0">
+<input checked="" class="sr-only peer toggle-input" type="checkbox">
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-surface-container-lowest after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface-container-lowest after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<!-- Toggle 2 -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex items-center justify-between gap-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary text-[20px]">insights</span>
+<div>
+<span class="font-label-md text-label-md text-on-surface font-semibold">AI Recommendations</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Auto-computes suggested monetary payout based on fare class and disruption cause.</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer shrink-0">
+<input checked="" class="sr-only peer toggle-input" type="checkbox">
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-surface-container-lowest after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface-container-lowest after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<!-- Toggle 3 -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex items-center justify-between gap-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-[20px]">description</span>
+<div>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Evidence-Based Reasoning</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Generates human-readable citation trees linked to DGCA &amp; EU261 regulatory clauses.</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer shrink-0">
+<input checked="" class="sr-only peer toggle-input" type="checkbox">
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-surface-container-lowest after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface-container-lowest after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<!-- Toggle 4 -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex items-center justify-between gap-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-outline text-[20px]">verified</span>
+<div>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Human Approval for Significant Refunds</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Forces supervisor electronic signature before any ledger adjustment executes.</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer shrink-0">
+<input checked="" class="sr-only peer toggle-input" type="checkbox">
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-surface-container-lowest after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface-container-lowest after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+</div>
+<!-- Governance Callout Note -->
+<div class="p-space-md rounded-xl bg-tertiary-fixed/30 flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[22px] shrink-0 mt-0.5">shield</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Governance Guarantee</span>
+<p class="font-body-sm text-body-sm text-on-tertiary-container mt-0.5">
+              AI investigates evidence and recommends actions. It does not make irreversible financial decisions on its own.
+            </p>
+</div>
+</div>
+</section>
+<!-- Bottom Page Actions (Sticky Bar) -->
+<div class="sticky bottom-6 z-30 p-space-md rounded-2xl bg-surface-container-lowest/90 backdrop-blur-md shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+<div class="flex items-center gap-2 text-outline">
+<span class="material-symbols-outlined text-primary text-[18px]">lock_reset</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">All changes logged to platform audit ledger.</span>
+</div>
+<div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+<button class="px-space-md py-2.5 rounded-full font-label-md text-label-md text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer" type="button">
+            Cancel
+          </button>
+<button class="px-space-xl py-2.5 rounded-full bg-primary-container text-on-primary-container font-label-md text-label-md font-semibold hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer" id="save-all-btn" type="button">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+<span class="">Save Changes</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Interactive JavaScript for Live Threshold Feedback and Toast -->
+<script>
+    // Live update for slider threshold
+    const slider = document.getElementById('risk-slider');
+    const valDisplay = document.getElementById('risk-val');
+    if (slider && valDisplay) {
+      slider.addEventListener('input', (e) => {
+        valDisplay.textContent = e.target.value;
+      });
+    }
+
+    // Interactive Toast Notification for Save Action
+    const saveButtons = document.querySelectorAll('#save-all-btn, button:has(.material-symbols-outlined:contains("save"))');
+    const saveBtn = document.getElementById('save-all-btn');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', () => {
+        const originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">refresh</span><span>Applying to Ledger...</span>';
+        saveBtn.disabled = true;
+        setTimeout(() => {
+          saveBtn.innerHTML = '<span class="material-symbols-outlined text-[18px]">task_alt</span><span>Changes Applied!</span>';
+          setTimeout(() => {
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+          }, 2000);
+        }, 700);
+      });
+    }
+  </script>
+</div></main></div>
+
+
+</body></html>

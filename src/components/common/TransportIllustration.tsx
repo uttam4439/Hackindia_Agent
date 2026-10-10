@@ -10,7 +10,7 @@ interface TransportIllustrationProps {
 export const TransportIllustration: React.FC<TransportIllustrationProps> = ({ mode, className = '' }) => {
   return (
     <div
-      className={`relative w-full max-w-2xl mx-auto rounded-3xl bg-gradient-to-b from-surface-container-lowest via-surface-container-low/60 to-surface-container-lowest p-4 sm:p-6 border border-surface-container-high/80 shadow-lg backdrop-blur-sm overflow-hidden transition-all duration-500 ${className}`}
+      className={`relative w-full max-w-4xl mx-auto rounded-3xl bg-gradient-to-b from-surface-container-lowest via-surface-container-low/60 to-surface-container-lowest p-4 sm:p-6 border border-surface-container-high/80 shadow-lg backdrop-blur-sm overflow-hidden transition-all duration-500 ${className}`}
       role="img"
       aria-label={`Selected transport illustration: ${mode}`}
     >

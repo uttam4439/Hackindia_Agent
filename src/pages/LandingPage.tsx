@@ -1,15 +1,48 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { TransportIllustration, TransportMode } from '../components/common/TransportIllustration';
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
-  const [fromCity, setFromCity] = useState('Delhi');
-  const fromCode = 'DEL';
-  const [toCity, setToCity] = useState('Mumbai');
-  const toCode = 'BOM';
+  const [selectedMode, setSelectedMode] = useState<TransportMode>('flights');
+
+  const modeData = {
+    flights: {
+      fromIcon: 'flight_takeoff',
+      toIcon: 'flight_land',
+      fromCity: 'Delhi',
+      fromCode: 'DEL',
+      toCity: 'Mumbai',
+      toCode: 'BOM',
+    },
+    trains: {
+      fromIcon: 'train',
+      toIcon: 'directions_railway',
+      fromCity: 'New Delhi',
+      fromCode: 'NDLS',
+      toCity: 'Mumbai Central',
+      toCode: 'MMCT',
+    },
+    buses: {
+      fromIcon: 'directions_bus',
+      toIcon: 'directions_bus',
+      fromCity: 'Delhi ISBT',
+      fromCode: 'ISBT',
+      toCity: 'Mumbai Borivali',
+      toCode: 'BVI',
+    },
+  };
+
+  const [fromCity, setFromCity] = useState(modeData.flights.fromCity);
+  const [toCity, setToCity] = useState(modeData.flights.toCity);
   const [journeyDate, setJourneyDate] = useState('28 Oct, 2025');
-  const [selectedMode, setSelectedMode] = useState<'flights' | 'trains' | 'buses'>('flights');
   const [activeSection, setActiveSection] = useState<'how-it-works' | 'features' | 'refund-engine' | 'get-started'>('get-started');
+
+  const handleModeChange = (mode: TransportMode) => {
+    setSelectedMode(mode);
+    setFromCity(modeData[mode].fromCity);
+    setToCity(modeData[mode].toCity);
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -203,8 +236,10 @@ export const LandingPage: React.FC = () => {
                 <div className="flex flex-col md:flex-row items-center justify-between gap-space-sm pl-4 pr-1.5 py-1">
                   {/* From Field */}
                   <div className="flex items-center gap-3 w-full md:w-3/12 text-left">
-                    <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center shrink-0 text-primary">
-                      <span className="material-symbols-outlined text-[20px]">flight_takeoff</span>
+                    <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center shrink-0 text-primary transition-colors">
+                      <span className="material-symbols-outlined text-[20px]">
+                        {modeData[selectedMode].fromIcon}
+                      </span>
                     </div>
                     <div className="flex flex-col min-w-0">
                       <span className="font-label-sm text-[11px] text-tertiary uppercase tracking-wider">From</span>
@@ -213,9 +248,11 @@ export const LandingPage: React.FC = () => {
                           type="text"
                           value={fromCity}
                           onChange={(e) => setFromCity(e.target.value)}
-                          className="font-semibold bg-transparent focus:outline-none w-20 text-on-surface"
+                          className="font-semibold bg-transparent focus:outline-none w-28 text-on-surface"
                         />
-                        <span className="text-tertiary text-xs font-mono font-normal">[{fromCode}]</span>
+                        <span className="text-tertiary text-xs font-mono font-normal">
+                          [{modeData[selectedMode].fromCode}]
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -224,8 +261,10 @@ export const LandingPage: React.FC = () => {
 
                   {/* To Field */}
                   <div className="flex items-center gap-3 w-full md:w-3/12 text-left pl-0 md:pl-2">
-                    <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center shrink-0 text-primary">
-                      <span className="material-symbols-outlined text-[20px]">flight_land</span>
+                    <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center shrink-0 text-primary transition-colors">
+                      <span className="material-symbols-outlined text-[20px]">
+                        {modeData[selectedMode].toIcon}
+                      </span>
                     </div>
                     <div className="flex flex-col min-w-0">
                       <span className="font-label-sm text-[11px] text-tertiary uppercase tracking-wider">To</span>
@@ -234,9 +273,11 @@ export const LandingPage: React.FC = () => {
                           type="text"
                           value={toCity}
                           onChange={(e) => setToCity(e.target.value)}
-                          className="font-semibold bg-transparent focus:outline-none w-24 text-on-surface"
+                          className="font-semibold bg-transparent focus:outline-none w-28 text-on-surface"
                         />
-                        <span className="text-tertiary text-xs font-mono font-normal">[{toCode}]</span>
+                        <span className="text-tertiary text-xs font-mono font-normal">
+                          [{modeData[selectedMode].toCode}]
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -273,7 +314,7 @@ export const LandingPage: React.FC = () => {
               {/* Mode Selector Pills (Flights, Trains, Buses) */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-space-md w-full max-w-4xl mt-space-lg">
                 <div
-                  onClick={() => setSelectedMode('flights')}
+                  onClick={() => handleModeChange('flights')}
                   className={`p-space-md rounded-2xl bg-surface-container-lowest shadow-sm hover:shadow-md text-left flex items-center gap-space-md cursor-pointer transition-all border ${
                     selectedMode === 'flights' ? 'border-primary-container ring-2 ring-primary-container/20' : 'border-surface-container'
                   }`}
@@ -288,7 +329,7 @@ export const LandingPage: React.FC = () => {
                 </div>
 
                 <div
-                  onClick={() => setSelectedMode('trains')}
+                  onClick={() => handleModeChange('trains')}
                   className={`p-space-md rounded-2xl bg-surface-container-lowest shadow-sm hover:shadow-md text-left flex items-center gap-space-md cursor-pointer transition-all border ${
                     selectedMode === 'trains' ? 'border-secondary-container ring-2 ring-secondary-container/20' : 'border-surface-container'
                   }`}
@@ -303,7 +344,7 @@ export const LandingPage: React.FC = () => {
                 </div>
 
                 <div
-                  onClick={() => setSelectedMode('buses')}
+                  onClick={() => handleModeChange('buses')}
                   className={`p-space-md rounded-2xl bg-surface-container-lowest shadow-sm hover:shadow-md text-left flex items-center gap-space-md cursor-pointer transition-all border ${
                     selectedMode === 'buses' ? 'border-on-surface-variant ring-2 ring-on-surface-variant/20' : 'border-surface-container'
                   }`}
@@ -316,6 +357,11 @@ export const LandingPage: React.FC = () => {
                     <p className="font-body-sm text-xs text-tertiary mt-0.5">Quick route & ticket refunds</p>
                   </div>
                 </div>
+              </div>
+
+              {/* Dynamic Transport Illustration */}
+              <div className="w-full max-w-4xl mt-space-lg transition-all duration-300">
+                <TransportIllustration mode={selectedMode} />
               </div>
 
               {/* Live Carrier Auditing Strip */}

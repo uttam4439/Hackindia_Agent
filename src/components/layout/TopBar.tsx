@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useInvestigation } from '../../context/InvestigationContext';
 
 interface TopBarProps {
@@ -8,6 +8,37 @@ interface TopBarProps {
 export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
   const { searchQuery, setSearchQuery, setIsSearchModalOpen } = useInvestigation();
   const [showNotifications, setShowNotifications] = useState(false);
+  const notificationRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showNotifications) return;
+
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target as Node)
+      ) {
+        setShowNotifications(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowNotifications(false);
+      }
+    };
+
+    // Listen to both mousedown (desktop) and touchstart (mobile)
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside, { passive: true });
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showNotifications]);
 
   return (
     <header className="fixed top-0 left-0 lg:left-64 right-0 h-16 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-md lg:px-space-xl border-b border-surface-container-high/60">
@@ -45,13 +76,16 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
       </div>
 
       <div className="flex items-center gap-space-sm lg:gap-space-lg">
-        {/* Notifications Button */}
-        <div className="relative">
+        {/* Notifications Button & Dropdown Container */}
+        <div ref={notificationRef} className="relative">
           <button
-            onClick={() => setShowNotifications(!showNotifications)}
-            className="relative p-2 rounded-full text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors"
+            onClick={() => setShowNotifications((prev) => !prev)}
+            className="relative p-2 rounded-full text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
             type="button"
             title="Notifications"
+            aria-expanded={showNotifications}
+            aria-haspopup="true"
+            aria-label="Toggle notifications panel"
           >
             <span className="material-symbols-outlined text-[22px]">notifications</span>
             <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary-container ring-2 ring-surface-container-lowest"></span>
@@ -59,7 +93,11 @@ export const TopBar: React.FC<TopBarProps> = ({ onMenuClick }) => {
 
           {/* Notifications Dropdown */}
           {showNotifications && (
-            <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-surface-container-lowest shadow-xl border border-surface-container-high p-space-md z-50 animate-fade-in">
+            <div
+              className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-surface-container-lowest shadow-xl border border-surface-container-high p-space-md z-50 animate-fade-in"
+              role="region"
+              aria-label="Auditor Alerts"
+            >
               <div className="flex items-center justify-between pb-2 border-b border-surface-container mb-3">
                 <span className="font-headline-sm text-[15px] font-bold text-on-surface">Auditor Alerts</span>
                 <span className="px-2 py-0.5 rounded-full bg-primary-container/20 text-on-primary-container font-label-sm text-[11px] font-bold">

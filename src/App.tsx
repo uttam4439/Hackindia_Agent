@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { InvestigationProvider } from './context/InvestigationContext';
+import { ScrollToTop } from './components/common/ScrollToTop';
 import { AppShell } from './components/layout/AppShell';
 import { LandingPage } from './pages/LandingPage';
 import { DashboardPage } from './pages/DashboardPage';
@@ -15,6 +16,7 @@ export const App: React.FC = () => {
   return (
     <InvestigationProvider>
       <BrowserRouter>
+        <ScrollToTop />
         <Routes>
           {/* Landing Page (Public standalone view) */}
           <Route path="/" element={<LandingPage />} />
@@ -22,7 +24,7 @@ export const App: React.FC = () => {
           {/* AppShell Layout for Dashboard & Operations */}
           <Route element={<AppShell />}>
             <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/overview" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/overview" element={<DashboardPage />} />
             <Route path="/bookings" element={<BookingsPage />} />
             <Route path="/refund-investigations" element={<RefundInvestigationsPage />} />
             <Route path="/refund-investigations/:id" element={<CaseDetailPage />} />

@@ -15,10 +15,10 @@ export const LandingPage: React.FC = () => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY + 160;
       const sections = [
+        { id: 'get-started', offset: document.getElementById('get-started')?.offsetTop || 0 },
         { id: 'how-it-works', offset: document.getElementById('how-it-works')?.offsetTop || 0 },
         { id: 'features', offset: document.getElementById('features')?.offsetTop || 0 },
         { id: 'refund-engine', offset: document.getElementById('refund-engine')?.offsetTop || 0 },
-        { id: 'get-started', offset: document.getElementById('get-started')?.offsetTop || 0 },
       ];
 
       const sortedSections = [...sections].sort((a, b) => b.offset - a.offset);
@@ -35,13 +35,41 @@ export const LandingPage: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    if (window.location.hash) {
+      const sectionId = window.location.hash.replace('#', '');
+      const el = document.getElementById(sectionId);
+      if (el) {
+        setTimeout(() => {
+          const headerOffset = 80;
+          const elementPosition = el.getBoundingClientRect().top;
+          const offsetPosition = Math.max(0, elementPosition + window.scrollY - headerOffset);
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth',
+          });
+          setActiveSection(sectionId as any);
+        }, 50);
+      }
+    }
+  }, []);
+
   const scrollToSection = (e: React.MouseEvent, sectionId: string) => {
     e.preventDefault();
+    if (sectionId === 'get-started') {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      });
+      setActiveSection('get-started');
+      return;
+    }
+
     const el = document.getElementById(sectionId);
     if (el) {
       const headerOffset = 80;
       const elementPosition = el.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+      const offsetPosition = Math.max(0, elementPosition + window.scrollY - headerOffset);
       window.scrollTo({
         top: offsetPosition,
         behavior: 'smooth',
@@ -52,7 +80,7 @@ export const LandingPage: React.FC = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate('/refund-investigations/AT-9842');
+    navigate('/overview');
   };
 
   return (
@@ -62,7 +90,13 @@ export const LandingPage: React.FC = () => {
         <div className="h-20 max-w-7xl mx-auto px-space-md lg:px-margin flex items-center justify-between">
           {/* Logo & Brand */}
           <div className="flex items-center gap-space-md">
-            <div className="flex items-center gap-space-sm cursor-pointer" onClick={() => navigate('/')}>
+            <div
+              className="flex items-center gap-space-sm cursor-pointer"
+              onClick={() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                navigate('/');
+              }}
+            >
               <div className="w-9 h-9 rounded-xl bg-primary-container flex items-center justify-center text-on-primary-container font-bold shadow-xs">
                 <span className="material-symbols-outlined text-[22px]">smart_toy</span>
               </div>
@@ -140,7 +174,7 @@ export const LandingPage: React.FC = () => {
             <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[720px] h-[360px] bg-gradient-to-b from-primary-container/20 via-secondary-container/10 to-transparent blur-3xl pointer-events-none rounded-full"></div>
 
             {/* Section 1: Hero & Real-time Booking / Trip Query Engine */}
-            <section id="get-started" className="relative max-w-7xl mx-auto px-space-md lg:px-margin pt-space-xl pb-space-2xl flex flex-col items-center text-center">
+            <section id="get-started" className="relative max-w-7xl mx-auto px-space-md lg:px-margin pt-space-xl pb-space-2xl flex flex-col items-center text-center scroll-mt-20">
               {/* Eyebrow Pill */}
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface-container-high border border-surface-container-highest text-on-surface-variant font-label-sm text-xs font-medium mb-3">
                 <span className="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
@@ -294,8 +328,168 @@ export const LandingPage: React.FC = () => {
             </section>
           </div>
 
-          {/* Section 2: Visual Preview of AI Refund Investigation (Obsidian Deep Card) */}
-          <section id="refund-engine" className="w-full bg-surface-container-low py-space-2xl">
+          {/* Section 2: How Agent Travel Works (Simple 3-Step Section) */}
+          <section id="how-it-works" className="w-full bg-surface-container-low py-space-2xl scroll-mt-20">
+            <div className="max-w-7xl mx-auto px-space-md lg:px-margin flex flex-col gap-space-xl">
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-space-sm text-left">
+                <div className="flex flex-col gap-1 max-w-xl">
+                  <span className="font-label-sm text-xs uppercase tracking-widest text-primary font-bold">
+                    Effortless Resolution
+                  </span>
+                  <h2 className="font-display-lg text-2xl sm:text-3xl lg:text-display-lg text-on-surface tracking-tight font-bold">
+                    How Agent Travel Works
+                  </h2>
+                  <p className="font-body-lg text-sm sm:text-base text-tertiary">
+                    Turning painful carrier dispute forms into a seamless, autonomous financial turnaround.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-space-lg text-left">
+                <div className="p-space-xl rounded-3xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md border border-surface-container">
+                  <div className="w-14 h-14 rounded-2xl bg-surface-container-low flex items-center justify-center text-primary">
+                    <span className="material-symbols-outlined text-[32px]">travel_explore</span>
+                  </div>
+                  <div className="flex flex-col gap-space-xs">
+                    <span className="font-label-sm text-[11px] text-tertiary uppercase font-bold tracking-wider">
+                      Step 01
+                    </span>
+                    <h3 className="font-headline-md text-headline-sm font-bold text-on-surface">Book your trip</h3>
+                    <p className="font-body-md text-xs sm:text-sm text-tertiary">
+                      Search and book flights, trains, or buses directly, or simply paste an existing booking reference (PNR / e-ticket).
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-space-xl rounded-3xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md border border-surface-container">
+                  <div className="w-14 h-14 rounded-2xl bg-surface-container-low flex items-center justify-center text-secondary">
+                    <span className="material-symbols-outlined text-[32px]">report_problem</span>
+                  </div>
+                  <div className="flex flex-col gap-space-xs">
+                    <span className="font-label-sm text-[11px] text-tertiary uppercase font-bold tracking-wider">
+                      Step 02
+                    </span>
+                    <h3 className="font-headline-md text-headline-sm font-bold text-on-surface">Request a refund</h3>
+                    <p className="font-body-md text-xs sm:text-sm text-tertiary">
+                      With one click, flag any cancellation, delay, schedule alteration, or disrupted itinerary for instant auditing.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-space-xl rounded-3xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md border border-surface-container">
+                  <div className="w-14 h-14 rounded-2xl bg-surface-container-low flex items-center justify-center text-primary-container">
+                    <span className="material-symbols-outlined text-[32px]">auto_fix_high</span>
+                  </div>
+                  <div className="flex flex-col gap-space-xs">
+                    <span className="font-label-sm text-[11px] text-tertiary uppercase font-bold tracking-wider">
+                      Step 03
+                    </span>
+                    <h3 className="font-headline-md text-headline-sm font-bold text-on-surface">AI investigates & recommends</h3>
+                    <p className="font-body-md text-xs sm:text-sm text-tertiary">
+                      Our neural engine audits operator tariffs, compiles claim evidence, and executes your full refund payout.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Section 3: The AI Refund Flow Architecture (4-stage Pipeline) */}
+          <section id="features" className="max-w-7xl mx-auto px-space-md lg:px-margin py-space-2xl w-full scroll-mt-20">
+            <div className="text-center max-w-3xl mx-auto mb-space-2xl flex flex-col gap-space-xs">
+              <span className="font-label-sm text-xs uppercase tracking-widest text-primary font-bold">
+                Autonomous Protocol
+              </span>
+              <h2 className="font-display-lg text-2xl sm:text-3xl lg:text-display-lg text-on-surface tracking-tight font-bold">
+                The AI Refund Flow Architecture
+              </h2>
+              <p className="font-body-lg text-sm sm:text-base text-tertiary">
+                An end-to-end automated pipeline connecting passenger itineraries directly to statutory compensation payouts.
+              </p>
+            </div>
+
+            {/* 4 Step Pipeline Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-md relative text-left">
+              {/* Step 1 */}
+              <div className="p-space-lg rounded-3xl bg-surface-container-lowest shadow-sm hover:shadow-lg transition-all flex flex-col justify-between border border-surface-container">
+                <div className="flex flex-col">
+                  <div className="flex items-center justify-between mb-space-md">
+                    <span className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center font-headline-sm text-headline-sm font-bold text-on-surface">
+                      01
+                    </span>
+                  </div>
+                  <h3 className="font-headline-sm text-base font-bold text-on-surface">Booking Sync</h3>
+                  <p className="font-body-md text-xs sm:text-sm text-tertiary mt-space-xs">
+                    Trip search query, e-ticket forward, or instant booking reference lookup.
+                  </p>
+                </div>
+                <div className="mt-space-lg pt-space-md flex items-center gap-2 text-primary font-label-md text-xs font-semibold">
+                  <span className="material-symbols-outlined text-[18px]">sync_alt</span>
+                  <span>Zero-friction sync</span>
+                </div>
+              </div>
+
+              {/* Step 2 */}
+              <div className="p-space-lg rounded-3xl bg-surface-container-lowest shadow-sm hover:shadow-lg transition-all flex flex-col justify-between border border-surface-container">
+                <div className="flex flex-col">
+                  <div className="flex items-center justify-between mb-space-md">
+                    <span className="w-10 h-10 rounded-full bg-primary-container/20 text-primary flex items-center justify-center font-headline-sm text-headline-sm font-bold">
+                      02
+                    </span>
+                  </div>
+                  <h3 className="font-headline-sm text-base font-bold text-on-surface">AI Investigation</h3>
+                  <p className="font-body-md text-xs sm:text-sm text-tertiary mt-space-xs">
+                    Deep scan of operator schedule logs, flight radar, and passenger rights regulations.
+                  </p>
+                </div>
+                <div className="mt-space-lg pt-space-md flex items-center gap-2 text-primary font-label-md text-xs font-semibold">
+                  <span className="material-symbols-outlined text-[18px]">psychology</span>
+                  <span>Automated Policy Check</span>
+                </div>
+              </div>
+
+              {/* Step 3 */}
+              <div className="p-space-lg rounded-3xl bg-surface-container-lowest shadow-sm hover:shadow-lg transition-all flex flex-col justify-between border border-surface-container">
+                <div className="flex flex-col">
+                  <div className="flex items-center justify-between mb-space-md">
+                    <span className="w-10 h-10 rounded-full bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center font-headline-sm text-headline-sm font-bold">
+                      03
+                    </span>
+                  </div>
+                  <h3 className="font-headline-sm text-base font-bold text-on-surface">Dossier Generation</h3>
+                  <p className="font-body-md text-xs sm:text-sm text-tertiary mt-space-xs">
+                    Assembly of tickets, delay metrics, and undisputed claim documents.
+                  </p>
+                </div>
+                <div className="mt-space-lg pt-space-md flex items-center gap-2 text-secondary font-label-md text-xs font-semibold">
+                  <span className="material-symbols-outlined text-[18px]">folder_special</span>
+                  <span>Verified Dossier</span>
+                </div>
+              </div>
+
+              {/* Step 4 */}
+              <div className="p-space-lg rounded-3xl bg-surface-container-lowest shadow-sm hover:shadow-lg transition-all flex flex-col justify-between border border-surface-container">
+                <div className="flex flex-col">
+                  <div className="flex items-center justify-between mb-space-md">
+                    <span className="w-10 h-10 rounded-full bg-surface-container-highest text-on-surface flex items-center justify-center font-headline-sm text-headline-sm font-bold">
+                      04
+                    </span>
+                  </div>
+                  <h3 className="font-headline-sm text-base font-bold text-on-surface">Refund Decision</h3>
+                  <p className="font-body-md text-xs sm:text-sm text-tertiary mt-space-xs">
+                    Precise settlement calculation and direct transmission to operator portals.
+                  </p>
+                </div>
+                <div className="mt-space-lg pt-space-md flex items-center gap-2 text-primary font-label-md text-xs font-semibold">
+                  <span className="material-symbols-outlined text-[18px]">payments</span>
+                  <span>Fast Restitution</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Section 4: Visual Preview of AI Refund Investigation (Obsidian Deep Card) */}
+          <section id="refund-engine" className="w-full bg-surface-container-low py-space-2xl scroll-mt-20">
             <div className="max-w-7xl mx-auto px-space-md lg:px-margin flex flex-col gap-space-lg">
               {/* Section Header */}
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-space-sm">
@@ -445,166 +639,6 @@ export const LandingPage: React.FC = () => {
             </div>
           </section>
 
-          {/* Section 3: The AI Refund Flow Architecture (4-stage Pipeline) */}
-          <section id="features" className="max-w-7xl mx-auto px-space-md lg:px-margin py-space-2xl w-full">
-            <div className="text-center max-w-3xl mx-auto mb-space-2xl flex flex-col gap-space-xs">
-              <span className="font-label-sm text-xs uppercase tracking-widest text-primary font-bold">
-                Autonomous Protocol
-              </span>
-              <h2 className="font-display-lg text-2xl sm:text-3xl lg:text-display-lg text-on-surface tracking-tight font-bold">
-                The AI Refund Flow Architecture
-              </h2>
-              <p className="font-body-lg text-sm sm:text-base text-tertiary">
-                An end-to-end automated pipeline connecting passenger itineraries directly to statutory compensation payouts.
-              </p>
-            </div>
-
-            {/* 4 Step Pipeline Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-md relative text-left">
-              {/* Step 1 */}
-              <div className="p-space-lg rounded-3xl bg-surface-container-lowest shadow-sm hover:shadow-lg transition-all flex flex-col justify-between border border-surface-container">
-                <div className="flex flex-col">
-                  <div className="flex items-center justify-between mb-space-md">
-                    <span className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center font-headline-sm text-headline-sm font-bold text-on-surface">
-                      01
-                    </span>
-                  </div>
-                  <h3 className="font-headline-sm text-base font-bold text-on-surface">Booking Sync</h3>
-                  <p className="font-body-md text-xs sm:text-sm text-tertiary mt-space-xs">
-                    Trip search query, e-ticket forward, or instant booking reference lookup.
-                  </p>
-                </div>
-                <div className="mt-space-lg pt-space-md flex items-center gap-2 text-primary font-label-md text-xs font-semibold">
-                  <span className="material-symbols-outlined text-[18px]">sync_alt</span>
-                  <span>Zero-friction sync</span>
-                </div>
-              </div>
-
-              {/* Step 2 */}
-              <div className="p-space-lg rounded-3xl bg-surface-container-lowest shadow-sm hover:shadow-lg transition-all flex flex-col justify-between border border-surface-container">
-                <div className="flex flex-col">
-                  <div className="flex items-center justify-between mb-space-md">
-                    <span className="w-10 h-10 rounded-full bg-primary-container/20 text-primary flex items-center justify-center font-headline-sm text-headline-sm font-bold">
-                      02
-                    </span>
-                  </div>
-                  <h3 className="font-headline-sm text-base font-bold text-on-surface">AI Investigation</h3>
-                  <p className="font-body-md text-xs sm:text-sm text-tertiary mt-space-xs">
-                    Deep scan of operator schedule logs, flight radar, and passenger rights regulations.
-                  </p>
-                </div>
-                <div className="mt-space-lg pt-space-md flex items-center gap-2 text-primary font-label-md text-xs font-semibold">
-                  <span className="material-symbols-outlined text-[18px]">psychology</span>
-                  <span>Automated Policy Check</span>
-                </div>
-              </div>
-
-              {/* Step 3 */}
-              <div className="p-space-lg rounded-3xl bg-surface-container-lowest shadow-sm hover:shadow-lg transition-all flex flex-col justify-between border border-surface-container">
-                <div className="flex flex-col">
-                  <div className="flex items-center justify-between mb-space-md">
-                    <span className="w-10 h-10 rounded-full bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center font-headline-sm text-headline-sm font-bold">
-                      03
-                    </span>
-                  </div>
-                  <h3 className="font-headline-sm text-base font-bold text-on-surface">Dossier Generation</h3>
-                  <p className="font-body-md text-xs sm:text-sm text-tertiary mt-space-xs">
-                    Assembly of tickets, delay metrics, and undisputed claim documents.
-                  </p>
-                </div>
-                <div className="mt-space-lg pt-space-md flex items-center gap-2 text-secondary font-label-md text-xs font-semibold">
-                  <span className="material-symbols-outlined text-[18px]">folder_special</span>
-                  <span>Verified Dossier</span>
-                </div>
-              </div>
-
-              {/* Step 4 */}
-              <div className="p-space-lg rounded-3xl bg-surface-container-lowest shadow-sm hover:shadow-lg transition-all flex flex-col justify-between border border-surface-container">
-                <div className="flex flex-col">
-                  <div className="flex items-center justify-between mb-space-md">
-                    <span className="w-10 h-10 rounded-full bg-surface-container-highest text-on-surface flex items-center justify-center font-headline-sm text-headline-sm font-bold">
-                      04
-                    </span>
-                  </div>
-                  <h3 className="font-headline-sm text-base font-bold text-on-surface">Refund Decision</h3>
-                  <p className="font-body-md text-xs sm:text-sm text-tertiary mt-space-xs">
-                    Precise settlement calculation and direct transmission to operator portals.
-                  </p>
-                </div>
-                <div className="mt-space-lg pt-space-md flex items-center gap-2 text-primary font-label-md text-xs font-semibold">
-                  <span className="material-symbols-outlined text-[18px]">payments</span>
-                  <span>Fast Restitution</span>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Section 4: How Agent Travel Works (Simple 3-Step Section) */}
-          <section id="how-it-works" className="w-full bg-surface-container-low py-space-2xl">
-            <div className="max-w-7xl mx-auto px-space-md lg:px-margin flex flex-col gap-space-xl">
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-space-sm text-left">
-                <div className="flex flex-col gap-1 max-w-xl">
-                  <span className="font-label-sm text-xs uppercase tracking-widest text-primary font-bold">
-                    Effortless Resolution
-                  </span>
-                  <h2 className="font-display-lg text-2xl sm:text-3xl lg:text-display-lg text-on-surface tracking-tight font-bold">
-                    How Agent Travel Works
-                  </h2>
-                  <p className="font-body-lg text-sm sm:text-base text-tertiary">
-                    Turning painful carrier dispute forms into a seamless, autonomous financial turnaround.
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-space-lg text-left">
-                <div className="p-space-xl rounded-3xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md border border-surface-container">
-                  <div className="w-14 h-14 rounded-2xl bg-surface-container-low flex items-center justify-center text-primary">
-                    <span className="material-symbols-outlined text-[32px]">travel_explore</span>
-                  </div>
-                  <div className="flex flex-col gap-space-xs">
-                    <span className="font-label-sm text-[11px] text-tertiary uppercase font-bold tracking-wider">
-                      Step 01
-                    </span>
-                    <h3 className="font-headline-md text-headline-sm font-bold text-on-surface">Book your trip</h3>
-                    <p className="font-body-md text-xs sm:text-sm text-tertiary">
-                      Search and book flights, trains, or buses directly, or simply paste an existing booking reference (PNR / e-ticket).
-                    </p>
-                  </div>
-                </div>
-
-                <div className="p-space-xl rounded-3xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md border border-surface-container">
-                  <div className="w-14 h-14 rounded-2xl bg-surface-container-low flex items-center justify-center text-secondary">
-                    <span className="material-symbols-outlined text-[32px]">report_problem</span>
-                  </div>
-                  <div className="flex flex-col gap-space-xs">
-                    <span className="font-label-sm text-[11px] text-tertiary uppercase font-bold tracking-wider">
-                      Step 02
-                    </span>
-                    <h3 className="font-headline-md text-headline-sm font-bold text-on-surface">Request a refund</h3>
-                    <p className="font-body-md text-xs sm:text-sm text-tertiary">
-                      With one click, flag any cancellation, delay, schedule alteration, or disrupted itinerary for instant auditing.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="p-space-xl rounded-3xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md border border-surface-container">
-                  <div className="w-14 h-14 rounded-2xl bg-surface-container-low flex items-center justify-center text-primary-container">
-                    <span className="material-symbols-outlined text-[32px]">auto_fix_high</span>
-                  </div>
-                  <div className="flex flex-col gap-space-xs">
-                    <span className="font-label-sm text-[11px] text-tertiary uppercase font-bold tracking-wider">
-                      Step 03
-                    </span>
-                    <h3 className="font-headline-md text-headline-sm font-bold text-on-surface">AI investigates & recommends</h3>
-                    <p className="font-body-md text-xs sm:text-sm text-tertiary">
-                      Our neural engine audits operator tariffs, compiles claim evidence, and executes your full refund payout.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
           {/* Section 5: High-Impact Call To Action Banner */}
           <section className="max-w-7xl mx-auto px-space-md lg:px-margin py-space-2xl w-full">
             <div className="w-full rounded-3xl bg-inverse-surface text-inverse-on-surface p-space-xl md:p-space-2xl relative overflow-hidden flex flex-col items-center text-center shadow-xl border border-white/10">
@@ -666,7 +700,13 @@ export const LandingPage: React.FC = () => {
       <footer className="w-full bg-surface-container-lowest border-t border-surface-container-high mt-auto">
         <div className="max-w-7xl mx-auto px-space-md lg:px-margin py-space-xl flex flex-col md:flex-row items-center justify-between gap-space-lg text-left">
           <div className="flex flex-col gap-space-xs">
-            <div className="flex items-center gap-space-sm cursor-pointer" onClick={() => navigate('/')}>
+            <div
+              className="flex items-center gap-space-sm cursor-pointer"
+              onClick={() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                navigate('/');
+              }}
+            >
               <div className="w-6 h-6 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-xs">
                 AT
               </div>

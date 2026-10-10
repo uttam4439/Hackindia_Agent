@@ -65,7 +65,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
             <NavLink
               to="/"
               className="flex items-center gap-space-sm group"
-              onClick={onClose}
+              onClick={() => {
+                onClose?.();
+                window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+              }}
             >
               <div className="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container font-bold shadow-xs group-hover:scale-105 transition-transform">
                 <span className="material-symbols-outlined text-[20px]">smart_toy</span>
@@ -106,7 +109,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onClose }) => 
                   <NavLink
                     key={item.path}
                     to={item.path}
-                    onClick={onClose}
+                    onClick={() => {
+                      onClose?.();
+                      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                    }}
                     data-path={dataPath}
                     className={`flex items-center gap-space-sm px-space-md py-space-sm rounded-xl font-label-md text-label-md transition-all ${
                       isActive

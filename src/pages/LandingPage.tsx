@@ -144,10 +144,10 @@ export const LandingPage: React.FC = () => {
             <a
               href="#how-it-works"
               onClick={(e) => scrollToSection(e, 'how-it-works')}
-              className={`px-4 py-2 transition-all rounded-full text-xs cursor-pointer ${
+              className={`px-4 py-2 transition-all rounded-full text-sm font-bold cursor-pointer ${
                 activeSection === 'how-it-works'
-                  ? 'text-on-surface font-semibold bg-surface-container-high shadow-xs'
-                  : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/60'
+                  ? 'text-on-surface bg-surface-container-high shadow-xs'
+                  : 'text-on-surface hover:bg-surface-container/60'
               }`}
             >
               How It Works
@@ -155,10 +155,10 @@ export const LandingPage: React.FC = () => {
             <a
               href="#features"
               onClick={(e) => scrollToSection(e, 'features')}
-              className={`px-4 py-2 transition-all rounded-full text-xs cursor-pointer ${
+              className={`px-4 py-2 transition-all rounded-full text-sm font-bold cursor-pointer ${
                 activeSection === 'features'
-                  ? 'text-on-surface font-semibold bg-surface-container-high shadow-xs'
-                  : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/60'
+                  ? 'text-on-surface bg-surface-container-high shadow-xs'
+                  : 'text-on-surface hover:bg-surface-container/60'
               }`}
             >
               Features
@@ -166,10 +166,10 @@ export const LandingPage: React.FC = () => {
             <a
               href="#refund-engine"
               onClick={(e) => scrollToSection(e, 'refund-engine')}
-              className={`px-4 py-2 transition-all rounded-full text-xs cursor-pointer ${
+              className={`px-4 py-2 transition-all rounded-full text-sm font-bold cursor-pointer ${
                 activeSection === 'refund-engine'
-                  ? 'text-on-surface font-semibold bg-surface-container-high shadow-xs'
-                  : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/60'
+                  ? 'text-on-surface bg-surface-container-high shadow-xs'
+                  : 'text-on-surface hover:bg-surface-container/60'
               }`}
             >
               Refund Engine
@@ -378,14 +378,14 @@ export const LandingPage: React.FC = () => {
           <section id="how-it-works" className="w-full bg-surface-container-low py-space-2xl scroll-mt-20">
             <div className="max-w-7xl mx-auto px-space-md lg:px-margin flex flex-col gap-space-xl">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-space-sm text-left">
-                <div className="flex flex-col gap-1 max-w-xl">
-                  <span className="font-label-sm text-xs uppercase tracking-widest text-primary font-bold">
+                <div className="flex flex-col gap-1.5 max-w-xl">
+                  <span className="font-label-sm text-xs uppercase tracking-widest text-primary font-semibold">
                     Effortless Resolution
                   </span>
-                  <h2 className="font-display-lg text-2xl sm:text-3xl lg:text-display-lg text-on-surface tracking-tight font-bold">
+                  <h2 className="font-display-lg text-3xl sm:text-4xl lg:text-display-lg text-on-surface tracking-tight font-extrabold leading-tight">
                     How Agent Travel Works
                   </h2>
-                  <p className="font-body-lg text-sm sm:text-base text-tertiary">
+                  <p className="font-body-lg text-sm sm:text-base text-on-surface-variant font-normal leading-relaxed">
                     Turning painful carrier dispute forms into a seamless, autonomous financial turnaround.
                   </p>
                 </div>
@@ -397,11 +397,11 @@ export const LandingPage: React.FC = () => {
                     <span className="material-symbols-outlined text-[32px]">travel_explore</span>
                   </div>
                   <div className="flex flex-col gap-space-xs">
-                    <span className="font-label-sm text-[11px] text-tertiary uppercase font-bold tracking-wider">
+                    <span className="font-label-sm text-xs text-primary uppercase font-semibold tracking-wider">
                       Step 01
                     </span>
-                    <h3 className="font-headline-md text-headline-sm font-bold text-on-surface">Book your trip</h3>
-                    <p className="font-body-md text-xs sm:text-sm text-tertiary">
+                    <h3 className="font-headline-md text-lg sm:text-xl font-bold text-on-surface tracking-tight">Book your trip</h3>
+                    <p className="font-body-md text-xs sm:text-sm text-on-surface-variant font-normal leading-relaxed">
                       Search and book flights, trains, or buses directly, or simply paste an existing booking reference (PNR / e-ticket).
                     </p>
                   </div>
@@ -412,11 +412,11 @@ export const LandingPage: React.FC = () => {
                     <span className="material-symbols-outlined text-[32px]">report_problem</span>
                   </div>
                   <div className="flex flex-col gap-space-xs">
-                    <span className="font-label-sm text-[11px] text-tertiary uppercase font-bold tracking-wider">
+                    <span className="font-label-sm text-xs text-primary uppercase font-semibold tracking-wider">
                       Step 02
                     </span>
-                    <h3 className="font-headline-md text-headline-sm font-bold text-on-surface">Request a refund</h3>
-                    <p className="font-body-md text-xs sm:text-sm text-tertiary">
+                    <h3 className="font-headline-md text-lg sm:text-xl font-bold text-on-surface tracking-tight">Request a refund</h3>
+                    <p className="font-body-md text-xs sm:text-sm text-on-surface-variant font-normal leading-relaxed">
                       With one click, flag any cancellation, delay, schedule alteration, or disrupted itinerary for instant auditing.
                     </p>
                   </div>
@@ -427,11 +427,11 @@ export const LandingPage: React.FC = () => {
                     <span className="material-symbols-outlined text-[32px]">auto_fix_high</span>
                   </div>
                   <div className="flex flex-col gap-space-xs">
-                    <span className="font-label-sm text-[11px] text-tertiary uppercase font-bold tracking-wider">
+                    <span className="font-label-sm text-xs text-primary uppercase font-semibold tracking-wider">
                       Step 03
                     </span>
-                    <h3 className="font-headline-md text-headline-sm font-bold text-on-surface">AI investigates & recommends</h3>
-                    <p className="font-body-md text-xs sm:text-sm text-tertiary">
+                    <h3 className="font-headline-md text-lg sm:text-xl font-bold text-on-surface tracking-tight">AI investigates & recommends</h3>
+                    <p className="font-body-md text-xs sm:text-sm text-on-surface-variant font-normal leading-relaxed">
                       Our neural engine audits operator tariffs, compiles claim evidence, and executes your full refund payout.
                     </p>
                   </div>
@@ -443,13 +443,13 @@ export const LandingPage: React.FC = () => {
           {/* Section 3: The AI Refund Flow Architecture (4-stage Pipeline) */}
           <section id="features" className="max-w-7xl mx-auto px-space-md lg:px-margin py-space-2xl w-full scroll-mt-20">
             <div className="text-center max-w-3xl mx-auto mb-space-2xl flex flex-col gap-space-xs">
-              <span className="font-label-sm text-xs uppercase tracking-widest text-primary font-bold">
+              <span className="font-label-sm text-xs uppercase tracking-widest text-primary font-semibold">
                 Autonomous Protocol
               </span>
-              <h2 className="font-display-lg text-2xl sm:text-3xl lg:text-display-lg text-on-surface tracking-tight font-bold">
+              <h2 className="font-display-lg text-3xl sm:text-4xl lg:text-display-lg text-on-surface tracking-tight font-extrabold leading-tight">
                 The AI Refund Flow Architecture
               </h2>
-              <p className="font-body-lg text-sm sm:text-base text-tertiary">
+              <p className="font-body-lg text-sm sm:text-base text-on-surface-variant font-normal leading-relaxed max-w-2xl mx-auto">
                 An end-to-end automated pipeline connecting passenger itineraries directly to statutory compensation payouts.
               </p>
             </div>
@@ -460,12 +460,12 @@ export const LandingPage: React.FC = () => {
               <div className="p-space-lg rounded-3xl bg-surface-container-lowest shadow-sm hover:shadow-lg transition-all flex flex-col justify-between border border-surface-container">
                 <div className="flex flex-col">
                   <div className="flex items-center justify-between mb-space-md">
-                    <span className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center font-headline-sm text-headline-sm font-bold text-on-surface">
+                    <span className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center font-headline-sm text-headline-sm font-semibold text-on-surface">
                       01
                     </span>
                   </div>
-                  <h3 className="font-headline-sm text-base font-bold text-on-surface">Booking Sync</h3>
-                  <p className="font-body-md text-xs sm:text-sm text-tertiary mt-space-xs">
+                  <h3 className="font-headline-sm text-lg font-bold text-on-surface tracking-tight">Booking Sync</h3>
+                  <p className="font-body-md text-xs sm:text-sm text-on-surface-variant font-normal mt-space-xs leading-relaxed">
                     Trip search query, e-ticket forward, or instant booking reference lookup.
                   </p>
                 </div>
@@ -479,12 +479,12 @@ export const LandingPage: React.FC = () => {
               <div className="p-space-lg rounded-3xl bg-surface-container-lowest shadow-sm hover:shadow-lg transition-all flex flex-col justify-between border border-surface-container">
                 <div className="flex flex-col">
                   <div className="flex items-center justify-between mb-space-md">
-                    <span className="w-10 h-10 rounded-full bg-primary-container/20 text-primary flex items-center justify-center font-headline-sm text-headline-sm font-bold">
+                    <span className="w-10 h-10 rounded-full bg-primary-container/20 text-primary flex items-center justify-center font-headline-sm text-headline-sm font-semibold">
                       02
                     </span>
                   </div>
-                  <h3 className="font-headline-sm text-base font-bold text-on-surface">AI Investigation</h3>
-                  <p className="font-body-md text-xs sm:text-sm text-tertiary mt-space-xs">
+                  <h3 className="font-headline-sm text-lg font-bold text-on-surface tracking-tight">AI Investigation</h3>
+                  <p className="font-body-md text-xs sm:text-sm text-on-surface-variant font-normal mt-space-xs leading-relaxed">
                     Deep scan of operator schedule logs, flight radar, and passenger rights regulations.
                   </p>
                 </div>
@@ -498,12 +498,12 @@ export const LandingPage: React.FC = () => {
               <div className="p-space-lg rounded-3xl bg-surface-container-lowest shadow-sm hover:shadow-lg transition-all flex flex-col justify-between border border-surface-container">
                 <div className="flex flex-col">
                   <div className="flex items-center justify-between mb-space-md">
-                    <span className="w-10 h-10 rounded-full bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center font-headline-sm text-headline-sm font-bold">
+                    <span className="w-10 h-10 rounded-full bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center font-headline-sm text-headline-sm font-semibold">
                       03
                     </span>
                   </div>
-                  <h3 className="font-headline-sm text-base font-bold text-on-surface">Dossier Generation</h3>
-                  <p className="font-body-md text-xs sm:text-sm text-tertiary mt-space-xs">
+                  <h3 className="font-headline-sm text-lg font-bold text-on-surface tracking-tight">Dossier Generation</h3>
+                  <p className="font-body-md text-xs sm:text-sm text-on-surface-variant font-normal mt-space-xs leading-relaxed">
                     Assembly of tickets, delay metrics, and undisputed claim documents.
                   </p>
                 </div>
@@ -517,12 +517,12 @@ export const LandingPage: React.FC = () => {
               <div className="p-space-lg rounded-3xl bg-surface-container-lowest shadow-sm hover:shadow-lg transition-all flex flex-col justify-between border border-surface-container">
                 <div className="flex flex-col">
                   <div className="flex items-center justify-between mb-space-md">
-                    <span className="w-10 h-10 rounded-full bg-surface-container-highest text-on-surface flex items-center justify-center font-headline-sm text-headline-sm font-bold">
+                    <span className="w-10 h-10 rounded-full bg-surface-container-highest text-on-surface flex items-center justify-center font-headline-sm text-headline-sm font-semibold">
                       04
                     </span>
                   </div>
-                  <h3 className="font-headline-sm text-base font-bold text-on-surface">Refund Decision</h3>
-                  <p className="font-body-md text-xs sm:text-sm text-tertiary mt-space-xs">
+                  <h3 className="font-headline-sm text-lg font-bold text-on-surface tracking-tight">Refund Decision</h3>
+                  <p className="font-body-md text-xs sm:text-sm text-on-surface-variant font-normal mt-space-xs leading-relaxed">
                     Precise settlement calculation and direct transmission to operator portals.
                   </p>
                 </div>
@@ -539,14 +539,14 @@ export const LandingPage: React.FC = () => {
             <div className="max-w-7xl mx-auto px-space-md lg:px-margin flex flex-col gap-space-lg">
               {/* Section Header */}
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-space-sm">
-                <div className="flex flex-col gap-1 max-w-2xl text-left">
-                  <span className="font-label-sm text-xs uppercase tracking-widest text-primary font-bold">
+                <div className="flex flex-col gap-1.5 max-w-2xl text-left">
+                  <span className="font-label-sm text-xs uppercase tracking-widest text-primary font-semibold">
                     Real-time Audit Engine
                   </span>
-                  <h2 className="font-display-lg text-2xl sm:text-3xl lg:text-display-lg text-on-surface tracking-tight font-bold">
+                  <h2 className="font-display-lg text-3xl sm:text-4xl lg:text-display-lg text-on-surface tracking-tight font-extrabold leading-tight">
                     AI Refund Investigation System
                   </h2>
-                  <p className="font-body-md text-sm sm:text-body-md text-tertiary">
+                  <p className="font-body-md text-sm sm:text-base text-on-surface-variant font-normal leading-relaxed">
                     Automated verification and policy checking parsing active disruption claims.
                   </p>
                 </div>
@@ -569,21 +569,21 @@ export const LandingPage: React.FC = () => {
                         </div>
                         <div className="flex flex-col">
                           <div className="flex items-center gap-2">
-                            <span className="font-headline-sm text-headline-sm font-bold tracking-tight text-white">
+                            <span className="font-headline-sm text-lg font-bold tracking-tight text-white">
                               Flight AI-805
                             </span>
-                            <span className="px-2.5 py-0.5 rounded-full bg-red-950/80 text-red-300 font-label-sm text-[11px] font-bold tracking-wider">
+                            <span className="px-2.5 py-0.5 rounded-full bg-red-950/80 text-red-200 border border-red-500/30 font-label-sm text-[11px] font-semibold tracking-wider">
                               CANCELLED
                             </span>
                           </div>
-                          <span className="font-body-sm text-xs text-tertiary-fixed-dim">
+                          <span className="font-body-sm text-xs text-white/85 font-normal">
                             Delhi (DEL) → Mumbai (BOM)
                           </span>
                         </div>
                       </div>
                       <div className="flex flex-col text-right">
-                        <span className="font-label-sm text-[11px] text-tertiary-fixed-dim">Disruption Notice</span>
-                        <span className="font-body-sm text-xs text-white font-medium">Under 24h Threshold</span>
+                        <span className="font-label-sm text-[11px] text-white/70 uppercase tracking-wider font-semibold">Disruption Notice</span>
+                        <span className="font-body-sm text-xs text-white font-semibold">Under 24h Threshold</span>
                       </div>
                     </div>
 
@@ -591,26 +591,26 @@ export const LandingPage: React.FC = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
                       <div className="p-space-md rounded-2xl bg-white/[0.04] backdrop-blur-sm flex flex-col gap-2 border border-white/5">
                         <div className="flex items-center justify-between">
-                          <span className="font-label-sm text-[11px] text-tertiary-fixed-dim uppercase tracking-wider font-semibold">
+                          <span className="font-label-sm text-[11px] text-primary-fixed uppercase tracking-wider font-semibold">
                             Disruption Audit
                           </span>
                           <span className="material-symbols-outlined text-primary-fixed text-[18px]">verified</span>
                         </div>
-                        <span className="font-headline-sm text-base font-bold text-white">Clear Conditions</span>
-                        <p className="font-body-sm text-xs text-tertiary-fixed-dim">
+                        <span className="font-headline-sm text-base sm:text-lg font-bold text-white tracking-tight">Clear Conditions</span>
+                        <p className="font-body-sm text-xs sm:text-sm text-white/85 font-normal leading-relaxed">
                           Weather defense verified clear; carrier operational liability established.
                         </p>
                       </div>
 
                       <div className="p-space-md rounded-2xl bg-white/[0.04] backdrop-blur-sm flex flex-col gap-2 border border-white/5">
                         <div className="flex items-center justify-between">
-                          <span className="font-label-sm text-[11px] text-tertiary-fixed-dim uppercase tracking-wider font-semibold">
+                          <span className="font-label-sm text-[11px] text-primary-fixed uppercase tracking-wider font-semibold">
                             Regulation Rule
                           </span>
                           <span className="material-symbols-outlined text-primary-fixed text-[18px]">gavel</span>
                         </div>
-                        <span className="font-headline-sm text-base font-bold text-white">DGCA CAR Sec 3</span>
-                        <p className="font-body-sm text-xs text-tertiary-fixed-dim">
+                        <span className="font-headline-sm text-base sm:text-lg font-bold text-white tracking-tight">DGCA CAR Sec 3</span>
+                        <p className="font-body-sm text-xs sm:text-sm text-white/85 font-normal leading-relaxed">
                           Mandates 100% full ticket refund without cancellation penalty.
                         </p>
                       </div>
@@ -618,11 +618,11 @@ export const LandingPage: React.FC = () => {
 
                     {/* Verified Status Bar */}
                     <div className="p-space-md rounded-2xl bg-white/[0.04] flex items-center justify-between text-tertiary-fixed-dim border border-white/5">
-                      <div className="flex items-center gap-2 text-primary-fixed font-medium text-xs sm:text-sm">
-                        <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                      <div className="flex items-center gap-2 text-white font-semibold text-xs sm:text-sm">
+                        <span className="material-symbols-outlined text-[18px] text-primary-fixed">check_circle</span>
                         <span>Passenger ticket and payment receipts verified</span>
                       </div>
-                      <span className="font-label-sm text-xs text-tertiary-fixed-dim font-mono">Dossier Ready</span>
+                      <span className="font-label-sm text-xs text-primary-fixed font-mono font-semibold uppercase tracking-wider">Dossier Ready</span>
                     </div>
                   </div>
 
@@ -630,40 +630,40 @@ export const LandingPage: React.FC = () => {
                   <div className="lg:col-span-5 flex flex-col justify-between p-space-lg rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-xl gap-space-md border border-white/10 text-left">
                     <div className="flex flex-col gap-space-sm">
                       <div className="flex items-center justify-between">
-                        <span className="font-label-sm text-xs uppercase tracking-widest text-primary-fixed font-bold">
+                        <span className="font-label-sm text-xs uppercase tracking-widest text-primary-fixed font-semibold">
                           Investigation Verdict
                         </span>
-                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-container/20 text-primary-fixed font-code-sm text-xs font-bold">
+                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-container/20 text-primary-fixed font-code-sm text-xs font-semibold">
                           <span className="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
                           <span>99.4% Confidence</span>
                         </div>
                       </div>
 
                       <div className="flex flex-col mt-space-sm">
-                        <span className="font-body-sm text-xs text-tertiary-fixed-dim">Verified Restitution Payable:</span>
-                        <div className="font-display-lg text-3xl sm:text-display-lg font-bold text-white tracking-tight flex items-baseline gap-2">
+                        <span className="font-body-sm text-xs text-white/80 font-medium uppercase tracking-wider">Verified Restitution Payable:</span>
+                        <div className="font-display-lg text-3xl sm:text-4xl lg:text-display-lg font-black text-white tracking-tight flex items-baseline gap-2">
                           <span>₹9,450</span>
-                          <span className="font-headline-sm text-sm text-tertiary-fixed font-normal">($120 USD)</span>
+                          <span className="font-headline-sm text-sm text-white/70 font-semibold">($120 USD)</span>
                         </div>
-                        <span className="font-label-sm text-xs text-primary-fixed font-medium mt-1">
+                        <span className="font-label-sm text-xs text-primary-fixed font-semibold mt-1">
                           Includes full unused ticket refund & statutory tax relief
                         </span>
                       </div>
 
                       <div className="flex flex-col gap-2.5 mt-space-md pt-space-xs">
-                        <div className="flex items-center gap-2.5 text-inverse-on-surface font-body-sm text-xs sm:text-sm">
+                        <div className="flex items-center gap-2.5 text-white font-medium text-xs sm:text-sm">
                           <span className="w-5 h-5 rounded-full bg-primary-container/20 text-primary-fixed flex items-center justify-center shrink-0">
                             <span className="material-symbols-outlined text-[14px]">check</span>
                           </span>
                           <span>Flight cancellation confirmed</span>
                         </div>
-                        <div className="flex items-center gap-2.5 text-inverse-on-surface font-body-sm text-xs sm:text-sm">
+                        <div className="flex items-center gap-2.5 text-white font-medium text-xs sm:text-sm">
                           <span className="w-5 h-5 rounded-full bg-primary-container/20 text-primary-fixed flex items-center justify-center shrink-0">
                             <span className="material-symbols-outlined text-[14px]">check</span>
                           </span>
                           <span>Eligible for full fare refund</span>
                         </div>
-                        <div className="flex items-center gap-2.5 text-inverse-on-surface font-body-sm text-xs sm:text-sm">
+                        <div className="flex items-center gap-2.5 text-white font-medium text-xs sm:text-sm">
                           <span className="w-5 h-5 rounded-full bg-primary-container/20 text-primary-fixed flex items-center justify-center shrink-0">
                             <span className="material-symbols-outlined text-[14px]">check</span>
                           </span>
@@ -674,7 +674,7 @@ export const LandingPage: React.FC = () => {
 
                     <button
                       onClick={() => navigate('/refund-investigations/AT-9842')}
-                      className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-white text-on-surface font-headline-sm text-sm font-semibold hover:bg-surface-container-high transition-all shadow-md cursor-pointer mt-4"
+                      className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-white text-on-surface font-headline-sm text-sm sm:text-base font-bold hover:bg-white/90 transition-all shadow-md cursor-pointer mt-4"
                     >
                       <span className="material-symbols-outlined text-[18px] text-primary">verified</span>
                       <span>Inspect Refund Details</span>

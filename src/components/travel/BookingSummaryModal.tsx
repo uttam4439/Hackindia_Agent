@@ -39,49 +39,62 @@ export const BookingSummaryModal: React.FC = () => {
     // Reuse sessionBookingId across payment retries in the same modal session
     const bookingId = sessionBookingId || `BK-${Date.now().toString().slice(-6)}`;
 
+    const storedToken =
+      sessionStorage.getItem('agent_travel_token') || localStorage.getItem('agent_travel_token');
+    const storedUserRaw =
+      sessionStorage.getItem('agent_travel_user') || localStorage.getItem('agent_travel_user');
+    let currentUser: any = null;
+    if (storedUserRaw) {
+      try {
+        currentUser = JSON.parse(storedUserRaw);
+      } catch {}
+    }
+
     try {
       // 1. Request backend to create authoritative Razorpay Order
       let orderData: any = null;
       try {
         const orderRes = await fetch('/api/payment/create-order', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(storedToken ? { Authorization: `Bearer ${storedToken}` } : {}),
+          },
           body: JSON.stringify({
             bookingId,
             tripDetails: summaryModalTrip,
+            travelerDetails: {
+              name: currentUser?.name || 'Aarav Sharma',
+              email: currentUser?.email || 'aarav.sharma@example.com',
+              contact: currentUser?.contact || '9876543210',
+              userId: currentUser?.id || 'usr_traveler_local',
+            },
           }),
         });
-        if (orderRes.ok) {
-          orderData = await orderRes.json();
+
+        const resJson = await orderRes.json().catch(() => null);
+
+        if (!orderRes.ok || !resJson?.success) {
+          const errMsg =
+            resJson?.error ||
+            resJson?.message ||
+            `Backend rejected booking order creation (HTTP ${orderRes.status}).`;
+          setIsSubmitting(false);
+          setPaymentError(errMsg);
+          return;
         }
-      } catch (err) {
-        console.warn('Direct proxy failed, trying localhost:5001:', err);
+
+        orderData = resJson;
+      } catch (err: any) {
+        setIsSubmitting(false);
+        setPaymentError('Network connection to booking server failed: ' + err.message);
+        return;
       }
 
       if (!orderData) {
-        try {
-          const directRes = await fetch('http://localhost:5001/api/payment/create-order', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              bookingId,
-              tripDetails: summaryModalTrip,
-            }),
-          });
-          if (directRes.ok) {
-            orderData = await directRes.json();
-          }
-        } catch {}
-      }
-
-      // Safe fallback test parameters if backend is launching
-      if (!orderData) {
-        orderData = {
-          orderId: null,
-          amount: Math.round((summaryModalTrip.fareAmount || 5000) * 100),
-          currency: 'INR',
-          keyId: 'rzp_test_Tjktt6Bs0TXxDk',
-        };
+        setIsSubmitting(false);
+        setPaymentError('Invalid response from booking order service.');
+        return;
       }
 
       // 2. Open Razorpay Standard Checkout
@@ -108,7 +121,10 @@ export const BookingSummaryModal: React.FC = () => {
               try {
                 const verifyRes = await fetch('/api/payment/verify', {
                   method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
+                  headers: {
+                    'Content-Type': 'application/json',
+                    ...(storedToken ? { Authorization: `Bearer ${storedToken}` } : {}),
+                  },
                   body: JSON.stringify({
                     bookingId,
                     razorpay_order_id: response.razorpay_order_id,
@@ -116,34 +132,14 @@ export const BookingSummaryModal: React.FC = () => {
                     razorpay_signature: response.razorpay_signature,
                   }),
                 });
-                const verifyJson = await verifyRes.json();
-                if (verifyRes.ok && verifyJson.success) {
+                const verifyJson = await verifyRes.json().catch(() => null);
+                if (verifyRes.ok && verifyJson?.success) {
                   verifySuccessful = true;
                 } else {
-                  verifyErrorMessage = verifyJson.error || 'Server signature verification rejected';
+                  verifyErrorMessage = verifyJson?.error || 'Server signature verification rejected';
                 }
               } catch (verifyErr: any) {
-                // Try direct port fallback if Vite proxy had a network hiccup
-                try {
-                  const directVerify = await fetch('http://localhost:5001/api/payment/verify', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      bookingId,
-                      razorpay_order_id: response.razorpay_order_id,
-                      razorpay_payment_id: response.razorpay_payment_id,
-                      razorpay_signature: response.razorpay_signature,
-                    }),
-                  });
-                  const directJson = await directVerify.json();
-                  if (directVerify.ok && directJson.success) {
-                    verifySuccessful = true;
-                  } else {
-                    verifyErrorMessage = directJson.error || 'Server signature verification rejected';
-                  }
-                } catch (netErr: any) {
-                  verifyErrorMessage = 'Unable to reach backend verification server: ' + netErr.message;
-                }
+                verifyErrorMessage = 'Unable to reach backend verification server: ' + verifyErr.message;
               }
 
               if (!verifySuccessful) {
@@ -151,6 +147,7 @@ export const BookingSummaryModal: React.FC = () => {
               }
 
               confirmBooking({
+                bookingId,
                 razorpayOrderId: response.razorpay_order_id,
                 razorpayPaymentId: response.razorpay_payment_id,
                 razorpaySignature: response.razorpay_signature,
@@ -170,9 +167,9 @@ export const BookingSummaryModal: React.FC = () => {
             },
           },
           prefill: {
-            name: 'Aarav Sharma',
-            email: 'aarav.sharma@example.com',
-            contact: '9876543210',
+            name: currentUser?.name || 'Aarav Sharma',
+            email: currentUser?.email || 'aarav.sharma@example.com',
+            contact: currentUser?.contact || '9876543210',
           },
           theme: {
             color: '#0d6b63',

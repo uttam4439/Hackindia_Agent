@@ -6,58 +6,93 @@
 
 import { describe, it, beforeEach, after } from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
+import { EventEmitter } from 'node:events';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
 
+import { createDatabase, safeCleanup } from '../awsConfig.js';
+import {
+  createRefundService,
+  REFUND_STATUSES,
+} from '../refundService.js';
+import { createRefundRouter } from '../refundRoutes.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const testDataFile = path.join(__dirname, '../data/store.refund-test.json');
-process.env.DATA_STORE_PATH = testDataFile;
 
-import { db } from '../awsConfig.js';
-import {
+// Dedicated, isolated database and service instances for Refund Tests
+const db = createDatabase({ isTest: true, testDataFile });
+const refundService = createRefundService(db);
+const {
   submitRefund,
   getRefundById,
   processReviewerDecision,
   listRefunds,
   saveDraftNote,
-  REFUND_STATUSES,
-} from '../refundService.js';
-import refundRouter from '../refundRoutes.js';
+} = refundService;
+const refundRouter = createRefundRouter(refundService);
 
-beforeEach(() => {
-  db._reset();
+// In-process invocation helper to test Express routes without binding TCP ports (sandbox safe)
+const invokeRefundRoute = (app, method, url, body = null) => {
+  return new Promise((resolve, reject) => {
+    const req = new EventEmitter();
+    req.method = method;
+    req.url = url;
+    req.headers = { 'content-type': 'application/json' };
+    if (body) req.body = body;
+
+    const res = new EventEmitter();
+    res.statusCode = 200;
+    res.headers = {};
+    res.bodyData = null;
+    res.setHeader = (k, v) => { res.headers[k.toLowerCase()] = v; };
+    res.getHeader = (k) => res.headers[k.toLowerCase()];
+    res.status = (code) => { res.statusCode = code; return res; };
+    res.json = (data) => {
+      res.bodyData = data;
+      resolve({ status: res.statusCode, body: data });
+      return res;
+    };
+    res.send = (data) => {
+      res.bodyData = data;
+      resolve({ status: res.statusCode, body: data });
+      return res;
+    };
+    res.end = () => {
+      resolve({ status: res.statusCode, body: res.bodyData });
+    };
+
+    app.handle(req, res, (err) => {
+      if (err) reject(err);
+    });
+  });
+};
+
+beforeEach(async () => {
+  await db._reset();
 });
 
 after(() => {
-  try {
-    if (fs.existsSync(testDataFile)) {
-      fs.unlinkSync(testDataFile);
-    }
-    const tmp = `${testDataFile}.tmp`;
-    if (fs.existsSync(tmp)) {
-      fs.unlinkSync(tmp);
-    }
-  } catch {}
+  safeCleanup(testDataFile);
 });
 
 describe('Refund Backend & Persistence Tests (Person 3)', () => {
-  it('1. Input Validation: Rejects missing bookingId or reason', () => {
-    const noBooking = submitRefund({ reason: 'Flight cancelled' });
+  it('1. Input Validation: Rejects missing bookingId or reason', async () => {
+    const noBooking = await submitRefund({ reason: 'Flight cancelled' });
     assert.equal(noBooking.success, false);
     assert.equal(noBooking.statusCode, 400);
     assert.match(noBooking.error, /bookingId is required/);
 
-    const noReason = submitRefund({ bookingId: 'BK-101' });
+    const noReason = await submitRefund({ bookingId: 'BK-101' });
     assert.equal(noReason.success, false);
     assert.equal(noReason.statusCode, 400);
     assert.match(noReason.error, /reason is required/);
   });
 
-  it('2. Booking Existence: Rejects non-existent booking ID', () => {
-    const res = submitRefund({
+  it('2. Booking Existence: Rejects non-existent booking ID', async () => {
+    const res = await submitRefund({
       bookingId: 'BK-NONEXISTENT',
       reason: 'Flight delayed over 4 hours',
     });
@@ -66,15 +101,15 @@ describe('Refund Backend & Persistence Tests (Person 3)', () => {
     assert.match(res.error, /not found/i);
   });
 
-  it('3. Payment Eligibility: Rejects bookings that are not in PAID status', () => {
+  it('3. Payment Eligibility: Rejects bookings that are not in PAID status', async () => {
     // 1. Pending payment booking
-    db.saveBooking({
+    await db.saveBooking({
       id: 'BK-PENDING-1',
       amount: 4500,
       paymentStatus: 'PENDING',
     });
 
-    const pendingRes = submitRefund({
+    const pendingRes = await submitRefund({
       bookingId: 'BK-PENDING-1',
       reason: 'Flight cancelled by carrier',
     });
@@ -83,13 +118,13 @@ describe('Refund Backend & Persistence Tests (Person 3)', () => {
     assert.match(pendingRes.error, /must be PAID/);
 
     // 2. Failed payment booking
-    db.saveBooking({
+    await db.saveBooking({
       id: 'BK-FAILED-1',
       amount: 3200,
       paymentStatus: 'FAILED',
     });
 
-    const failedRes = submitRefund({
+    const failedRes = await submitRefund({
       bookingId: 'BK-FAILED-1',
       reason: 'Trip cancelled',
     });
@@ -98,9 +133,9 @@ describe('Refund Backend & Persistence Tests (Person 3)', () => {
     assert.match(failedRes.error, /must be PAID/);
   });
 
-  it('4. Amount Validation: Validates claim amounts against eligible paid amounts', () => {
+  it('4. Amount Validation: Validates claim amounts against eligible paid amounts', async () => {
     const bookingId = 'BK-AMT-1';
-    db.saveBooking({
+    await db.saveBooking({
       id: bookingId,
       amount: 5000,
       paymentStatus: 'PAID',
@@ -108,7 +143,7 @@ describe('Refund Backend & Persistence Tests (Person 3)', () => {
     });
 
     // Zero or negative claim amount
-    const zeroRes = submitRefund({
+    const zeroRes = await submitRefund({
       bookingId,
       reason: 'Cancellation',
       claimAmount: 0,
@@ -118,7 +153,7 @@ describe('Refund Backend & Persistence Tests (Person 3)', () => {
     assert.match(zeroRes.error, /greater than 0/);
 
     // Excessive claim amount exceeding paid amount (₹6000 > ₹5000)
-    const excessRes = submitRefund({
+    const excessRes = await submitRefund({
       bookingId,
       reason: 'Cancellation',
       claimAmount: 6000,
@@ -128,7 +163,7 @@ describe('Refund Backend & Persistence Tests (Person 3)', () => {
     assert.match(excessRes.error, /cannot exceed/);
 
     // Valid partial claim amount (₹3000 <= ₹5000)
-    const partialRes = submitRefund({
+    const partialRes = await submitRefund({
       bookingId,
       reason: 'Cancellation of return leg only',
       claimAmount: 3000,
@@ -139,9 +174,9 @@ describe('Refund Backend & Persistence Tests (Person 3)', () => {
     assert.equal(partialRes.refund.eligiblePaidAmount, 5000);
   });
 
-  it('5. Duplicate Prevention: Prevents multiple active refund requests for the same booking', () => {
+  it('5. Duplicate Prevention: Prevents multiple active refund requests for the same booking', async () => {
     const bookingId = 'BK-DUP-CHECK-1';
-    db.saveBooking({
+    await db.saveBooking({
       id: bookingId,
       amount: 4200,
       paymentStatus: 'PAID',
@@ -149,7 +184,7 @@ describe('Refund Backend & Persistence Tests (Person 3)', () => {
     });
 
     // 1st submission succeeds
-    const firstRes = submitRefund({
+    const firstRes = await submitRefund({
       bookingId,
       reason: 'Train cancelled by Indian Railways',
     });
@@ -158,7 +193,7 @@ describe('Refund Backend & Persistence Tests (Person 3)', () => {
     assert.ok(firstRes.refund.id);
 
     // 2nd submission for same booking must be rejected with 409 Conflict
-    const secondRes = submitRefund({
+    const secondRes = await submitRefund({
       bookingId,
       reason: 'Duplicate claim attempt',
     });
@@ -168,9 +203,9 @@ describe('Refund Backend & Persistence Tests (Person 3)', () => {
     assert.equal(secondRes.refund.id, firstRes.refund.id);
   });
 
-  it('6. Persistence & Reconciliation: Persists case in store and links to booking', () => {
+  it('6. Persistence & Reconciliation: Persists case in store and links to booking', async () => {
     const bookingId = 'BK-PERSIST-1';
-    db.saveBooking({
+    await db.saveBooking({
       id: bookingId,
       amount: 7800,
       currency: 'INR',
@@ -187,7 +222,7 @@ describe('Refund Backend & Persistence Tests (Person 3)', () => {
       },
     });
 
-    const submitRes = submitRefund({
+    const submitRes = await submitRefund({
       bookingId,
       reason: 'Flight delayed > 5 hours without accommodation',
       evidence: ['flight_delay_sms.png'],
@@ -197,7 +232,7 @@ describe('Refund Backend & Persistence Tests (Person 3)', () => {
     const refundId = submitRes.refund.id;
 
     // Verify stored in DB
-    const retrieved = db.getRefund(refundId);
+    const retrieved = await db.getRefund(refundId);
     assert.ok(retrieved);
     assert.equal(retrieved.id, refundId);
     assert.equal(retrieved.bookingId, bookingId);
@@ -206,49 +241,51 @@ describe('Refund Backend & Persistence Tests (Person 3)', () => {
     assert.equal(retrieved.evidence[0], 'flight_delay_sms.png');
 
     // Verify booking is reconciled with refund case ID and status
-    const updatedBooking = db.getBooking(bookingId);
+    const updatedBooking = await db.getBooking(bookingId);
     assert.equal(updatedBooking.refundCaseId, refundId);
     assert.equal(updatedBooking.refundStatus, 'Under Investigation');
   });
 
-  it('7. GET /api/refunds/:id: Retrieves refund by ID, caseRef, or booking ID', () => {
+  it('7. GET /api/refunds/:id: Retrieves refund by ID, caseRef, or booking ID', async () => {
     const bookingId = 'BK-LOOKUP-1';
-    db.saveBooking({ id: bookingId, amount: 2500, paymentStatus: 'PAID' });
-    const created = submitRefund({ bookingId, reason: 'Carrier cancelled' }).refund;
+    await db.saveBooking({ id: bookingId, amount: 2500, paymentStatus: 'PAID' });
+    const createdResult = await submitRefund({ bookingId, reason: 'Carrier cancelled' });
+    const created = createdResult.refund;
 
     // By ID
-    const byId = getRefundById(created.id);
+    const byId = await getRefundById(created.id);
     assert.equal(byId.success, true);
     assert.equal(byId.refund.id, created.id);
 
     // By caseRef (with #)
-    const byRef = getRefundById(created.caseRef);
+    const byRef = await getRefundById(created.caseRef);
     assert.equal(byRef.success, true);
     assert.equal(byRef.refund.id, created.id);
 
     // By booking ID
-    const byBooking = getRefundById(bookingId);
+    const byBooking = await getRefundById(bookingId);
     assert.equal(byBooking.success, true);
     assert.equal(byBooking.refund.id, created.id);
 
     // Non-existent ID returns 404
-    const notFound = getRefundById('RF-UNKNOWN');
+    const notFound = await getRefundById('RF-UNKNOWN');
     assert.equal(notFound.success, false);
     assert.equal(notFound.statusCode, 404);
   });
 
-  it('8. Reviewer Decision: Coordinates with Person 4 (Approve / Reject / Docs / Escalate)', () => {
+  it('8. Reviewer Decision: Coordinates with Person 4 (Approve / Reject / Docs / Escalate)', async () => {
     const bookingId = 'BK-DECISION-1';
-    db.saveBooking({ id: bookingId, amount: 6200, paymentStatus: 'PAID' });
-    const refund = submitRefund({ bookingId, reason: 'Medical emergency' }).refund;
+    await db.saveBooking({ id: bookingId, amount: 6200, paymentStatus: 'PAID' });
+    const refundResult = await submitRefund({ bookingId, reason: 'Medical emergency' });
+    const refund = refundResult.refund;
 
     // Missing comment / note rejected
-    const noNote = processReviewerDecision(refund.id, { decision: 'APPROVE' });
+    const noNote = await processReviewerDecision(refund.id, { decision: 'APPROVE' });
     assert.equal(noNote.success, false);
     assert.equal(noNote.statusCode, 400);
 
     // Request additional info / carrier evidence
-    const docsRes = processReviewerDecision(refund.id, {
+    const docsRes = await processReviewerDecision(refund.id, {
       decision: 'more_docs',
       note: 'Need hospital admission certificate copy',
       reviewerId: 'Lead Auditor Julian',
@@ -258,7 +295,7 @@ describe('Refund Backend & Persistence Tests (Person 3)', () => {
     assert.equal(docsRes.refund.reviewerComment, 'Need hospital admission certificate copy');
 
     // Escalate to senior desk
-    const escRes = processReviewerDecision(refund.id, {
+    const escRes = await processReviewerDecision(refund.id, {
       decision: 'ESCALATE',
       note: 'Complex policy question, escalating',
       reviewerId: 'Auditor Maya',
@@ -267,7 +304,7 @@ describe('Refund Backend & Persistence Tests (Person 3)', () => {
     assert.equal(escRes.refund.decisionStatus, REFUND_STATUSES.UNDER_HUMAN_REVIEW);
 
     // Approve refund
-    const approveRes = processReviewerDecision(refund.id, {
+    const approveRes = await processReviewerDecision(refund.id, {
       decision: 'eligible',
       note: 'Medical certificate verified and approved under exceptional policy waiver',
       reviewerId: 'Senior Auditor Julian Hayes',
@@ -277,24 +314,25 @@ describe('Refund Backend & Persistence Tests (Person 3)', () => {
     assert.equal(approveRes.refund.approvedAmount, 6200);
 
     // Check booking updated
-    const booking = db.getBooking(bookingId);
+    const booking = await db.getBooking(bookingId);
     assert.equal(booking.refundStatus, 'Full Refund Eligible');
   });
 
-  it('9. Invalid Status Transitions: Rejects altering finalized or approved refunds', () => {
+  it('9. Invalid Status Transitions: Rejects altering finalized or approved refunds', async () => {
     const bookingId = 'BK-FINAL-1';
-    db.saveBooking({ id: bookingId, amount: 3500, paymentStatus: 'PAID' });
-    const refund = submitRefund({ bookingId, reason: 'Flight cancelled' }).refund;
+    await db.saveBooking({ id: bookingId, amount: 3500, paymentStatus: 'PAID' });
+    const refundResult = await submitRefund({ bookingId, reason: 'Flight cancelled' });
+    const refund = refundResult.refund;
 
     // Approve the refund
-    const appRes = processReviewerDecision(refund.id, {
+    const appRes = await processReviewerDecision(refund.id, {
       decision: 'APPROVE',
       note: 'Approved',
     });
     assert.equal(appRes.success, true);
 
     // Attempting to re-approve or reject an already approved refund must be rejected
-    const alterRes = processReviewerDecision(refund.id, {
+    const alterRes = await processReviewerDecision(refund.id, {
       decision: 'REJECT',
       note: 'Attempting to reject after approval',
     });
@@ -303,68 +341,45 @@ describe('Refund Backend & Persistence Tests (Person 3)', () => {
     assert.match(alterRes.error, /Cannot alter decision/);
   });
 
-  it('10. Express Router End-to-End: Verifies HTTP routing via test server instance', async () => {
+  it('10. Express Router End-to-End: Verifies HTTP routing via in-process Express handler', async () => {
     const app = express();
     app.use(express.json());
     app.use('/api/refunds', refundRouter);
 
-    db.saveBooking({ id: 'BK-HTTP-1', amount: 5500, paymentStatus: 'PAID' });
+    await db.saveBooking({ id: 'BK-HTTP-1', amount: 5500, paymentStatus: 'PAID' });
 
-    // Start ephemeral server
-    const server = await new Promise((resolve) => {
-      const s = app.listen(0, () => resolve(s));
+    // 1. Submit POST /api/refunds/submit
+    const submitRes = await invokeRefundRoute(app, 'POST', '/api/refunds/submit', {
+      bookingId: 'BK-HTTP-1',
+      reason: 'Severe weather cancellation',
     });
-    const port = server.address().port;
-    const baseUrl = `http://127.0.0.1:${port}/api/refunds`;
+    assert.equal(submitRes.status, 201);
+    assert.equal(submitRes.body.success, true);
+    const refundId = submitRes.body.refund.id;
 
-    try {
-      // 1. Submit POST /api/refunds/submit
-      const submitFetch = await fetch(`${baseUrl}/submit`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          bookingId: 'BK-HTTP-1',
-          reason: 'Severe weather cancellation',
-        }),
-      });
-      const submitJson = await submitFetch.json();
-      assert.equal(submitFetch.status, 201);
-      assert.equal(submitJson.success, true);
-      const refundId = submitJson.refund.id;
+    // 2. Query GET /api/refunds/:id
+    const getRes = await invokeRefundRoute(app, 'GET', `/api/refunds/${refundId}`);
+    assert.equal(getRes.status, 200);
+    assert.equal(getRes.body.refund.id, refundId);
 
-      // 2. Query GET /api/refunds/:id
-      const getFetch = await fetch(`${baseUrl}/${refundId}`);
-      const getJson = await getFetch.json();
-      assert.equal(getFetch.status, 200);
-      assert.equal(getJson.refund.id, refundId);
+    // 3. Reviewer Decision POST /api/refunds/:id/decision
+    const decRes = await invokeRefundRoute(app, 'POST', `/api/refunds/${refundId}/decision`, {
+      decision: 'APPROVE',
+      note: 'Weather alert cross-referenced with METAR logs',
+      reviewerId: 'Auditor Julian',
+    });
+    assert.equal(decRes.status, 200);
+    assert.equal(decRes.body.refund.decisionStatus, 'Approved');
 
-      // 3. Reviewer Decision POST /api/refunds/:id/decision
-      const decFetch = await fetch(`${baseUrl}/${refundId}/decision`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          decision: 'APPROVE',
-          note: 'Weather alert cross-referenced with METAR logs',
-          reviewerId: 'Auditor Julian',
-        }),
-      });
-      const decJson = await decFetch.json();
-      assert.equal(decFetch.status, 200);
-      assert.equal(decJson.refund.decisionStatus, 'Approved');
-
-      // 4. List GET /api/refunds
-      const listFetch = await fetch(baseUrl);
-      const listJson = await listFetch.json();
-      assert.equal(listFetch.status, 200);
-      assert.equal(listJson.count, 1);
-    } finally {
-      await new Promise((resolve) => server.close(resolve));
-    }
+    // 4. List GET /api/refunds
+    const listRes = await invokeRefundRoute(app, 'GET', '/api/refunds');
+    assert.equal(listRes.status, 200);
+    assert.equal(listRes.body.count, 1);
   });
 
   it('11. Regression Test: Booking BK-148123 data consistency (IndiGo, ₹5,120, non-fabricated traveler, no AT-9842 fallback)', async () => {
     // Seed verified paid booking BK-148123 exactly as stored in store.json
-    db.saveBooking({
+    await db.saveBooking({
       id: 'BK-148123',
       amount: 5120,
       currency: 'INR',
@@ -389,7 +404,7 @@ describe('Refund Backend & Persistence Tests (Person 3)', () => {
     });
 
     // 1. Submit claim for BK-148123
-    const submitResult = submitRefund({
+    const submitResult = await submitRefund({
       bookingId: 'BK-148123',
       reason: 'Cancelled by airline / operator (Flight 6E-2134)',
       contact: 'aarav.sharma@example.com',
@@ -425,40 +440,31 @@ describe('Refund Backend & Persistence Tests (Person 3)', () => {
     assert.match(refund.id, /^RF-/);
 
     // 2. Query by booking ID directly via getRefundById
-    const getResult = getRefundById('BK-148123');
+    const getResult = await getRefundById('BK-148123');
     assert.equal(getResult.success, true);
     assert.equal(getResult.statusCode, 200);
     assert.equal(getResult.refund.id, refund.id);
     assert.equal(getResult.refund.carrier.name, 'IndiGo');
     assert.equal(getResult.refund.claimAmount, 5120);
 
-    // 3. Test HTTP routing for GET /api/refunds/BK-148123
+    // 3. Test HTTP routing for GET /api/refunds/BK-148123 via in-process Express handler
     const app = express();
     app.use(express.json());
     app.use('/api/refunds', refundRouter);
 
-    const server = await new Promise((resolve) => {
-      const s = app.listen(0, () => resolve(s));
-    });
-    const port = server.address().port;
-    try {
-      const httpRes = await fetch(`http://127.0.0.1:${port}/api/refunds/BK-148123`);
-      const httpJson = await httpRes.json();
-      assert.equal(httpRes.status, 200);
-      assert.equal(httpJson.success, true);
-      assert.equal(httpJson.refund.bookingId, 'BK-148123');
-      assert.equal(httpJson.refund.carrier.name, 'IndiGo');
-      assert.equal(httpJson.refund.claimAmount, 5120);
-      assert.notEqual(httpJson.refund.carrier.name, 'Air India');
-      assert.notEqual(httpJson.refund.claimAmount, 9450);
-    } finally {
-      await new Promise((resolve) => server.close(resolve));
-    }
+    const httpRes = await invokeRefundRoute(app, 'GET', '/api/refunds/BK-148123');
+    assert.equal(httpRes.status, 200);
+    assert.equal(httpRes.body.success, true);
+    assert.equal(httpRes.body.refund.bookingId, 'BK-148123');
+    assert.equal(httpRes.body.refund.carrier.name, 'IndiGo');
+    assert.equal(httpRes.body.refund.claimAmount, 5120);
+    assert.notEqual(httpRes.body.refund.carrier.name, 'Air India');
+    assert.notEqual(httpRes.body.refund.claimAmount, 9450);
   });
 
   it('12. Draft Persistence: saveDraftNote persists note to store.json and survives reload', async () => {
     // Setup a PAID booking and submit a refund
-    db.saveBooking({
+    await db.saveBooking({
       id: 'BK-DRAFT-TEST',
       amount: 3800,
       currency: 'INR',
@@ -476,7 +482,7 @@ describe('Refund Backend & Persistence Tests (Person 3)', () => {
       },
     });
 
-    const submitResult = submitRefund({
+    const submitResult = await submitRefund({
       bookingId: 'BK-DRAFT-TEST',
       reason: 'Carrier cancelled flight SG-101',
     });
@@ -485,7 +491,7 @@ describe('Refund Backend & Persistence Tests (Person 3)', () => {
 
     // 1. Save a draft note
     const draftNote = 'Awaiting additional carrier ops log from SpiceJet GDS system.';
-    const draftResult = saveDraftNote(refundId, {
+    const draftResult = await saveDraftNote(refundId, {
       reviewerNote: draftNote,
       draftDecision: 'more_docs',
       reviewerId: 'Julian Hayes (Lead Auditor)',
@@ -512,61 +518,86 @@ describe('Refund Backend & Persistence Tests (Person 3)', () => {
     assert.match(draftLogEntry.description, /more_docs/);
 
     // 5. Simulate reload: re-fetch from db directly (simulates server restart / page refresh)
-    const reloaded = getRefundById(refundId);
+    const reloaded = await getRefundById(refundId);
     assert.equal(reloaded.success, true);
     assert.equal(reloaded.refund.reviewerDraftNote, draftNote);
     assert.equal(reloaded.refund.reviewerDraftDecision, 'more_docs');
     assert.equal(reloaded.refund.decisionStatus, REFUND_STATUSES.UNDER_HUMAN_REVIEW);
 
-    // 6. Verify HTTP endpoint also returns draft note
+    // 6. Verify HTTP endpoint also returns draft note via in-process Express handler
     const app = express();
     app.use(express.json());
     app.use('/api/refunds', refundRouter);
-    const server = await new Promise((resolve) => {
-      const s = app.listen(0, () => resolve(s));
-    });
-    const port = server.address().port;
-    try {
-      // GET by refund ID
-      const getRes = await fetch(`http://127.0.0.1:${port}/api/refunds/${refundId}`);
-      const getJson = await getRes.json();
-      assert.equal(getRes.status, 200);
-      assert.equal(getJson.refund.reviewerDraftNote, draftNote);
 
-      // POST /draft endpoint
-      const updatedNote = 'Confirmed carrier cancellation. Ready for review.';
-      const postDraftRes = await fetch(`http://127.0.0.1:${port}/api/refunds/${refundId}/draft`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reviewerNote: updatedNote, draftDecision: 'eligible' }),
-      });
-      const postDraftJson = await postDraftRes.json();
-      assert.equal(postDraftRes.status, 200);
-      assert.equal(postDraftJson.success, true);
-      assert.equal(postDraftJson.refund.reviewerDraftNote, updatedNote);
-      assert.equal(postDraftJson.refund.reviewerDraftDecision, 'eligible');
-      // Decision status unchanged
-      assert.equal(postDraftJson.refund.decisionStatus, REFUND_STATUSES.UNDER_HUMAN_REVIEW);
-    } finally {
-      await new Promise((resolve) => server.close(resolve));
-    }
+    // GET by refund ID
+    const getRes = await invokeRefundRoute(app, 'GET', `/api/refunds/${refundId}`);
+    assert.equal(getRes.status, 200);
+    assert.equal(getRes.body.refund.reviewerDraftNote, draftNote);
+
+    // POST /draft endpoint
+    const updatedNote = 'Confirmed carrier cancellation. Ready for review.';
+    const postDraftRes = await invokeRefundRoute(app, 'POST', `/api/refunds/${refundId}/draft`, {
+      reviewerNote: updatedNote,
+      draftDecision: 'eligible',
+    });
+    assert.equal(postDraftRes.status, 200);
+    assert.equal(postDraftRes.body.success, true);
+    assert.equal(postDraftRes.body.refund.reviewerDraftNote, updatedNote);
+    assert.equal(postDraftRes.body.refund.reviewerDraftDecision, 'eligible');
+    // Decision status unchanged
+    assert.equal(postDraftRes.body.refund.decisionStatus, REFUND_STATUSES.UNDER_HUMAN_REVIEW);
 
     // 7. Verify draft rejects empty note
-    const emptyDraft = saveDraftNote(refundId, { reviewerNote: '   ' });
+    const emptyDraft = await saveDraftNote(refundId, { reviewerNote: '   ' });
     assert.equal(emptyDraft.success, false);
     assert.equal(emptyDraft.statusCode, 400);
     assert.match(emptyDraft.error, /reviewerNote is required/);
 
     // 8. Verify draft rejects finalized (approved) case
-    const approveResult = processReviewerDecision(refundId, {
+    const approveResult = await processReviewerDecision(refundId, {
       decision: 'APPROVE',
       reviewerComment: 'Final approval after carrier evidence confirmed.',
     });
     assert.equal(approveResult.success, true);
 
-    const finalDraft = saveDraftNote(refundId, { reviewerNote: 'Late draft attempt.' });
+    const finalDraft = await saveDraftNote(refundId, { reviewerNote: 'Late draft attempt.' });
     assert.equal(finalDraft.success, false);
     assert.equal(finalDraft.statusCode, 400);
     assert.match(finalDraft.error, /finalized status/);
+  });
+
+  it('13. Concurrency & Optimistic Locking: Detects version conflict on simultaneous reviewer decisions', async () => {
+    const bookingId = 'BK-CONCURRENCY-1';
+    await db.saveBooking({ id: bookingId, amount: 4900, paymentStatus: 'PAID' });
+    const refundResult = await submitRefund({ bookingId, reason: 'Flight cancellation' });
+    const refundId = refundResult.refund.id;
+
+    // First reviewer submits a decision (advances version from 1 to 2)
+    const firstDecision = await processReviewerDecision(refundId, {
+      decision: 'more_docs',
+      note: 'Auditor A: Requesting luggage tags',
+      reviewerId: 'Auditor A',
+    });
+    assert.equal(firstDecision.success, true);
+    assert.equal(firstDecision.refund.version, 2);
+
+    // Stale direct transact attempt with stale expectedVersion 1 must fail with concurrencyConflict
+    const staleTx = await db.transactReviewerDecision({
+      refundId,
+      bookingId,
+      updateData: {
+        decisionStatus: 'Approved',
+        status: 'APPROVED',
+        finalDecision: 'Approved by Auditor B',
+        reviewerComment: 'Auditor B: Approved with stale view',
+        assignedAuditor: 'Auditor B',
+        approvedAmount: 4900,
+        auditLog: [],
+        history: [],
+      },
+      expectedVersion: 1, // Stale version!
+    });
+    assert.equal(staleTx.success, false);
+    assert.equal(staleTx.concurrencyConflict, true);
   });
 });

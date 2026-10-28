@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { SiteHeader } from '../components/layout/SiteHeader';
 import { SiteFooter } from '../components/layout/SiteFooter';
@@ -8,19 +8,57 @@ type CategoryType = 'All' | 'Beaches' | 'Mountains' | 'Heritage' | 'Spiritual' |
 
 interface DestinationItem {
   id: string;
+  destinationId?: string;
   name: string;
   category: CategoryType;
   tags: string;
   bestTime: string;
   startingPrice: string;
+  basePrice?: number;
   image: string;
   description: string;
+  isCatalogDemo?: boolean;
 }
 
 export const DestinationsPage: React.FC = () => {
   const navigate = useNavigate();
   const { setSearchCriteria } = useTravelBooking();
   const [selectedCategory, setSelectedCategory] = useState<CategoryType>('All');
+  const [destinations, setDestinations] = useState<DestinationItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [disclaimer, setDisclaimer] = useState<string>(
+    'Curated Demo Catalog Inventory for Showcase — Not Live Airline/GDS Feed'
+  );
+
+  const fetchDestinations = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/catalog/destinations');
+      if (!res.ok) {
+        throw new Error(`Catalog API responded with HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      if (data.success && Array.isArray(data.destinations)) {
+        setDestinations(data.destinations);
+        if (data.disclaimer) {
+          setDisclaimer(data.disclaimer);
+        }
+      } else {
+        throw new Error(data.error || 'Invalid catalog response format');
+      }
+    } catch (err: any) {
+      console.warn('[CATALOG] Failed to fetch live destinations:', err.message);
+      setError(err.message || 'Unable to connect to travel catalog');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDestinations();
+  }, []);
 
   const handleExplore = (destinationName: string) => {
     // Map common destination names to airport format if needed, or pass clean name
@@ -47,89 +85,6 @@ export const DestinationsPage: React.FC = () => {
     'Spiritual',
     'Backwaters',
     'International',
-  ];
-
-  const destinations: DestinationItem[] = [
-    {
-      id: 'kashmir',
-      name: 'Kashmir',
-      category: 'Mountains',
-      tags: 'Lakes · Scenic views',
-      bestTime: 'Sep – Nov & Apr – Jun',
-      startingPrice: '₹ 4,899',
-      image: 'https://images.unsplash.com/photo-1595815771614-ade9d652a65d?auto=format&fit=crop&w=800&q=80',
-      description: 'Crisp mountain breeze, chinar foliage, shikara stays and alpine meadows.',
-    },
-    {
-      id: 'goa',
-      name: 'Goa',
-      category: 'Beaches',
-      tags: 'Beaches · Nightlife',
-      bestTime: 'Nov – Feb',
-      startingPrice: '₹ 3,299',
-      image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=800&q=80',
-      description: 'Sun-kissed coastlines, vibrant beach shacks, Portuguese architecture and water sports.',
-    },
-    {
-      id: 'manali',
-      name: 'Manali',
-      category: 'Mountains',
-      tags: 'Mountains · Adventure',
-      bestTime: 'Oct – Mar',
-      startingPrice: '₹ 3,699',
-      image: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=800&q=80',
-      description: 'Snow peaks, Solang valley excursions, pine forests and river rafting.',
-    },
-    {
-      id: 'jaipur',
-      name: 'Jaipur',
-      category: 'Heritage',
-      tags: 'Heritage · Culture',
-      bestTime: 'Oct – Mar',
-      startingPrice: '₹ 6,999',
-      image: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=800&q=80',
-      description: 'Majestic forts, royal palaces, bustling bazaars and quintessential Rajasthani hospitality.',
-    },
-    {
-      id: 'kerala',
-      name: 'Kerala (Alleppey)',
-      category: 'Backwaters',
-      tags: 'Backwaters · Houseboats',
-      bestTime: 'Sep – Mar',
-      startingPrice: '₹ 5,499',
-      image: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&w=800&q=80',
-      description: 'Tranquil palm-fringed canals, traditional houseboats, spices and ayurvedic retreats.',
-    },
-    {
-      id: 'varanasi',
-      name: 'Varanasi',
-      category: 'Spiritual',
-      tags: 'Spiritual · Ghats',
-      bestTime: 'Oct – Mar',
-      startingPrice: '₹ 3,899',
-      image: 'https://images.unsplash.com/photo-1561361513-2d000a50f0dc?auto=format&fit=crop&w=800&q=80',
-      description: 'Ancient river ghats, evening Ganga Aarti, timeless spirituality and silk weaving.',
-    },
-    {
-      id: 'dubai',
-      name: 'Dubai',
-      category: 'International',
-      tags: 'International · Desert Safari',
-      bestTime: 'Nov – Apr',
-      startingPrice: '₹ 18,999',
-      image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=800&q=80',
-      description: 'Iconic architecture, luxury desert camps, premier shopping and world-class attractions.',
-    },
-    {
-      id: 'shimla',
-      name: 'Shimla',
-      category: 'Mountains',
-      tags: 'Hills · Heritage',
-      bestTime: 'Year round',
-      startingPrice: '₹ 4,199',
-      image: 'https://images.unsplash.com/photo-1588668214407-6ea9a6d8c272?auto=format&fit=crop&w=800&q=80',
-      description: 'Colonial charm on Mall Road, toy train rides, cedar forests and mountain vistas.',
-    },
   ];
 
   const filtered = destinations.filter(
@@ -218,56 +173,122 @@ export const DestinationsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Destinations Grid (Page 4) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {filtered.map((d) => (
-            <div
-              key={d.id}
-              className="group bg-white rounded-xl border border-[#e3ded4] overflow-hidden shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 flex flex-col cursor-pointer"
-              onClick={() => handleExplore(d.name)}
-            >
-              <div className="h-44 overflow-hidden relative">
-                <img
-                  src={d.image}
-                  alt={d.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute top-3 right-3 bg-white/95 px-2.5 py-0.5 rounded-md text-xs font-bold text-[#0d3d3a] shadow-sm">
-                  From {d.startingPrice}
-                </div>
-              </div>
-
-              <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
-                <div>
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-bold text-[#0d3d3a] text-base group-hover:text-[#0d6b63] transition-colors">
-                      {d.name}
-                    </h3>
-                    <span className="text-[11px] text-[#6b7775]">{d.tags}</span>
-                  </div>
-                  <p className="text-xs text-[#5c6967] mt-1.5 line-clamp-2 leading-relaxed">
-                    {d.description}
-                  </p>
-                </div>
-
-                <div className="pt-2 border-t border-[#f0ebe1] flex items-center justify-between text-xs">
-                  <span className="text-[11px] text-[#889593]">
-                    Best: {d.bestTime}
-                  </span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleExplore(d.name);
-                    }}
-                    className="text-[#0d6b63] font-semibold hover:underline"
-                  >
-                    Explore →
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
+        {/* Demo Disclaimer Banner */}
+        <div className="mb-6 py-2.5 px-4 rounded-xl bg-[#ecfdf5] border border-[#a7f3d0] text-xs text-[#065f46] flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-[18px] text-[#059669]">info</span>
+            <span className="font-medium">{disclaimer}</span>
+          </div>
+          <span className="hidden sm:inline-block text-[11px] font-semibold text-[#047857] uppercase tracking-wider bg-white/70 px-2 py-0.5 rounded">
+            Verified AWS DynamoDB Catalog
+          </span>
         </div>
+
+        {/* Error State */}
+        {error && (
+          <div className="mb-6 p-4 rounded-xl bg-[#fef2f2] border border-[#fecaca] text-xs sm:text-sm text-[#991b1b] flex items-center justify-between shadow-sm">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[20px] text-[#dc2626]">error</span>
+              <span>Failed to load destinations: {error}</span>
+            </div>
+            <button
+              onClick={fetchDestinations}
+              className="bg-[#dc2626] text-white px-3 py-1 rounded-md text-xs font-semibold hover:bg-[#b91c1c] transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {/* Loading Skeletons */}
+        {loading && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-white rounded-xl border border-[#e3ded4] overflow-hidden shadow-sm animate-pulse flex flex-col">
+                <div className="h-44 bg-[#e5e0d8]" />
+                <div className="p-4 space-y-3">
+                  <div className="h-4 bg-[#e5e0d8] rounded w-3/4" />
+                  <div className="h-3 bg-[#e5e0d8] rounded w-full" />
+                  <div className="h-3 bg-[#e5e0d8] rounded w-5/6" />
+                  <div className="pt-2 border-t border-[#f0ebe1] flex justify-between">
+                    <div className="h-3 bg-[#e5e0d8] rounded w-1/3" />
+                    <div className="h-3 bg-[#e5e0d8] rounded w-1/4" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Empty Result State */}
+        {!loading && !error && filtered.length === 0 && (
+          <div className="text-center py-12 bg-white rounded-2xl border border-[#e3ded4] p-8">
+            <span className="material-symbols-outlined text-4xl text-[#889593]">explore_off</span>
+            <h3 className="text-lg font-bold text-[#0d3d3a] mt-2">No destinations found</h3>
+            <p className="text-xs sm:text-sm text-[#5c6967] mt-1">
+              No places currently match the selected category &quot;{selectedCategory}&quot;.
+            </p>
+            <button
+              onClick={() => setSelectedCategory('All')}
+              className="mt-4 bg-[#0d6b63] text-white px-4 py-2 rounded-md text-xs font-semibold hover:bg-[#0a534d]"
+            >
+              Show all destinations
+            </button>
+          </div>
+        )}
+
+        {/* Destinations Grid (Page 4) */}
+        {!loading && filtered.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {filtered.map((d) => (
+              <div
+                key={d.id}
+                className="group bg-white rounded-xl border border-[#e3ded4] overflow-hidden shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 flex flex-col cursor-pointer"
+                onClick={() => handleExplore(d.name)}
+              >
+                <div className="h-44 overflow-hidden relative">
+                  <img
+                    src={d.image}
+                    alt={d.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute top-3 right-3 bg-white/95 px-2.5 py-0.5 rounded-md text-xs font-bold text-[#0d3d3a] shadow-sm">
+                    From {d.startingPrice}
+                  </div>
+                </div>
+
+                <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-bold text-[#0d3d3a] text-base group-hover:text-[#0d6b63] transition-colors">
+                        {d.name}
+                      </h3>
+                      <span className="text-[11px] text-[#6b7775]">{d.tags}</span>
+                    </div>
+                    <p className="text-xs text-[#5c6967] mt-1.5 line-clamp-2 leading-relaxed">
+                      {d.description}
+                    </p>
+                  </div>
+
+                  <div className="pt-2 border-t border-[#f0ebe1] flex items-center justify-between text-xs">
+                    <span className="text-[11px] text-[#889593]">
+                      Best: {d.bestTime}
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleExplore(d.name);
+                      }}
+                      className="text-[#0d6b63] font-semibold hover:underline"
+                    >
+                      Explore →
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </main>
 
       <SiteFooter />

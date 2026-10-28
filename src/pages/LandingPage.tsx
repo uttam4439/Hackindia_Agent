@@ -20,11 +20,13 @@ export const LandingPage: React.FC = () => {
   });
 
   // Flight form state
+  const [flightTripType, setFlightTripType] = useState<'oneway' | 'roundtrip'>('oneway');
   const [fromCity, setFromCity] = useState(searchCriteria.origin || 'Delhi (DEL)');
   const [toCity, setToCity] = useState(searchCriteria.destination || 'Mumbai (BOM)');
   const [departDate, setDepartDate] = useState(searchCriteria.departDate || '2026-12-21');
   const [returnDate, setReturnDate] = useState(searchCriteria.returnDate || '2026-12-28');
-  const [travellers, setTravellers] = useState(searchCriteria.passengers || '1 Traveller · Economy');
+  const [flightPassengers, setFlightPassengers] = useState(1);
+  const [flightClass, setFlightClass] = useState('Economy');
 
   // Hotel form state
   const [hotelCity, setHotelCity] = useState(searchCriteria.destination?.includes('Goa') ? searchCriteria.destination : 'Goa, India');
@@ -36,12 +38,16 @@ export const LandingPage: React.FC = () => {
   const [trainFrom, setTrainFrom] = useState(searchCriteria.origin?.includes('Delhi') ? searchCriteria.origin : 'New Delhi (NDLS)');
   const [trainTo, setTrainTo] = useState(searchCriteria.destination?.includes('Jaipur') ? searchCriteria.destination : 'Jaipur (JP)');
   const [trainDate, setTrainDate] = useState(searchCriteria.departDate || '2026-11-02');
+  const [trainPassengers, setTrainPassengers] = useState(1);
   const [trainClass, setTrainClass] = useState(searchCriteria.travelClass || 'All Classes');
 
   // Bus form state
   const [busFrom, setBusFrom] = useState('Bengaluru');
   const [busTo, setBusTo] = useState('Goa');
   const [busDate, setBusDate] = useState(searchCriteria.departDate || '2026-11-06');
+  const [busPassengers, setBusPassengers] = useState(1);
+  const [busAcPref, setBusAcPref] = useState<'Any' | 'AC' | 'Non-AC'>('Any');
+  const [busSeatPref, setBusSeatPref] = useState<'Any' | 'Sleeper' | 'Seater'>('Any');
 
   // Cab form state
   const [cabPickup, setCabPickup] = useState('Delhi Airport (DEL)');
@@ -83,7 +89,7 @@ export const LandingPage: React.FC = () => {
       const o = fromCity.trim();
       const d = toCity.trim();
       if (!o || !d) {
-        setValidationError('Please specify both origin and destination.');
+        setValidationError('Please specify both origin and destination for your flight.');
         return;
       }
       if (o.toLowerCase() === d.toLowerCase()) {
@@ -94,15 +100,68 @@ export const LandingPage: React.FC = () => {
         setValidationError('Please select a valid departure date.');
         return;
       }
+      if (flightTripType === 'roundtrip' && returnDate && returnDate < departDate) {
+        setValidationError('Return date must be on or after the departure date.');
+        return;
+      }
       setSearchCriteria({
         serviceType: 'flights',
         origin: o,
         destination: d,
         departDate,
-        returnDate,
-        passengers: travellers,
+        returnDate: flightTripType === 'roundtrip' ? returnDate : undefined,
+        tripType: flightTripType === 'oneway' ? 'oneWay' : 'roundTrip',
+        travelClass: flightClass,
+        passengers: `${flightPassengers} Traveller${flightPassengers > 1 ? 's' : ''} · ${flightClass}`,
       });
       navigate('/flights');
+    } else if (activeService === 'trains') {
+      const from = trainFrom.trim();
+      const to = trainTo.trim();
+      if (!from || !to) {
+        setValidationError('Please specify both departure and arrival train stations.');
+        return;
+      }
+      if (from.toLowerCase() === to.toLowerCase()) {
+        setValidationError('Departure and arrival stations cannot be the same.');
+        return;
+      }
+      if (!trainDate) {
+        setValidationError('Please select a journey date for your train.');
+        return;
+      }
+      setSearchCriteria({
+        serviceType: 'trains',
+        origin: from,
+        destination: to,
+        departDate: trainDate,
+        travelClass: trainClass,
+        passengers: `${trainPassengers} Passenger${trainPassengers > 1 ? 's' : ''}`,
+      });
+      navigate('/trains');
+    } else if (activeService === 'bus') {
+      const from = busFrom.trim();
+      const to = busTo.trim();
+      if (!from || !to) {
+        setValidationError('Please specify both origin and destination for your bus.');
+        return;
+      }
+      if (from.toLowerCase() === to.toLowerCase()) {
+        setValidationError('Origin and destination cannot be the same.');
+        return;
+      }
+      if (!busDate) {
+        setValidationError('Please select a date of journey for your bus.');
+        return;
+      }
+      setSearchCriteria({
+        serviceType: 'buses',
+        origin: from,
+        destination: to,
+        departDate: busDate,
+        passengers: `${busPassengers} Passenger${busPassengers > 1 ? 's' : ''}`,
+      });
+      navigate('/buses');
     } else if (activeService === 'hotels') {
       const c = hotelCity.trim();
       if (!c) {
@@ -127,43 +186,6 @@ export const LandingPage: React.FC = () => {
         passengers: guests,
       });
       navigate('/hotels');
-    } else if (activeService === 'trains') {
-      const from = trainFrom.trim();
-      const to = trainTo.trim();
-      if (!from || !to) {
-        setValidationError('Please specify both departure and arrival stations.');
-        return;
-      }
-      if (from.toLowerCase() === to.toLowerCase()) {
-        setValidationError('Departure and arrival stations cannot be the same.');
-        return;
-      }
-      setSearchCriteria({
-        serviceType: 'trains',
-        origin: from,
-        destination: to,
-        departDate: trainDate,
-        travelClass: trainClass,
-      });
-      navigate('/trains');
-    } else if (activeService === 'bus') {
-      const from = busFrom.trim();
-      const to = busTo.trim();
-      if (!from || !to) {
-        setValidationError('Please specify both origin and destination.');
-        return;
-      }
-      if (from.toLowerCase() === to.toLowerCase()) {
-        setValidationError('Origin and destination cannot be the same.');
-        return;
-      }
-      setSearchCriteria({
-        serviceType: 'buses',
-        origin: from,
-        destination: to,
-        departDate: busDate,
-      });
-      navigate('/buses');
     } else if (activeService === 'cabs') {
       setSearchCriteria({
         serviceType: 'cabs',
@@ -270,47 +292,8 @@ export const LandingPage: React.FC = () => {
 
               <button
                 type="button"
-                onClick={() => setActiveService('hotels')}
-                className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold transition-colors border-b-2 whitespace-nowrap ${
-                  activeService === 'hotels'
-                    ? 'border-[#0d6b63] text-[#0d3d3a] bg-white rounded-t-lg'
-                    : 'border-transparent text-[#6b7775] hover:text-[#0d3d3a]'
-                }`}
-              >
-                <span className="material-symbols-outlined text-[18px]">hotel</span>
-                Hotels
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveService('holidays')}
-                className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold transition-colors border-b-2 whitespace-nowrap ${
-                  activeService === 'holidays'
-                    ? 'border-[#0d6b63] text-[#0d3d3a] bg-white rounded-t-lg'
-                    : 'border-transparent text-[#6b7775] hover:text-[#0d3d3a]'
-                }`}
-              >
-                <span className="material-symbols-outlined text-[18px]">beach_access</span>
-                Holidays
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveService('bus')}
-                className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold transition-colors border-b-2 whitespace-nowrap ${
-                  activeService === 'bus'
-                    ? 'border-[#0d6b63] text-[#0d3d3a] bg-white rounded-t-lg'
-                    : 'border-transparent text-[#6b7775] hover:text-[#0d3d3a]'
-                }`}
-              >
-                <span className="material-symbols-outlined text-[18px]">directions_bus</span>
-                Bus
-              </button>
-
-              <button
-                type="button"
                 onClick={() => setActiveService('trains')}
-                className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold transition-colors border-b-2 whitespace-nowrap ${
+                className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold transition-colors border-b-2 whitespace-nowrap cursor-pointer ${
                   activeService === 'trains'
                     ? 'border-[#0d6b63] text-[#0d3d3a] bg-white rounded-t-lg'
                     : 'border-transparent text-[#6b7775] hover:text-[#0d3d3a]'
@@ -322,22 +305,63 @@ export const LandingPage: React.FC = () => {
 
               <button
                 type="button"
-                onClick={() => setActiveService('cabs')}
-                className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold transition-colors border-b-2 whitespace-nowrap ${
-                  activeService === 'cabs'
+                onClick={() => setActiveService('bus')}
+                className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold transition-colors border-b-2 whitespace-nowrap cursor-pointer ${
+                  activeService === 'bus'
                     ? 'border-[#0d6b63] text-[#0d3d3a] bg-white rounded-t-lg'
                     : 'border-transparent text-[#6b7775] hover:text-[#0d3d3a]'
                 }`}
               >
-                <span className="material-symbols-outlined text-[18px]">local_taxi</span>
+                <span className="material-symbols-outlined text-[18px]">directions_bus</span>
+                Buses
+              </button>
+
+              <div className="h-5 w-px bg-[#e3ded4] mx-2 hidden sm:block" />
+
+              <button
+                type="button"
+                onClick={() => setActiveService('hotels')}
+                className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold transition-colors border-b-2 whitespace-nowrap cursor-pointer ${
+                  activeService === 'hotels'
+                    ? 'border-[#0d6b63] text-[#0d3d3a] bg-white rounded-t-lg'
+                    : 'border-transparent text-[#889593] hover:text-[#0d3d3a]'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[16px]">hotel</span>
+                Hotels
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveService('holidays')}
+                className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold transition-colors border-b-2 whitespace-nowrap cursor-pointer ${
+                  activeService === 'holidays'
+                    ? 'border-[#0d6b63] text-[#0d3d3a] bg-white rounded-t-lg'
+                    : 'border-transparent text-[#889593] hover:text-[#0d3d3a]'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[16px]">beach_access</span>
+                Holidays
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveService('cabs')}
+                className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold transition-colors border-b-2 whitespace-nowrap cursor-pointer ${
+                  activeService === 'cabs'
+                    ? 'border-[#0d6b63] text-[#0d3d3a] bg-white rounded-t-lg'
+                    : 'border-transparent text-[#889593] hover:text-[#0d3d3a]'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[16px]">local_taxi</span>
                 Cabs
               </button>
             </div>
 
             {/* Tab Form Content */}
-            <form onSubmit={handleSearch} className="p-5 sm:p-6">
+            <form onSubmit={handleSearch} className="p-5 sm:p-6 space-y-4">
               {validationError && (
-                <div className="mb-4 p-3 rounded-lg bg-[#fef2f2] border border-[#fecaca] text-[#991b1b] text-xs font-semibold flex items-center justify-between animate-fade-in">
+                <div className="p-3 rounded-lg bg-[#fef2f2] border border-[#fecaca] text-[#991b1b] text-xs font-semibold flex items-center justify-between animate-fade-in">
                   <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-[18px]">error</span>
                     <span>{validationError}</span>
@@ -354,283 +378,466 @@ export const LandingPage: React.FC = () => {
 
               {/* Flights Form */}
               {activeService === 'flights' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 lg:gap-4 items-end">
-                  <div className="lg:col-span-1 border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60 hover:border-[#0d6b63] transition-colors relative">
-                    <div className="flex items-center justify-between">
-                      <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">
-                        From
+                <div className="space-y-4">
+                  {/* Trip Type Selector & Disruption Protection Badge */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#f0ebe1]">
+                    <div className="flex items-center gap-4 text-xs font-semibold text-[#0d3d3a]">
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="flightTripType"
+                          value="oneway"
+                          checked={flightTripType === 'oneway'}
+                          onChange={() => setFlightTripType('oneway')}
+                          className="accent-[#0d6b63] cursor-pointer"
+                        />
+                        <span>One-Way</span>
                       </label>
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="flightTripType"
+                          value="roundtrip"
+                          checked={flightTripType === 'roundtrip'}
+                          onChange={() => setFlightTripType('roundtrip')}
+                          className="accent-[#0d6b63] cursor-pointer"
+                        />
+                        <span>Round-Trip</span>
+                      </label>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#0d6b63] bg-[#e8f2f0] px-2.5 py-1 rounded-full">
+                      <span className="material-symbols-outlined text-[15px]">verified_user</span>
+                      <span>DGCA CAR Passenger Refund Protection Included</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3 items-end">
+                    {/* From City / Airport */}
+                    <div className="lg:col-span-2 border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60 hover:border-[#0d6b63] transition-colors relative">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">
+                          From (City / Airport)
+                        </label>
+                        <button
+                          type="button"
+                          onClick={handleSwapCities}
+                          title="Swap Cities"
+                          className="text-[#0d6b63] hover:text-[#0a534d] cursor-pointer text-[11px] font-bold flex items-center gap-0.5"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">swap_horiz</span>
+                          <span>Swap</span>
+                        </button>
+                      </div>
+                      <input
+                        type="text"
+                        value={fromCity}
+                        onChange={(e) => {
+                          setFromCity(e.target.value);
+                          setValidationError(null);
+                        }}
+                        placeholder="e.g. Delhi (DEL)"
+                        className="w-full bg-transparent font-semibold text-[#0d3d3a] text-sm focus:outline-none pt-0.5"
+                        required
+                      />
+                    </div>
+
+                    {/* To City / Airport */}
+                    <div className="lg:col-span-2 border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60 hover:border-[#0d6b63] transition-colors">
+                      <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">
+                        To (City / Airport)
+                      </label>
+                      <input
+                        type="text"
+                        value={toCity}
+                        onChange={(e) => {
+                          setToCity(e.target.value);
+                          setValidationError(null);
+                        }}
+                        placeholder="e.g. Mumbai (BOM)"
+                        className="w-full bg-transparent font-semibold text-[#0d3d3a] text-sm focus:outline-none pt-0.5"
+                        required
+                      />
+                    </div>
+
+                    {/* Departure Date */}
+                    <div className="border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60 hover:border-[#0d6b63] transition-colors">
+                      <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">
+                        Departure
+                      </label>
+                      <input
+                        type="date"
+                        value={departDate}
+                        onChange={(e) => {
+                          setDepartDate(e.target.value);
+                          setValidationError(null);
+                        }}
+                        className="w-full bg-transparent font-semibold text-[#0d3d3a] text-xs focus:outline-none pt-0.5 cursor-pointer"
+                        required
+                      />
+                    </div>
+
+                    {/* Return Date (Round Trips) */}
+                    <div className={`border rounded-lg p-2.5 transition-colors ${
+                      flightTripType === 'roundtrip'
+                        ? 'border-[#e3ded4] bg-[#fbf9f4]/60 hover:border-[#0d6b63]'
+                        : 'border-[#eae4d8] bg-[#f0ebe1]/40 opacity-60'
+                    }`}>
+                      <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">
+                        Return
+                      </label>
+                      <input
+                        type="date"
+                        value={returnDate}
+                        disabled={flightTripType !== 'roundtrip'}
+                        min={departDate}
+                        onChange={(e) => setReturnDate(e.target.value)}
+                        className="w-full bg-transparent font-semibold text-[#0d3d3a] text-xs focus:outline-none pt-0.5 cursor-pointer disabled:cursor-not-allowed"
+                      />
+                    </div>
+
+                    {/* Search Flights Button */}
+                    <div>
                       <button
-                        type="button"
-                        onClick={handleSwapCities}
-                        title="Swap Origin and Destination"
-                        className="text-[#0d6b63] hover:text-[#0a534d] cursor-pointer text-[11px] font-bold flex items-center gap-0.5"
+                        type="submit"
+                        className="w-full h-[52px] bg-[#0d6b63] text-white font-semibold rounded-lg hover:bg-[#0a534d] transition-colors flex items-center justify-center gap-1.5 shadow-sm text-sm cursor-pointer"
                       >
-                        <span className="material-symbols-outlined text-[14px]">swap_horiz</span>
-                        <span>Swap</span>
+                        <span className="material-symbols-outlined text-[18px]">search</span>
+                        <span>Search Flights</span>
                       </button>
                     </div>
-                    <input
-                      type="text"
-                      value={fromCity}
-                      onChange={(e) => {
-                        setFromCity(e.target.value);
-                        setValidationError(null);
-                      }}
-                      className="w-full bg-transparent font-semibold text-[#0d3d3a] text-sm focus:outline-none pt-0.5"
-                    />
                   </div>
 
-                  <div className="lg:col-span-1 border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60 hover:border-[#0d6b63] transition-colors">
-                    <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">
-                      To
-                    </label>
-                    <input
-                      type="text"
-                      value={toCity}
-                      onChange={(e) => {
-                        setToCity(e.target.value);
-                        setValidationError(null);
-                      }}
-                      className="w-full bg-transparent font-semibold text-[#0d3d3a] text-sm focus:outline-none pt-0.5"
-                    />
+                  {/* Passengers & Travel Class Selection Strip */}
+                  <div className="flex flex-wrap items-center gap-4 pt-1 text-xs">
+                    <div className="flex items-center gap-2">
+                      <label className="text-[#6b7775] font-semibold">Passengers:</label>
+                      <select
+                        value={flightPassengers}
+                        onChange={(e) => setFlightPassengers(Number(e.target.value))}
+                        className="px-2.5 py-1.5 border border-[#e3ded4] rounded-md font-semibold text-[#0d3d3a] bg-white cursor-pointer"
+                      >
+                        {[1, 2, 3, 4, 5, 6].map((num) => (
+                          <option key={num} value={num}>
+                            {num} Passenger{num > 1 ? 's' : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <label className="text-[#6b7775] font-semibold">Travel Class:</label>
+                      <select
+                        value={flightClass}
+                        onChange={(e) => setFlightClass(e.target.value)}
+                        className="px-2.5 py-1.5 border border-[#e3ded4] rounded-md font-semibold text-[#0d3d3a] bg-white cursor-pointer"
+                      >
+                        <option value="Economy">Economy</option>
+                        <option value="Premium Economy">Premium Economy</option>
+                        <option value="Business">Business</option>
+                        <option value="First Class">First Class</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Train Booking Form */}
+              {activeService === 'trains' && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-[#f0ebe1] text-xs">
+                    <span className="font-semibold text-[#0d3d3a] flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[16px] text-[#0d6b63]">train</span>
+                      IRCTC Verified Passenger Booking with Automated TDR Assistance
+                    </span>
+                    <span className="text-[11px] text-[#0d6b63] font-semibold bg-[#e8f2f0] px-2 py-0.5 rounded-full">
+                      Zero UPI Convenience Fees
+                    </span>
                   </div>
 
-                  <div className="lg:col-span-1 border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60 hover:border-[#0d6b63] transition-colors">
-                    <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">
-                      Departure
-                    </label>
-                    <input
-                      type="date"
-                      value={departDate}
-                      onChange={(e) => {
-                        setDepartDate(e.target.value);
-                        setValidationError(null);
-                      }}
-                      className="w-full bg-transparent font-semibold text-[#0d3d3a] text-sm focus:outline-none pt-0.5 cursor-pointer"
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 items-end">
+                    {/* From Station */}
+                    <div className="border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60 hover:border-[#0d6b63] transition-colors">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">
+                          From Station
+                        </label>
+                        <button
+                          type="button"
+                          onClick={handleSwapTrainStations}
+                          title="Swap Stations"
+                          className="text-[#0d6b63] hover:text-[#0a534d] cursor-pointer"
+                        >
+                          <span className="material-symbols-outlined text-[15px]">swap_horiz</span>
+                        </button>
+                      </div>
+                      <input
+                        type="text"
+                        value={trainFrom}
+                        onChange={(e) => setTrainFrom(e.target.value)}
+                        placeholder="e.g. New Delhi (NDLS)"
+                        className="w-full bg-transparent font-semibold text-[#0d3d3a] text-sm focus:outline-none pt-0.5"
+                        required
+                      />
+                    </div>
+
+                    {/* To Station */}
+                    <div className="border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60 hover:border-[#0d6b63] transition-colors">
+                      <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">
+                        To Station
+                      </label>
+                      <input
+                        type="text"
+                        value={trainTo}
+                        onChange={(e) => setTrainTo(e.target.value)}
+                        placeholder="e.g. Mumbai Central (MMCT)"
+                        className="w-full bg-transparent font-semibold text-[#0d3d3a] text-sm focus:outline-none pt-0.5"
+                        required
+                      />
+                    </div>
+
+                    {/* Journey Date */}
+                    <div className="border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60 hover:border-[#0d6b63] transition-colors">
+                      <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">
+                        Journey Date
+                      </label>
+                      <input
+                        type="date"
+                        value={trainDate}
+                        onChange={(e) => setTrainDate(e.target.value)}
+                        className="w-full bg-transparent font-semibold text-[#0d3d3a] text-xs focus:outline-none pt-0.5 cursor-pointer"
+                        required
+                      />
+                    </div>
+
+                    {/* Passenger Count */}
+                    <div className="border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60 hover:border-[#0d6b63] transition-colors">
+                      <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">
+                        Passengers
+                      </label>
+                      <select
+                        value={trainPassengers}
+                        onChange={(e) => setTrainPassengers(Number(e.target.value))}
+                        className="w-full bg-transparent font-semibold text-[#0d3d3a] text-xs focus:outline-none pt-0.5 cursor-pointer"
+                      >
+                        {[1, 2, 3, 4, 5, 6].map((num) => (
+                          <option key={num} value={num}>
+                            {num} Passenger{num > 1 ? 's' : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Travel Class */}
+                    <div className="border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60 hover:border-[#0d6b63] transition-colors">
+                      <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">
+                        Travel Class
+                      </label>
+                      <select
+                        value={trainClass}
+                        onChange={(e) => setTrainClass(e.target.value)}
+                        className="w-full bg-transparent font-semibold text-[#0d3d3a] text-xs focus:outline-none pt-0.5 cursor-pointer"
+                      >
+                        <option value="All Classes">All Classes</option>
+                        <option value="AC Chair Car (CC)">AC Chair Car (CC)</option>
+                        <option value="Executive Chair Car (EC)">Executive Chair (EC)</option>
+                        <option value="3A AC 3 Tier">3AC (3A)</option>
+                        <option value="2A AC 2 Tier">2AC (2A)</option>
+                        <option value="1A AC First Class">1AC (1A)</option>
+                        <option value="Sleeper (SL)">Sleeper (SL)</option>
+                      </select>
+                    </div>
+
+                    {/* Search Trains Button */}
+                    <div>
+                      <button
+                        type="submit"
+                        className="w-full h-[52px] bg-[#0d6b63] text-white font-semibold rounded-lg hover:bg-[#0a534d] transition-colors flex items-center justify-center gap-1.5 shadow-sm text-sm cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">search</span>
+                        <span>Search Trains</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Bus Booking Form */}
+              {activeService === 'bus' && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-[#f0ebe1] text-xs">
+                    <span className="font-semibold text-[#0d3d3a] flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[16px] text-[#0d6b63]">directions_bus</span>
+                      Intercity Volvo & Sleeper Buses with GPS Live Tracking Guarantee
+                    </span>
+                    <span className="text-[11px] text-[#0d6b63] font-semibold bg-[#e8f2f0] px-2 py-0.5 rounded-full">
+                      Verified Operators
+                    </span>
                   </div>
 
-                  <div className="lg:col-span-1 border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60 hover:border-[#0d6b63] transition-colors">
-                    <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">
-                      Return
-                    </label>
-                    <input
-                      type="date"
-                      value={returnDate}
-                      onChange={(e) => setReturnDate(e.target.value)}
-                      className="w-full bg-transparent font-semibold text-[#0d3d3a] text-sm focus:outline-none pt-0.5 cursor-pointer"
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 items-end">
+                    {/* From City */}
+                    <div className="border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60 hover:border-[#0d6b63] transition-colors">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">
+                          From City
+                        </label>
+                        <button
+                          type="button"
+                          onClick={handleSwapBusStations}
+                          title="Swap Cities"
+                          className="text-[#0d6b63] hover:text-[#0a534d] cursor-pointer"
+                        >
+                          <span className="material-symbols-outlined text-[15px]">swap_horiz</span>
+                        </button>
+                      </div>
+                      <input
+                        type="text"
+                        value={busFrom}
+                        onChange={(e) => setBusFrom(e.target.value)}
+                        placeholder="e.g. Delhi"
+                        className="w-full bg-transparent font-semibold text-[#0d3d3a] text-sm focus:outline-none pt-0.5"
+                        required
+                      />
+                    </div>
+
+                    {/* To City */}
+                    <div className="border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60 hover:border-[#0d6b63] transition-colors">
+                      <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">
+                        To City
+                      </label>
+                      <input
+                        type="text"
+                        value={busTo}
+                        onChange={(e) => setBusTo(e.target.value)}
+                        placeholder="e.g. Manali"
+                        className="w-full bg-transparent font-semibold text-[#0d3d3a] text-sm focus:outline-none pt-0.5"
+                        required
+                      />
+                    </div>
+
+                    {/* Journey Date */}
+                    <div className="border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60 hover:border-[#0d6b63] transition-colors">
+                      <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">
+                        Journey Date
+                      </label>
+                      <input
+                        type="date"
+                        value={busDate}
+                        onChange={(e) => setBusDate(e.target.value)}
+                        className="w-full bg-transparent font-semibold text-[#0d3d3a] text-xs focus:outline-none pt-0.5 cursor-pointer"
+                        required
+                      />
+                    </div>
+
+                    {/* Passenger Count */}
+                    <div className="border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60 hover:border-[#0d6b63] transition-colors">
+                      <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">
+                        Passenger Count
+                      </label>
+                      <select
+                        value={busPassengers}
+                        onChange={(e) => setBusPassengers(Number(e.target.value))}
+                        className="w-full bg-transparent font-semibold text-[#0d3d3a] text-xs focus:outline-none pt-0.5 cursor-pointer"
+                      >
+                        {[1, 2, 3, 4, 5, 6].map((num) => (
+                          <option key={num} value={num}>
+                            {num} Seat{num > 1 ? 's' : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* AC / Non-AC & Seater / Sleeper preferences */}
+                    <div className="border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60 hover:border-[#0d6b63] transition-colors">
+                      <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">
+                        Bus Preference
+                      </label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <select
+                          value={busAcPref}
+                          onChange={(e) => setBusAcPref(e.target.value as any)}
+                          className="bg-transparent font-semibold text-[#0d3d3a] text-xs focus:outline-none cursor-pointer"
+                        >
+                          <option value="Any">Any AC/Non-AC</option>
+                          <option value="AC">AC Only</option>
+                          <option value="Non-AC">Non-AC</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Search Buses Button */}
+                    <div>
+                      <button
+                        type="submit"
+                        className="w-full h-[52px] bg-[#0d6b63] text-white font-semibold rounded-lg hover:bg-[#0a534d] transition-colors flex items-center justify-center gap-1.5 shadow-sm text-sm cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">search</span>
+                        <span>Search Buses</span>
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="lg:col-span-1 border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60 hover:border-[#0d6b63] transition-colors">
-                    <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">
-                      Travellers
-                    </label>
-                    <select
-                      value={travellers}
-                      onChange={(e) => setTravellers(e.target.value)}
-                      className="w-full bg-transparent font-semibold text-[#0d3d3a] text-xs focus:outline-none pt-1"
-                    >
-                      <option value="1 Traveller · Economy">1 Traveller · Economy</option>
-                      <option value="2 Travellers · Economy">2 Travellers · Economy</option>
-                      <option value="1 Traveller · Business">1 Traveller · Business</option>
-                      <option value="Family (2A + 2C)">Family (2A + 2C)</option>
-                    </select>
-                  </div>
-
-                  <div className="lg:col-span-1">
-                    <button
-                      type="submit"
-                      className="w-full h-[52px] bg-[#0d6b63] text-white font-semibold rounded-lg hover:bg-[#0a534d] transition-colors flex items-center justify-center gap-2 shadow-sm text-sm"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">search</span>
-                      Search flights
-                    </button>
+                  {/* Seater / Sleeper Preference Pills */}
+                  <div className="flex items-center gap-3 pt-1 text-xs">
+                    <span className="text-[#6b7775] font-semibold">Seat Preference:</span>
+                    {(['Any', 'Sleeper', 'Seater'] as const).map((seat) => (
+                      <button
+                        key={seat}
+                        type="button"
+                        onClick={() => setBusSeatPref(seat)}
+                        className={`px-3 py-1 rounded-full font-semibold transition-colors cursor-pointer ${
+                          busSeatPref === seat
+                            ? 'bg-[#0d6b63] text-white'
+                            : 'bg-white border border-[#e3ded4] text-[#6b7775] hover:text-[#0d3d3a]'
+                        }`}
+                      >
+                        {seat}
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}
 
               {/* Hotels Form */}
               {activeService === 'hotels' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 lg:gap-4 items-end">
-                  <div className="lg:col-span-2 border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60">
-                    <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">
-                      City or Destination
-                    </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 items-end">
+                  <div className="border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60 hover:border-[#0d6b63] transition-colors">
+                    <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">City or Hotel</label>
                     <input
                       type="text"
                       value={hotelCity}
                       onChange={(e) => setHotelCity(e.target.value)}
+                      placeholder="e.g. Goa, India"
                       className="w-full bg-transparent font-semibold text-[#0d3d3a] text-sm focus:outline-none pt-0.5"
                     />
                   </div>
                   <div className="border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60 hover:border-[#0d6b63] transition-colors">
-                    <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">
-                      Check-In
-                    </label>
+                    <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">Check-in</label>
                     <input
                       type="date"
                       value={checkIn}
-                      onChange={(e) => {
-                        const newIn = e.target.value;
-                        setCheckIn(newIn);
-                        setValidationError(null);
-                        if (checkOut <= newIn) {
-                          const parts = newIn.split('-').map(Number);
-                          if (parts.length === 3) {
-                            const d = new Date(parts[0], parts[1] - 1, parts[2] + 1);
-                            const y = d.getFullYear();
-                            const m = String(d.getMonth() + 1).padStart(2, '0');
-                            const day = String(d.getDate()).padStart(2, '0');
-                            setCheckOut(`${y}-${m}-${day}`);
-                          }
-                        }
-                      }}
-                      className="w-full bg-transparent font-semibold text-[#0d3d3a] text-sm focus:outline-none pt-0.5 cursor-pointer"
+                      onChange={(e) => setCheckIn(e.target.value)}
+                      className="w-full bg-transparent font-semibold text-[#0d3d3a] text-xs focus:outline-none pt-0.5 cursor-pointer"
                     />
                   </div>
                   <div className="border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60 hover:border-[#0d6b63] transition-colors">
-                    <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">
-                      Check-Out
-                    </label>
+                    <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">Check-out</label>
                     <input
                       type="date"
                       value={checkOut}
-                      min={checkIn}
-                      onChange={(e) => {
-                        setCheckOut(e.target.value);
-                        setValidationError(null);
-                      }}
-                      className="w-full bg-transparent font-semibold text-[#0d3d3a] text-sm focus:outline-none pt-0.5 cursor-pointer"
+                      onChange={(e) => setCheckOut(e.target.value)}
+                      className="w-full bg-transparent font-semibold text-[#0d3d3a] text-xs focus:outline-none pt-0.5 cursor-pointer"
                     />
                   </div>
-                  <div className="border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60">
-                    <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">
-                      Guests & Rooms
-                    </label>
+                  <div className="border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60 hover:border-[#0d6b63] transition-colors">
+                    <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">Guests & Rooms</label>
                     <input
                       type="text"
                       value={guests}
                       onChange={(e) => setGuests(e.target.value)}
-                      className="w-full bg-transparent font-semibold text-[#0d3d3a] text-sm focus:outline-none pt-0.5"
+                      className="w-full bg-transparent font-semibold text-[#0d3d3a] text-xs focus:outline-none pt-0.5"
                     />
-                  </div>
-                  <div>
-                    <button
-                      type="submit"
-                      className="w-full h-[52px] bg-[#0d6b63] text-white font-semibold rounded-lg hover:bg-[#0a534d] transition-colors flex items-center justify-center gap-2 text-sm shadow-sm"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">search</span>
-                      Search hotels
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Trains Form */}
-              {activeService === 'trains' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 lg:gap-4 items-end">
-                  <div className="border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60">
-                    <div className="flex items-center justify-between">
-                      <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">
-                        From Station
-                      </label>
-                      <button
-                        type="button"
-                        onClick={handleSwapTrainStations}
-                        title="Swap Stations"
-                        className="text-[#0d6b63] hover:text-[#0a534d] cursor-pointer"
-                      >
-                        <span className="material-symbols-outlined text-[15px]">swap_horiz</span>
-                      </button>
-                    </div>
-                    <input
-                      type="text"
-                      value={trainFrom}
-                      onChange={(e) => setTrainFrom(e.target.value)}
-                      className="w-full bg-transparent font-semibold text-[#0d3d3a] text-sm focus:outline-none pt-0.5"
-                    />
-                  </div>
-                  <div className="border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60">
-                    <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">
-                      To Station
-                    </label>
-                    <input
-                      type="text"
-                      value={trainTo}
-                      onChange={(e) => setTrainTo(e.target.value)}
-                      className="w-full bg-transparent font-semibold text-[#0d3d3a] text-sm focus:outline-none pt-0.5"
-                    />
-                  </div>
-                  <div className="border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60">
-                    <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">
-                      Journey Date
-                    </label>
-                    <input
-                      type="date"
-                      value={trainDate}
-                      onChange={(e) => setTrainDate(e.target.value)}
-                      className="w-full bg-transparent font-semibold text-[#0d3d3a] text-sm focus:outline-none pt-0.5"
-                    />
-                  </div>
-                  <div className="border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60">
-                    <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">
-                      Travel Class
-                    </label>
-                    <select
-                      value={trainClass}
-                      onChange={(e) => setTrainClass(e.target.value)}
-                      className="w-full bg-transparent font-semibold text-[#0d3d3a] text-sm focus:outline-none pt-0.5"
-                    >
-                      <option value="All Classes">All Classes</option>
-                      <option value="Executive Chair Car (EC)">Executive Chair Car (EC)</option>
-                      <option value="AC Chair Car (CC)">AC Chair Car (CC)</option>
-                      <option value="Sleeper (SL)">Sleeper (SL)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <button
-                      type="submit"
-                      className="w-full h-[52px] bg-[#0d6b63] text-white font-semibold rounded-lg hover:bg-[#0a534d] transition-colors flex items-center justify-center gap-2 text-sm shadow-sm"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">search</span>
-                      Search trains
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Bus Form */}
-              {activeService === 'bus' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 items-end">
-                  <div className="border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60">
-                    <div className="flex items-center justify-between">
-                      <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">From City</label>
-                      <button
-                        type="button"
-                        onClick={handleSwapBusStations}
-                        title="Swap Cities"
-                        className="text-[#0d6b63] hover:text-[#0a534d] cursor-pointer"
-                      >
-                        <span className="material-symbols-outlined text-[15px]">swap_horiz</span>
-                      </button>
-                    </div>
-                    <input type="text" value={busFrom} onChange={(e) => setBusFrom(e.target.value)} className="w-full bg-transparent font-semibold text-[#0d3d3a] text-sm focus:outline-none pt-0.5" />
-                  </div>
-                  <div className="border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60">
-                    <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">To City</label>
-                    <input type="text" value={busTo} onChange={(e) => setBusTo(e.target.value)} className="w-full bg-transparent font-semibold text-[#0d3d3a] text-sm focus:outline-none pt-0.5" />
-                  </div>
-                  <div className="border border-[#e3ded4] rounded-lg p-2.5 bg-[#fbf9f4]/60">
-                    <label className="text-[11px] font-bold text-[#6b7775] uppercase tracking-wider block">Date of Travel</label>
-                    <input type="date" value={busDate} onChange={(e) => setBusDate(e.target.value)} className="w-full bg-transparent font-semibold text-[#0d3d3a] text-sm focus:outline-none pt-0.5" />
-                  </div>
-                  <div>
-                    <button type="submit" className="w-full h-[52px] bg-[#0d6b63] text-white font-semibold rounded-lg hover:bg-[#0a534d] transition-colors flex items-center justify-center gap-2 text-sm shadow-sm">
-                      <span className="material-symbols-outlined text-[18px]">search</span>
-                      Search buses
-                    </button>
                   </div>
                 </div>
               )}

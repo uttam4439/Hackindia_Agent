@@ -52,6 +52,8 @@ export const FlightsPage: React.FC = () => {
   // Filters state
   const [selectedStops, setSelectedStops] = useState<string[]>(['nonstop']);
   const [selectedAirlines, setSelectedAirlines] = useState<string[]>([]);
+  const [sortOption, setSortOption] = useState<'price_asc' | 'price_desc' | 'time_asc' | 'duration_asc'>('price_asc');
+  const [selectedFlightDetails, setSelectedFlightDetails] = useState<FlightItem | null>(null);
 
   // Inline Modify Search State
   const [isModifyOpen, setIsModifyOpen] = useState(false);
@@ -262,6 +264,19 @@ export const FlightsPage: React.FC = () => {
     setIsModifyOpen(false);
   };
 
+  const parseDurationMinutes = (dur: string) => {
+    const hMatch = dur.match(/(\d+)\s*h/i);
+    const mMatch = dur.match(/(\d+)\s*m/i);
+    const hours = hMatch ? parseInt(hMatch[1], 10) : 0;
+    const minutes = mMatch ? parseInt(mMatch[1], 10) : 0;
+    return hours * 60 + minutes;
+  };
+
+  const parseTimeToMinutes = (tm: string) => {
+    const [h, m] = tm.split(':').map(Number);
+    return (h || 0) * 60 + (m || 0);
+  };
+
   const filteredFlights = flights.filter((f) => {
     if (selectedAirlines.length > 0 && !selectedAirlines.includes(f.airline)) {
       return false;
@@ -274,6 +289,14 @@ export const FlightsPage: React.FC = () => {
       if (has1Stop && !hasNonStop && isNonStop) return false;
     }
     return true;
+  });
+
+  const sortedFlights = [...filteredFlights].sort((a, b) => {
+    if (sortOption === 'price_asc') return a.price - b.price;
+    if (sortOption === 'price_desc') return b.price - a.price;
+    if (sortOption === 'time_asc') return parseTimeToMinutes(a.fromTime) - parseTimeToMinutes(b.fromTime);
+    if (sortOption === 'duration_asc') return parseDurationMinutes(a.duration) - parseDurationMinutes(b.duration);
+    return 0;
   });
 
   return (
@@ -609,7 +632,42 @@ export const FlightsPage: React.FC = () => {
               </div>
             )}
 
-            {!loading && !error && filteredFlights.length === 0 ? (
+            {/* Sorting Toolbar */}
+            {!loading && !error && sortedFlights.length > 0 && (
+              <div className="bg-white rounded-xl border border-[#e3ded4] p-3 shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-[#0d3d3a] flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[16px] text-[#0d6b63]">swap_vert</span>
+                    Sort by:
+                  </span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {[
+                      { id: 'price_asc', label: 'Price: Low to High' },
+                      { id: 'time_asc', label: 'Departure Time' },
+                      { id: 'duration_asc', label: 'Fastest' },
+                    ].map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => setSortOption(opt.id as any)}
+                        className={`px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer ${
+                          sortOption === opt.id
+                            ? 'bg-[#0d6b63] text-white shadow-xs'
+                            : 'bg-[#f7f4ed] text-[#42504e] hover:bg-[#eae4d8]'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <span className="text-[#889593] text-[11px]">
+                  {sortedFlights.length} flight{sortedFlights.length !== 1 ? 's' : ''} available
+                </span>
+              </div>
+            )}
+
+            {!loading && !error && sortedFlights.length === 0 ? (
               <div className="bg-white rounded-xl border border-[#e3ded4] p-10 text-center space-y-3 shadow-sm">
                 <span className="material-symbols-outlined text-[42px] text-[#889593]">flight_takeoff</span>
                 <h3 className="font-bold text-[#0d3d3a] text-base">No flights match your filter criteria</h3>
@@ -628,7 +686,7 @@ export const FlightsPage: React.FC = () => {
                 </button>
               </div>
             ) : !loading && (
-              filteredFlights.map((flight) => (
+              sortedFlights.map((flight) => (
                 <div
                   key={flight.id}
                   className="bg-white rounded-xl border border-[#e3ded4] p-5 shadow-sm hover:border-[#0d6b63]/60 transition-all space-y-4"
@@ -640,13 +698,18 @@ export const FlightsPage: React.FC = () => {
                         {flight.code}
                       </div>
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <h4 className="font-bold text-[#0d3d3a] text-sm">
                             {flight.airline} · {flight.flightNo}
                           </h4>
                           <span className="text-[10px] font-semibold text-[#0d6b63] bg-[#e8f2f0] px-2 py-0.5 rounded-full">
                             Departs {displayDateFormatted}
                           </span>
+                          {flight.availableSeats !== undefined && (
+                            <span className="text-[10px] font-semibold text-[#b45309] bg-[#fffbeb] px-2 py-0.5 rounded border border-[#fde68a]">
+                              {flight.availableSeats} seats left
+                            </span>
+                          )}
                         </div>
                         <div className="flex items-center gap-2 text-xs text-[#6b7775] mt-1">
                           <span className="font-semibold text-[#0d3d3a]">{flight.fromTime}</span>
@@ -658,7 +721,7 @@ export const FlightsPage: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Price & Action Button */}
+                    {/* Price & Action Buttons */}
                     <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 pt-3 sm:pt-0 border-[#e3ded4] gap-2">
                       <div className="text-right">
                         <span className="text-xl font-bold text-[#0d3d3a] leading-none block">
@@ -672,12 +735,22 @@ export const FlightsPage: React.FC = () => {
                         )}
                       </div>
 
-                      <button
-                        onClick={() => handleBook(flight)}
-                        className="bg-[#0d6b63] text-white px-5 py-2 rounded-md text-xs font-semibold hover:bg-[#0a534d] transition-colors shadow-sm cursor-pointer"
-                      >
-                        Book flight
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedFlightDetails(flight)}
+                          className="border border-[#0d6b63] text-[#0d6b63] bg-white px-3 py-2 rounded-md text-xs font-semibold hover:bg-[#e8f2f0] transition-colors cursor-pointer"
+                        >
+                          View Details
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleBook(flight)}
+                          className="bg-[#0d6b63] text-white px-4 py-2 rounded-md text-xs font-semibold hover:bg-[#0a534d] transition-colors shadow-sm cursor-pointer whitespace-nowrap"
+                        >
+                          Select Flight
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -696,6 +769,119 @@ export const FlightsPage: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* Flight Details Modal */}
+        {selectedFlightDetails && (
+          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-lg w-full border border-[#e3ded4] p-6 space-y-5 shadow-2xl animate-fade-in text-left max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between pb-3 border-b border-[#e3ded4]">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-lg bg-[#f0ebe1] flex items-center justify-center text-[#0d3d3a] font-bold text-xs border border-[#e3ded4]">
+                    {selectedFlightDetails.code}
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-[#0d3d3a]">
+                      {selectedFlightDetails.airline} · {selectedFlightDetails.flightNo}
+                    </h3>
+                    <p className="text-xs text-[#6b7775]">
+                      {origin} → {destination} · {displayDateFormatted}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedFlightDetails(null)}
+                  className="text-[#6b7775] hover:text-black p-1 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[20px]">close</span>
+                </button>
+              </div>
+
+              {/* Schedule & Flight Route */}
+              <div className="bg-[#fbf9f4] p-4 rounded-xl border border-[#e3ded4] space-y-3">
+                <div className="flex items-center justify-between text-xs sm:text-sm">
+                  <div>
+                    <span className="text-lg font-bold text-[#0d3d3a] block">{selectedFlightDetails.fromTime}</span>
+                    <span className="text-xs font-semibold text-[#0d3d3a]">{selectedFlightDetails.fromCode}</span>
+                    <span className="text-[11px] text-[#6b7775] block">{origin}</span>
+                  </div>
+                  <div className="text-center px-3">
+                    <span className="text-xs text-[#889593] font-medium">{selectedFlightDetails.duration}</span>
+                    <div className="w-20 sm:w-28 h-0.5 bg-[#0d6b63]/40 my-1 relative">
+                      <div className="w-2 h-2 rounded-full bg-[#0d6b63] absolute left-1/2 -top-0.75 -translate-x-1/2"></div>
+                    </div>
+                    <span className="text-[11px] text-[#0d6b63] font-semibold">{selectedFlightDetails.stops}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-lg font-bold text-[#0d3d3a] block">{selectedFlightDetails.toTime}</span>
+                    <span className="text-xs font-semibold text-[#0d3d3a]">{selectedFlightDetails.toCode}</span>
+                    <span className="text-[11px] text-[#6b7775] block">{destination}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Baggage & Amenities Grid */}
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="p-3 bg-white rounded-lg border border-[#e3ded4] space-y-1">
+                  <div className="flex items-center gap-1.5 text-[#0d6b63] font-semibold">
+                    <span className="material-symbols-outlined text-[16px]">luggage</span>
+                    <span>Cabin Baggage</span>
+                  </div>
+                  <p className="text-[11px] text-[#5c6967]">7 kg (1 piece per adult)</p>
+                </div>
+                <div className="p-3 bg-white rounded-lg border border-[#e3ded4] space-y-1">
+                  <div className="flex items-center gap-1.5 text-[#0d6b63] font-semibold">
+                    <span className="material-symbols-outlined text-[16px]">business_center</span>
+                    <span>Check-in Baggage</span>
+                  </div>
+                  <p className="text-[11px] text-[#5c6967]">15 kg (1 piece per adult)</p>
+                </div>
+              </div>
+
+              {/* Cancellation & Refund Policies */}
+              <div className="p-3.5 bg-[#e8f2f0]/60 rounded-xl border border-[#d0dfd3] space-y-1.5 text-xs">
+                <div className="flex items-center gap-1.5 font-bold text-[#0d3d3a]">
+                  <span className="material-symbols-outlined text-[16px] text-[#0d6b63]">verified_user</span>
+                  <span>Cancellation & Refund Policy</span>
+                </div>
+                <p className="text-[11px] text-[#42504e] leading-relaxed">
+                  Cancellations up to 2 hours before departure are eligible for standard refund arbitration. In the event of carrier delays or cancellation, our AI automated dispute engine will assist your claim immediately.
+                </p>
+              </div>
+
+              {/* Price Breakdown & Actions */}
+              <div className="pt-2 border-t border-[#e3ded4] flex items-center justify-between">
+                <div>
+                  <span className="text-xs text-[#889593] block">Total Payable ({passengerCount} traveller{passengerCount > 1 ? 's' : ''}):</span>
+                  <span className="text-xl font-bold text-[#0d3d3a]">
+                    ₹ {(selectedFlightDetails.price * passengerCount).toLocaleString('en-IN')}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedFlightDetails(null)}
+                    className="px-3.5 py-2 text-xs font-semibold text-[#5c6967] hover:text-[#0d3d3a] hover:bg-[#f0ebe1] rounded-lg transition-colors cursor-pointer"
+                  >
+                    Close
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const f = selectedFlightDetails;
+                      setSelectedFlightDetails(null);
+                      handleBook(f);
+                    }}
+                    className="bg-[#0d6b63] text-white px-5 py-2 rounded-lg text-xs font-semibold hover:bg-[#0a534d] transition-colors shadow-sm cursor-pointer flex items-center gap-1.5"
+                  >
+                    <span>Proceed to Book</span>
+                    <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
 
       <SiteFooter />

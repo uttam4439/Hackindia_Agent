@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { SiteHeader } from '../components/layout/SiteHeader';
 import { SiteFooter } from '../components/layout/SiteFooter';
 import { useTravelBooking } from '../context/TravelBookingContext';
@@ -26,8 +26,7 @@ interface TrainItem {
 }
 
 export const TrainsPage: React.FC = () => {
-  const navigate = useNavigate();
-  const { searchCriteria, openBookingSummary, bookingSuccessAlert, clearBookingSuccessAlert } = useTravelBooking();
+  const { searchCriteria, setSearchCriteria, openBookingSummary, bookingSuccessAlert, clearBookingSuccessAlert } = useTravelBooking();
 
   const origin = searchCriteria.origin || 'New Delhi (NDLS)';
   const destination = searchCriteria.destination || 'Jaipur (JP)';
@@ -36,6 +35,13 @@ export const TrainsPage: React.FC = () => {
 
   const [selectedClasses, setSelectedClasses] = useState<string[]>(['Chair Car']);
   const [selectedTimes, setSelectedTimes] = useState<string[]>(['Early morning · 04–08', 'Morning · 08–12']);
+  const [sortOption, setSortOption] = useState<'price_asc' | 'time_asc' | 'duration_asc'>('price_asc');
+  const [selectedTrainDetails, setSelectedTrainDetails] = useState<TrainItem | null>(null);
+  const [isModifyOpen, setIsModifyOpen] = useState(false);
+  const [modOrigin, setModOrigin] = useState(origin);
+  const [modDestination, setModDestination] = useState(destination);
+  const [modDate, setModDate] = useState(departDate);
+  const [modPassengers, setModPassengers] = useState(passengers);
   const [trains, setTrains] = useState<TrainItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -149,6 +155,49 @@ export const TrainsPage: React.FC = () => {
     );
   };
 
+  const parseDurationMinutes = (dur: string) => {
+    const hMatch = dur.match(/(\d+)\s*h/i);
+    const mMatch = dur.match(/(\d+)\s*m/i);
+    const hours = hMatch ? parseInt(hMatch[1], 10) : 0;
+    const minutes = mMatch ? parseInt(mMatch[1], 10) : 0;
+    return hours * 60 + minutes;
+  };
+
+  const parseTimeToMinutes = (tm: string) => {
+    const [h, m] = tm.split(':').map(Number);
+    return (h || 0) * 60 + (m || 0);
+  };
+
+  const getLowestFare = (tr: TrainItem) => {
+    if (!tr.classes || tr.classes.length === 0) return 99999;
+    return Math.min(...tr.classes.map((c) => c.rawFare));
+  };
+
+  const sortedTrains = [...trains].sort((a, b) => {
+    if (sortOption === 'price_asc') return getLowestFare(a) - getLowestFare(b);
+    if (sortOption === 'time_asc') return parseTimeToMinutes(a.depTime) - parseTimeToMinutes(b.depTime);
+    if (sortOption === 'duration_asc') return parseDurationMinutes(a.duration) - parseDurationMinutes(b.duration);
+    return 0;
+  });
+
+  const handleSwapModify = () => {
+    const temp = modOrigin;
+    setModOrigin(modDestination);
+    setModDestination(temp);
+  };
+
+  const handleApplyModify = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!modOrigin.trim() || !modDestination.trim() || !modDate) return;
+    setSearchCriteria({
+      origin: modOrigin.trim(),
+      destination: modDestination.trim(),
+      departDate: modDate,
+      passengers: modPassengers,
+    });
+    setIsModifyOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-[#f7f4ed] flex flex-col font-sans text-[#192524] antialiased">
       <SiteHeader activeTab="trains" />
@@ -182,17 +231,127 @@ export const TrainsPage: React.FC = () => {
               Trains from {origin} to {destination}
             </h1>
             <p className="text-xs sm:text-sm text-[#5c6967] mt-0.5">
-              {displayDateFormatted} · {passengers} · 3 trains found
+              {displayDateFormatted} · {passengers} · {sortedTrains.length} train{sortedTrains.length !== 1 ? 's' : ''} found
             </p>
           </div>
 
           <button
-            onClick={() => navigate('/')}
-            className="self-start sm:self-auto border border-[#0d6b63] text-[#0d6b63] bg-white px-3.5 py-1.5 rounded-md text-xs font-semibold hover:bg-[#e8f2f0] transition-colors cursor-pointer"
+            onClick={() => {
+              setIsModifyOpen(!isModifyOpen);
+              setModOrigin(origin);
+              setModDestination(destination);
+              setModDate(departDate);
+              setModPassengers(passengers);
+            }}
+            className="self-start sm:self-auto border border-[#0d6b63] text-[#0d6b63] bg-white px-3.5 py-1.5 rounded-md text-xs font-semibold hover:bg-[#e8f2f0] transition-colors cursor-pointer flex items-center gap-1.5"
           >
-            Modify search
+            <span className="material-symbols-outlined text-[16px]">{isModifyOpen ? 'close' : 'tune'}</span>
+            <span>{isModifyOpen ? 'Close modify' : 'Modify search'}</span>
           </button>
         </div>
+
+        {/* Inline Modify Search Drawer */}
+        {isModifyOpen && (
+          <form
+            onSubmit={handleApplyModify}
+            className="my-4 p-4 sm:p-5 bg-white rounded-xl border border-[#0d6b63]/30 shadow-md animate-fade-in text-left space-y-4"
+          >
+            <div className="flex items-center justify-between pb-2 border-b border-[#e3ded4]">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#0d3d3a] flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[16px] text-[#0d6b63]">train</span>
+                Modify Train Journey Criteria
+              </span>
+              <span className="text-[11px] text-[#889593]">
+                Updates live schedules and seat availability
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
+              <div className="lg:col-span-3">
+                <label className="text-[11px] font-bold text-[#5c6967] block uppercase mb-1">
+                  From Station
+                </label>
+                <input
+                  type="text"
+                  value={modOrigin}
+                  onChange={(e) => setModOrigin(e.target.value)}
+                  className="w-full px-3 py-2 text-xs border border-[#e3ded4] rounded-lg focus:outline-none focus:border-[#0d6b63] bg-[#fbf9f4]"
+                  placeholder="e.g. New Delhi (NDLS)"
+                />
+              </div>
+
+              <div className="lg:col-span-1 flex justify-center pb-0.5">
+                <button
+                  type="button"
+                  onClick={handleSwapModify}
+                  title="Swap Stations"
+                  className="w-8 h-8 rounded-full border border-[#e3ded4] bg-white hover:bg-[#e8f2f0] text-[#0d6b63] flex items-center justify-center transition-transform hover:rotate-180 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[18px]">swap_horiz</span>
+                </button>
+              </div>
+
+              <div className="lg:col-span-3">
+                <label className="text-[11px] font-bold text-[#5c6967] block uppercase mb-1">
+                  To Station
+                </label>
+                <input
+                  type="text"
+                  value={modDestination}
+                  onChange={(e) => setModDestination(e.target.value)}
+                  className="w-full px-3 py-2 text-xs border border-[#e3ded4] rounded-lg focus:outline-none focus:border-[#0d6b63] bg-[#fbf9f4]"
+                  placeholder="e.g. Jaipur (JP)"
+                />
+              </div>
+
+              <div className="lg:col-span-2">
+                <label className="text-[11px] font-bold text-[#5c6967] block uppercase mb-1">
+                  Journey Date
+                </label>
+                <input
+                  type="date"
+                  value={modDate}
+                  onChange={(e) => setModDate(e.target.value)}
+                  className="w-full px-3 py-2 text-xs border border-[#e3ded4] rounded-lg focus:outline-none focus:border-[#0d6b63] bg-[#fbf9f4]"
+                />
+              </div>
+
+              <div className="lg:col-span-3">
+                <label className="text-[11px] font-bold text-[#5c6967] block uppercase mb-1">
+                  Passengers
+                </label>
+                <select
+                  value={modPassengers}
+                  onChange={(e) => setModPassengers(e.target.value)}
+                  className="w-full px-3 py-2 text-xs border border-[#e3ded4] rounded-lg focus:outline-none focus:border-[#0d6b63] bg-[#fbf9f4]"
+                >
+                  <option value="1 passenger">1 Passenger</option>
+                  <option value="2 passengers">2 Passengers</option>
+                  <option value="3 passengers">3 Passengers</option>
+                  <option value="4 passengers">4 Passengers</option>
+                  <option value="6 passengers">6 Passengers (Max)</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#e3ded4]">
+              <button
+                type="button"
+                onClick={() => setIsModifyOpen(false)}
+                className="px-3.5 py-1.5 text-xs text-[#5c6967] hover:text-[#0d3d3a] hover:bg-[#f0ebe1] rounded-md transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-1.5 text-xs font-semibold bg-[#0d6b63] text-white hover:bg-[#0a534d] rounded-md transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm"
+              >
+                <span className="material-symbols-outlined text-[15px]">check</span>
+                <span>Update Results</span>
+              </button>
+            </div>
+          </form>
+        )}
 
         {/* 2-Column Split: Filters + Train Cards (Page 17) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-6">
@@ -304,23 +463,52 @@ export const TrainsPage: React.FC = () => {
               </div>
             )}
 
-            {!loading && !error && trains.length === 0 && (
+            {/* Sorting Toolbar */}
+            {!loading && !error && sortedTrains.length > 0 && (
+              <div className="bg-white rounded-xl border border-[#e3ded4] p-3 shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-[#0d3d3a] flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[16px] text-[#0d6b63]">swap_vert</span>
+                    Sort by:
+                  </span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {[
+                      { id: 'price_asc', label: 'Price: Low to High' },
+                      { id: 'time_asc', label: 'Departure Time' },
+                      { id: 'duration_asc', label: 'Fastest' },
+                    ].map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => setSortOption(opt.id as any)}
+                        className={`px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer ${
+                          sortOption === opt.id
+                            ? 'bg-[#0d6b63] text-white shadow-xs'
+                            : 'bg-[#f7f4ed] text-[#42504e] hover:bg-[#eae4d8]'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <span className="text-[#889593] text-[11px]">
+                  {sortedTrains.length} train{sortedTrains.length !== 1 ? 's' : ''} available
+                </span>
+              </div>
+            )}
+
+            {!loading && !error && sortedTrains.length === 0 && (
               <div className="bg-white rounded-xl border border-[#e3ded4] p-10 text-center space-y-3 shadow-sm">
                 <span className="material-symbols-outlined text-[42px] text-[#889593]">train</span>
                 <h3 className="font-bold text-[#0d3d3a] text-base">No trains available in catalog</h3>
                 <p className="text-xs text-[#6b7775] max-w-md mx-auto">
-                  No scheduled demo train routes currently found.
+                  No scheduled demo train routes currently found matching your search.
                 </p>
               </div>
             )}
 
-            {!loading && trains.length > 0 && (
-              <div className="text-xs text-[#6b7775]">
-                Showing {trains.length} trains · Fares per passenger · Curated Demo Catalog
-              </div>
-            )}
-
-            {!loading && trains.map((train) => (
+            {!loading && sortedTrains.map((train) => (
               <div
                 key={train.id}
                 className="bg-white rounded-xl border border-[#e3ded4] p-5 shadow-sm hover:border-[#0d6b63]/60 transition-all space-y-4"
@@ -331,9 +519,18 @@ export const TrainsPage: React.FC = () => {
                     <p className="text-xs text-[#6b7775]">#{train.number} · {train.frequency}</p>
                   </div>
 
-                  <div className="flex items-center gap-1 text-[11px] font-semibold text-[#0d6b63] bg-[#e8f2f0] px-2.5 py-0.5 rounded-full self-start sm:self-auto">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#0d6b63]"></span>
-                    TDR Refund Protected
+                  <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTrainDetails(train)}
+                      className="border border-[#0d6b63] text-[#0d6b63] bg-white px-3 py-1 rounded text-xs font-semibold hover:bg-[#e8f2f0] transition-colors cursor-pointer"
+                    >
+                      View Details
+                    </button>
+                    <div className="flex items-center gap-1 text-[11px] font-semibold text-[#0d6b63] bg-[#e8f2f0] px-2.5 py-1 rounded-full">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#0d6b63]"></span>
+                      TDR Refund Protected
+                    </div>
                   </div>
                 </div>
 
@@ -363,7 +560,7 @@ export const TrainsPage: React.FC = () => {
                   {train.classes.map((c) => (
                     <div
                       key={c.name}
-                      className="p-3 rounded-lg border border-[#e3ded4] bg-[#fbf9f4] flex items-center justify-between text-xs"
+                      className="p-3 rounded-lg border border-[#e3ded4] bg-[#fbf9f4] flex items-center justify-between text-xs hover:border-[#0d6b63]/50 transition-colors"
                     >
                       <div>
                         <span className="font-bold text-[#0d3d3a] block">{c.name}</span>
@@ -375,9 +572,9 @@ export const TrainsPage: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => handleBook(train, c)}
-                          className="bg-[#0d6b63] text-white px-3 py-1.5 rounded text-xs font-semibold hover:bg-[#0a534d] transition-colors cursor-pointer"
+                          className="bg-[#0d6b63] text-white px-3.5 py-1.5 rounded text-xs font-semibold hover:bg-[#0a534d] transition-colors cursor-pointer shadow-xs"
                         >
-                          Book
+                          Select & Book
                         </button>
                       </div>
                     </div>
@@ -387,6 +584,118 @@ export const TrainsPage: React.FC = () => {
             ))}
           </div>
         </div>
+
+        {/* Train Details Modal */}
+        {selectedTrainDetails && (
+          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-lg w-full border border-[#e3ded4] p-6 space-y-5 shadow-2xl animate-fade-in text-left max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between pb-3 border-b border-[#e3ded4]">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-lg bg-[#e8f2f0] flex items-center justify-center text-[#0d6b63] font-bold text-base">
+                    <span className="material-symbols-outlined text-[20px]">train</span>
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-[#0d3d3a]">
+                      {selectedTrainDetails.name} (#{selectedTrainDetails.number})
+                    </h3>
+                    <p className="text-xs text-[#6b7775]">
+                      {origin} → {destination} · {displayDateFormatted}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedTrainDetails(null)}
+                  className="text-[#6b7775] hover:text-black p-1 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[20px]">close</span>
+                </button>
+              </div>
+
+              {/* Timings Strip */}
+              <div className="bg-[#fbf9f4] p-4 rounded-xl border border-[#e3ded4] space-y-3">
+                <div className="flex items-center justify-between text-xs sm:text-sm">
+                  <div>
+                    <span className="text-lg font-bold text-[#0d3d3a] block">{selectedTrainDetails.depTime}</span>
+                    <span className="text-xs font-semibold text-[#0d3d3a]">{selectedTrainDetails.fromStation}</span>
+                  </div>
+                  <div className="text-center px-3">
+                    <span className="text-xs text-[#889593] font-medium">{selectedTrainDetails.duration}</span>
+                    <div className="w-20 sm:w-28 h-0.5 bg-[#0d6b63]/40 my-1 relative">
+                      <div className="w-2 h-2 rounded-full bg-[#0d6b63] absolute left-1/2 -top-0.75 -translate-x-1/2"></div>
+                    </div>
+                    <span className="text-[11px] text-[#0d6b63] font-semibold">{selectedTrainDetails.frequency}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-lg font-bold text-[#0d3d3a] block">{selectedTrainDetails.arrTime}</span>
+                    <span className="text-xs font-semibold text-[#0d3d3a]">{selectedTrainDetails.toStation}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Onboard Amenities */}
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="p-3 bg-white rounded-lg border border-[#e3ded4] space-y-1">
+                  <div className="flex items-center gap-1.5 text-[#0d6b63] font-semibold">
+                    <span className="material-symbols-outlined text-[16px]">restaurant</span>
+                    <span>Pantry & Catering</span>
+                  </div>
+                  <p className="text-[11px] text-[#5c6967]">Onboard meals available or included</p>
+                </div>
+                <div className="p-3 bg-white rounded-lg border border-[#e3ded4] space-y-1">
+                  <div className="flex items-center gap-1.5 text-[#0d6b63] font-semibold">
+                    <span className="material-symbols-outlined text-[16px]">power</span>
+                    <span>Charging & Bio-Toilets</span>
+                  </div>
+                  <p className="text-[11px] text-[#5c6967]">Personal sockets at all AC seats</p>
+                </div>
+              </div>
+
+              {/* IRCTC TDR Rules */}
+              <div className="p-3.5 bg-[#e8f2f0]/60 rounded-xl border border-[#d0dfd3] space-y-1.5 text-xs">
+                <div className="flex items-center gap-1.5 font-bold text-[#0d3d3a]">
+                  <span className="material-symbols-outlined text-[16px] text-[#0d6b63]">gavel</span>
+                  <span>IRCTC TDR Dispute Protection</span>
+                </div>
+                <p className="text-[11px] text-[#42504e] leading-relaxed">
+                  Automatic TDR filing assistance is included if the train is delayed more than 3 hours or in the event of AC failure. Agent Travel arbitrates with IRCTC on your behalf.
+                </p>
+              </div>
+
+              {/* Class Booking Selection inside Modal */}
+              <div className="space-y-2 pt-2 border-t border-[#e3ded4]">
+                <span className="text-xs font-bold text-[#0d3d3a] block">Select Class to Continue:</span>
+                <div className="space-y-2">
+                  {selectedTrainDetails.classes.map((cls) => (
+                    <div
+                      key={cls.name}
+                      className="p-3 rounded-xl border border-[#e3ded4] flex items-center justify-between hover:bg-[#fbf9f4] transition-colors text-xs"
+                    >
+                      <div>
+                        <span className="font-bold text-[#0d3d3a] block">{cls.name}</span>
+                        <span className="text-[11px] text-[#166534] font-semibold">{cls.status}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="font-bold text-sm text-[#0d3d3a]">{cls.fare}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const tr = selectedTrainDetails;
+                            setSelectedTrainDetails(null);
+                            handleBook(tr, cls);
+                          }}
+                          className="bg-[#0d6b63] text-white px-4 py-1.5 rounded-lg font-semibold hover:bg-[#0a534d] transition-colors cursor-pointer shadow-xs"
+                        >
+                          Book Now
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
 
       <SiteFooter />

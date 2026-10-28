@@ -89,3 +89,52 @@
     }
   }
 }
+
+/* Dedicated Print Styles for Travel E-Ticket & Receipt Printing */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 8mm 8mm 8mm;
+  }
+
+  html, body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt !important;
+    line-height: 1.3 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .no-print, header, footer, nav, .site-header, .site-footer {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .ticket-print-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: 1.5px solid #0d6b63 !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Ensure background colors on tables and headers print crisply */
+  .print-bg-teal {
+    background-color: #0d3d3a !important;
+    color: #ffffff !important;
+  }
+
+  .print-bg-light {
+    background-color: #f7f9f9 !important;
+  }
+
+  .print-border {
+    border-color: #0d6b63 !important;
+  }
+}

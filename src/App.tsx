@@ -24,6 +24,7 @@ import { HelpPage } from './pages/HelpPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { SignInPage } from './pages/SignInPage';
 import { SignUpPage } from './pages/SignUpPage';
+import { TicketPage } from './pages/TicketPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 // Internal Reviewer Console Pages (Mockup Pages 11 & 12)
@@ -47,6 +48,8 @@ export const App: React.FC = () => {
               <Route path="/destinations" element={<DestinationsPage />} />
               <Route path="/offers" element={<OffersPage />} />
               <Route path="/bookings" element={<BookingsPage />} />
+              <Route path="/ticket/:id" element={<TicketPage />} />
+              <Route path="/tickets/:id" element={<TicketPage />} />
               <Route path="/refunds" element={<RefundCenterPage />} />
               <Route path="/refunds/:id" element={<CaseDetailPage />} />
               <Route path="/hotels" element={<HotelsPage />} />

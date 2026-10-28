@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { SiteHeader } from '../components/layout/SiteHeader';
 import { SiteFooter } from '../components/layout/SiteFooter';
 import { useTravelBooking, StoredBooking } from '../context/TravelBookingContext';
@@ -8,20 +8,42 @@ type StatusTab = 'upcoming' | 'completed' | 'cancelled' | 'all';
 type ServiceFilter = 'all' | 'flights' | 'hotels' | 'trains' | 'buses' | 'cabs' | 'holidays';
 
 export const BookingsPage: React.FC = () => {
-  const { userBookings, bookingSuccessAlert, clearBookingSuccessAlert } = useTravelBooking();
+  const navigate = useNavigate();
+  const { userBookings, bookingSuccessAlert, clearBookingSuccessAlert, fetchBackendBookings } = useTravelBooking();
   const [activeTab, setActiveTab] = useState<StatusTab>('upcoming');
   const [serviceFilter, setServiceFilter] = useState<ServiceFilter>('all');
   const [selectedBookingDetails, setSelectedBookingDetails] = useState<StoredBooking | null>(null);
 
-  const upcomingCount = userBookings.filter((b) => !b.status.includes('Cancelled')).length;
+  React.useEffect(() => {
+    fetchBackendBookings();
+  }, []);
+
+  const isPastBooking = (b: StoredBooking) => {
+    if (b.status === 'Completed') return true;
+    const dateDetail = b.details.find(
+      (d) => d.label === 'DATE' || d.label === 'CHECK-IN' || d.label === 'START DATE'
+    );
+    if (dateDetail) {
+      const d = new Date(dateDetail.value);
+      if (!isNaN(d.getTime())) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return d < today;
+      }
+    }
+    return false;
+  };
+
+  const upcomingCount = userBookings.filter((b) => !isPastBooking(b) && !b.status.includes('Cancelled')).length;
+  const completedCount = userBookings.filter((b) => isPastBooking(b) && !b.status.includes('Cancelled')).length;
   const cancelledCount = userBookings.filter((b) => b.status.includes('Cancelled')).length;
   const cancelledBooking = userBookings.find((b) => b.hasRefundAlert || b.status.includes('Cancelled'));
 
   const filteredBookings = userBookings.filter((b) => {
     // Status tab filter
     if (activeTab === 'cancelled' && !b.status.includes('Cancelled')) return false;
-    if (activeTab === 'upcoming' && b.status.includes('Cancelled')) return false;
-    if (activeTab === 'completed') return false; // sample data currently contains upcoming/cancelled trips
+    if (activeTab === 'upcoming' && (isPastBooking(b) || b.status.includes('Cancelled'))) return false;
+    if (activeTab === 'completed' && (!isPastBooking(b) || b.status.includes('Cancelled'))) return false;
 
     // Service mode filter
     if (serviceFilter === 'flights' && b.serviceType !== 'FLIGHT') return false;
@@ -124,7 +146,7 @@ export const BookingsPage: React.FC = () => {
                   : 'text-[#42504e] hover:bg-[#eae4d8]'
               }`}
             >
-              Completed
+              Completed {completedCount > 0 ? `(${completedCount})` : ''}
             </button>
             <button
               onClick={() => setActiveTab('cancelled')}
@@ -236,7 +258,7 @@ export const BookingsPage: React.FC = () => {
                   ) : (
                     <button
                       onClick={() => setSelectedBookingDetails(b)}
-                      className="bg-white border border-[#0d6b63] text-[#0d6b63] px-4 py-2 rounded-md text-xs font-semibold hover:bg-[#e8f2f0] transition-colors"
+                      className="bg-white border border-[#0d6b63] text-[#0d6b63] px-4 py-2 rounded-md text-xs font-semibold hover:bg-[#e8f2f0] transition-colors cursor-pointer"
                     >
                       Manage booking
                     </button>
@@ -244,7 +266,7 @@ export const BookingsPage: React.FC = () => {
 
                   <button
                     onClick={() => setSelectedBookingDetails(b)}
-                    className="text-[#6b7775] hover:text-[#0d3d3a] px-3 py-2 text-xs font-medium"
+                    className="text-[#6b7775] hover:text-[#0d3d3a] px-3 py-2 text-xs font-medium cursor-pointer"
                   >
                     View details
                   </button>
@@ -373,20 +395,59 @@ export const BookingsPage: React.FC = () => {
                     </span>
                   </div>
                 )}
+                {selectedBookingDetails.traveler && (
+                  <div className="pt-2 pb-1 border-b border-[#f0ebe1] space-y-1">
+                    <span className="font-bold text-[#0d3d3a] block">Primary Passenger:</span>
+                    <div className="text-[11px] text-[#42504e] space-y-0.5">
+                      <div>Name: <span className="font-semibold text-[#0d3d3a]">{selectedBookingDetails.traveler.name}</span></div>
+                      <div>Email: <span className="font-semibold text-[#0d3d3a]">{selectedBookingDetails.traveler.email}</span></div>
+                      {selectedBookingDetails.traveler.phone && (
+                        <div>Phone: <span className="font-semibold text-[#0d3d3a]">{selectedBookingDetails.traveler.phone}</span></div>
+                      )}
+                    </div>
+                    {selectedBookingDetails.traveler.passengers && selectedBookingDetails.traveler.passengers.length > 0 && (
+                      <div className="pt-1">
+                        <span className="text-[11px] font-bold text-[#5c6967] block">Co-Travellers:</span>
+                        <div className="space-y-0.5 mt-0.5">
+                          {selectedBookingDetails.traveler.passengers.map((p, idx) => (
+                            <div key={idx} className="text-[11px] text-[#42504e]">
+                              • {p.name} {p.age ? `(${p.age} yrs, ${p.gender || 'N/A'})` : ''}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
-              <div className="pt-2 flex justify-between items-center gap-2">
+              <div className="pt-2 flex flex-wrap justify-between items-center gap-2">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const bId = selectedBookingDetails.id;
+                      setSelectedBookingDetails(null);
+                      navigate(`/ticket/${bId}?print=true`);
+                    }}
+                    className="border border-[#0d6b63] text-[#0d6b63] bg-white px-3.5 py-1.5 rounded-md text-xs font-semibold hover:bg-[#e8f2f0] transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+                    title="Generate and print dedicated travel ticket / receipt"
+                  >
+                    <span className="material-symbols-outlined text-[15px]">print</span>
+                    <span>Print Ticket</span>
+                  </button>
+                  <Link
+                    to={selectedBookingDetails.refundCaseId ? `/refunds/${selectedBookingDetails.refundCaseId}` : '/refunds'}
+                    className="border border-[#b45309] text-[#b45309] bg-[#fffbeb] px-3 py-1.5 rounded-md text-xs font-semibold hover:bg-[#fef3c7] transition-colors flex items-center gap-1.5"
+                  >
+                    <span className="material-symbols-outlined text-[15px]">gavel</span>
+                    Dispute / Refund
+                  </Link>
+                </div>
                 <button
                   type="button"
-                  onClick={() => window.print()}
-                  className="border border-[#0d6b63] text-[#0d6b63] bg-white px-3.5 py-2 rounded-md text-xs font-semibold hover:bg-[#e8f2f0] transition-colors flex items-center gap-1.5"
-                >
-                  <span className="material-symbols-outlined text-[16px]">print</span>
-                  Print Receipt
-                </button>
-                <button
                   onClick={() => setSelectedBookingDetails(null)}
-                  className="bg-[#0d6b63] text-white px-5 py-2 rounded-md text-xs font-semibold hover:bg-[#0a534d] transition-colors"
+                  className="bg-[#0d6b63] text-white px-4 py-1.5 rounded-md text-xs font-semibold hover:bg-[#0a534d] transition-colors cursor-pointer"
                 >
                   Done
                 </button>

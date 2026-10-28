@@ -1,8 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { SiteHeader } from '../components/layout/SiteHeader';
 import { SiteFooter } from '../components/layout/SiteFooter';
 import { useTravelBooking } from '../context/TravelBookingContext';
+
+interface BusItem {
+  id: string;
+  catalogTripId?: string;
+  operator: string;
+  type: string;
+  rating: number;
+  seatsLeft: string;
+  depTime: string;
+  boarding: string;
+  duration: string;
+  arrTime: string;
+  drop: string;
+  fare: string;
+  rawFare: number;
+}
 
 export const BusesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -14,6 +30,12 @@ export const BusesPage: React.FC = () => {
   const passengers = searchCriteria.passengers || '1 passenger';
 
   const [selectedTypes, setSelectedTypes] = useState<string[]>(['AC Sleeper', 'Multi-Axle']);
+  const [buses, setBuses] = useState<BusItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [disclaimer, setDisclaimer] = useState<string>(
+    'Curated Demo Catalog Inventory for Showcase — Not Live Airline/GDS Feed'
+  );
 
   const displayDateFormatted = (() => {
     const d = new Date(departDate + 'T00:00:00');
@@ -22,69 +44,60 @@ export const BusesPage: React.FC = () => {
       : departDate;
   })();
 
-  const buses = [
-    {
-      id: 'b1',
-      operator: 'Coastline Travels',
-      type: 'AC Sleeper (2+1)',
-      rating: 4.5,
-      seatsLeft: '12 seats left',
-      depTime: '21:30',
-      boarding: 'Majestic',
-      duration: '10h 30m',
-      arrTime: '08:00',
-      drop: 'Panaji',
-      fare: '₹ 1,450',
-    },
-    {
-      id: 'b2',
-      operator: 'VRL Travels',
-      type: 'Multi-Axle I-Shift A/C Sleeper',
-      rating: 4.6,
-      seatsLeft: '8 seats left',
-      depTime: '22:00',
-      boarding: 'Silk Board',
-      duration: '10h 00m',
-      arrTime: '08:00',
-      drop: 'Mapusa',
-      fare: '₹ 1,650',
-    },
-    {
-      id: 'b3',
-      operator: 'SRS Travels',
-      type: 'Non-AC Sleeper (2+1)',
-      rating: 4.1,
-      seatsLeft: '18 seats left',
-      depTime: '20:30',
-      boarding: 'Madiwala',
-      duration: '11h 00m',
-      arrTime: '07:30',
-      drop: 'Panaji',
-      fare: '₹ 950',
-    },
-    {
-      id: 'b4',
-      operator: 'Orange Tours & Travels',
-      type: 'Volvo 9600 AC Sleeper',
-      rating: 4.7,
-      seatsLeft: '6 seats left',
-      depTime: '22:30',
-      boarding: 'Majestic',
-      duration: '09h 45m',
-      arrTime: '08:15',
-      drop: 'Panaji',
-      fare: '₹ 1,890',
-    },
-  ];
+  const mapCatalogToBus = (t: any): BusItem => ({
+    id: t.tripId || t.code || t.id,
+    catalogTripId: t.id,
+    operator: t.operator || 'InterCity Travels',
+    type: t.travelClass || 'AC Sleeper (2+1)',
+    rating: 4.6,
+    seatsLeft: `${t.availableSeats || 12} seats left`,
+    depTime: t.departTime || '21:30',
+    boarding: t.origin || origin,
+    duration: t.duration || '10h 30m',
+    arrTime: t.arriveTime || '08:00',
+    drop: t.destination || destination,
+    fare: t.fareFormatted || `₹ ${(t.fareAmount || t.basePrice || 1450).toLocaleString('en-IN')}`,
+    rawFare: Number(t.fareAmount || t.basePrice || 1450),
+  });
 
-  const handleBook = (bus: typeof buses[0]) => {
-    const baseFare = parseInt(bus.fare.replace(/[^0-9]/g, '')) || 1450;
+  const fetchBuses = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/catalog/trips?serviceType=buses');
+      if (!res.ok) {
+        throw new Error(`Catalog API responded with HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      if (data.success && Array.isArray(data.trips)) {
+        setBuses(data.trips.map(mapCatalogToBus));
+        if (data.disclaimer) {
+          setDisclaimer(data.disclaimer);
+        }
+      } else {
+        throw new Error(data.error || 'Invalid catalog response format');
+      }
+    } catch (err: any) {
+      console.warn('[CATALOG] Failed to fetch live buses:', err.message);
+      setError(err.message || 'Unable to connect to bus catalog');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBuses();
+  }, [origin, destination]);
+
+  const handleBook = (bus: BusItem) => {
+    const baseFare = bus.rawFare || parseInt(bus.fare.replace(/[^0-9]/g, '')) || 1450;
     const matchPassengers = passengers.match(/(\d+)/);
     const passengerCount = matchPassengers ? Math.max(1, parseInt(matchPassengers[1], 10)) : 1;
     const totalFare = baseFare * passengerCount;
 
     openBookingSummary({
       id: bus.id,
+      catalogTripId: bus.catalogTripId || bus.id,
       serviceType: 'buses',
       title: `${bus.operator} · ${bus.type}`,
       operator: bus.operator,
@@ -103,6 +116,7 @@ export const BusesPage: React.FC = () => {
       fareFormatted: `₹ ${totalFare.toLocaleString('en-IN')}`,
       fareAmount: totalFare,
       refundable: true,
+      isCatalogDemo: true,
     });
   };
 
@@ -219,11 +233,68 @@ export const BusesPage: React.FC = () => {
 
           {/* Right Bus Cards */}
           <div className="lg:col-span-9 space-y-4">
-            <div className="text-xs text-[#6b7775]">
-              Showing 4 of 38 buses · Fares per passenger · Sample data
+            {/* Demo Catalog Disclaimer Banner */}
+            <div className="py-2.5 px-4 rounded-xl bg-[#ecfdf5] border border-[#a7f3d0] text-xs text-[#065f46] flex items-center justify-between shadow-sm">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px] text-[#059669]">info</span>
+                <span className="font-medium">{disclaimer}</span>
+              </div>
+              <span className="hidden sm:inline-block text-[11px] font-semibold text-[#047857] uppercase tracking-wider bg-white/70 px-2 py-0.5 rounded">
+                Verified AWS DynamoDB Catalog
+              </span>
             </div>
 
-            {filteredBuses.map((bus) => (
+            {/* Error State */}
+            {error && (
+              <div className="p-4 rounded-xl bg-[#fef2f2] border border-[#fecaca] text-xs sm:text-sm text-[#991b1b] flex items-center justify-between shadow-sm">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[20px] text-[#dc2626]">error</span>
+                  <span>Failed to load bus inventory: {error}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={fetchBuses}
+                  className="bg-[#dc2626] text-white px-3 py-1 rounded-md text-xs font-semibold hover:bg-[#b91c1c] transition-colors"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+
+            {/* Loading Skeletons */}
+            {loading && (
+              <div className="space-y-4">
+                {[1, 2].map((i) => (
+                  <div key={i} className="bg-white rounded-xl border border-[#e3ded4] p-5 shadow-sm animate-pulse space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-2">
+                        <div className="h-4 bg-[#e5e0d8] rounded w-44" />
+                        <div className="h-3 bg-[#e5e0d8] rounded w-28" />
+                      </div>
+                      <div className="h-6 bg-[#e5e0d8] rounded w-20" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {!loading && !error && filteredBuses.length === 0 && (
+              <div className="bg-white rounded-xl border border-[#e3ded4] p-10 text-center space-y-3 shadow-sm">
+                <span className="material-symbols-outlined text-[42px] text-[#889593]">directions_bus</span>
+                <h3 className="font-bold text-[#0d3d3a] text-base">No buses available in catalog</h3>
+                <p className="text-xs text-[#6b7775] max-w-md mx-auto">
+                  No scheduled demo bus routes currently found.
+                </p>
+              </div>
+            )}
+
+            {!loading && filteredBuses.length > 0 && (
+              <div className="text-xs text-[#6b7775]">
+                Showing {filteredBuses.length} buses · Fares per passenger · Curated Demo Catalog
+              </div>
+            )}
+
+            {!loading && filteredBuses.map((bus) => (
               <div
                 key={bus.id}
                 className="bg-white rounded-xl border border-[#e3ded4] p-5 shadow-sm hover:border-[#0d6b63]/60 transition-all space-y-3"

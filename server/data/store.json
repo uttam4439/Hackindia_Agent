@@ -1,98 +1,21 @@
 {
   "bookings": {
-    "BK-SAFE-1": {
-      "id": "BK-SAFE-1",
-      "paymentStatus": "PAID",
-      "updatedAt": "2026-10-16T18:16:47.628Z"
-    },
-    "BK-872324": {
-      "id": "BK-872324",
-      "createdAt": "2026-10-16T18:21:12.886Z",
-      "razorpayOrderId": "order_Tog0sTvb9568sj",
+    "BK-901291": {
+      "id": "BK-901291",
+      "createdAt": "2026-10-21T08:21:44.159Z",
+      "razorpayOrderId": "order_TqUTELpH4bQDDD",
       "amount": 4872,
-      "currency": "INR",
-      "paymentStatus": "PENDING",
-      "bookingDetails": {
-        "id": "AI-805",
-        "serviceType": "flights",
-        "title": "Air India · AI-805",
-        "operator": "Air India",
-        "code": "AI-805",
-        "route": "Delhi (DEL) → Mumbai (BOM)",
-        "origin": "Delhi (DEL)",
-        "destination": "Mumbai (BOM)",
-        "departDate": "2026-12-21",
-        "departTime": "06:10",
-        "arriveTime": "08:25",
-        "duration": "2h 15m",
-        "travelClass": "Economy",
-        "passengers": "1 Traveller · Economy",
-        "passengerCount": 1,
-        "baseRatePerUnit": 4872,
-        "taxAmount": 585,
-        "fareFormatted": "₹ 4,872",
-        "fareAmount": 4872,
-        "refundable": true,
-        "notes": "Non-stop · Mon, 21 Dec 2026 · Departure confirmed"
-      },
-      "updatedAt": "2026-10-16T18:21:12.886Z"
-    },
-    "BK-148123": {
-      "id": "BK-148123",
-      "createdAt": "2026-10-16T18:25:48.627Z",
-      "razorpayOrderId": "order_Tog5jR7Qp2CgP4",
-      "amount": 5120,
       "currency": "INR",
       "paymentStatus": "PAID",
       "bookingDetails": {
-        "id": "6E-2134",
-        "serviceType": "flights",
-        "title": "IndiGo · 6E-2134",
-        "operator": "IndiGo",
-        "code": "6E-2134",
-        "route": "Delhi (DEL) → Mumbai (BOM)",
-        "origin": "Delhi (DEL)",
-        "destination": "Mumbai (BOM)",
-        "departDate": "2026-12-21",
-        "departTime": "08:30",
-        "arriveTime": "10:40",
-        "duration": "2h 10m",
-        "travelClass": "Economy",
-        "passengers": "1 Traveller · Economy",
-        "passengerCount": 1,
-        "baseRatePerUnit": 5120,
-        "taxAmount": 614,
-        "fareFormatted": "₹ 5,120",
-        "fareAmount": 5120,
-        "refundable": true,
-        "notes": "Non-stop · Mon, 21 Dec 2026 · Departure confirmed"
-      },
-      "updatedAt": "2026-10-19T12:16:45.890Z",
-      "razorpayPaymentId": "pay_TogBAypoJSOi1K",
-      "razorpaySignature": "ed694c3077ffcb6b7c6e2b9015ad760fa0ba70cf98044273b75f6255245ee6c4",
-
-      "paymentVerifiedAt": "2026-10-16T18:31:24.095Z",
-      "refundCaseId": "RF-2058722ZAV",
-      "refundStatus": "Under Investigation"
-
-      "paymentVerifiedAt": "2026-10-16T18:31:24.095Z"
-    },
-    "BK-929130": {
-      "id": "BK-929130",
-      "createdAt": "2026-10-19T06:05:29.142Z",
-      "razorpayOrderId": null,
-      "amount": 4872,
-      "currency": "INR",
-      "paymentStatus": "PENDING",
-      "bookingDetails": {
         "id": "AI-805",
         "serviceType": "flights",
         "title": "Air India · AI-805",
         "operator": "Air India",
         "code": "AI-805",
-        "route": "Delhi (DEL) → Srinagar (SXR)",
+        "route": "Delhi (DEL) → Kullu (KUU)",
         "origin": "Delhi (DEL)",
-        "destination": "Srinagar (SXR)",
+        "destination": "Kullu (KUU)",
         "departDate": "2026-12-21",
         "departTime": "06:10",
         "arriveTime": "08:25",
@@ -107,45 +30,15 @@
         "refundable": true,
         "notes": "Non-stop · Mon, 21 Dec 2026 · Departure confirmed"
       },
-      "updatedAt": "2026-10-19T06:05:29.142Z"
-    },
-    "BK-057878": {
-      "id": "BK-057878",
-      "createdAt": "2026-10-19T06:07:37.895Z",
-      "razorpayOrderId": null,
-      "amount": 4872,
-      "currency": "INR",
-      "paymentStatus": "PENDING",
-      "bookingDetails": {
-        "id": "AI-805",
-        "serviceType": "flights",
-        "title": "Air India · AI-805",
-        "operator": "Air India",
-        "code": "AI-805",
-        "route": "Delhi (DEL) → Srinagar (SXR)",
-        "origin": "Delhi (DEL)",
-        "destination": "Srinagar (SXR)",
-        "departDate": "2026-12-21",
-        "departTime": "06:10",
-        "arriveTime": "08:25",
-        "duration": "2h 15m",
-        "travelClass": "Economy",
-        "passengers": "1 Traveller · Economy",
-        "passengerCount": 1,
-        "baseRatePerUnit": 4872,
-        "taxAmount": 585,
-        "fareFormatted": "₹ 4,872",
-        "fareAmount": 4872,
-        "refundable": true,
-        "notes": "Non-stop · Mon, 21 Dec 2026 · Departure confirmed"
-      },
-      "updatedAt": "2026-10-19T06:07:37.895Z"
-
+      "updatedAt": "2026-10-21T08:23:13.153Z",
+      "razorpayPaymentId": "pay_TqUUSHzHPkPZno",
+      "razorpaySignature": "2292d850d2ba271b11842f134f5d5bc390f3a2da8a06b1c3530fabbd8e1ff147",
+      "paymentVerifiedAt": "2026-10-21T08:23:13.151Z"
     }
   },
   "orders": {
-    "order_Tog0sTvb9568sj": {
-      "bookingId": "BK-872324",
+    "order_TqUTELpH4bQDDD": {
+      "bookingId": "BK-901291",
       "amount": 487200,
       "currency": "INR",
       "tripDetails": {
@@ -154,9 +47,9 @@
         "title": "Air India · AI-805",
         "operator": "Air India",
         "code": "AI-805",
-        "route": "Delhi (DEL) → Mumbai (BOM)",
+        "route": "Delhi (DEL) → Kullu (KUU)",
         "origin": "Delhi (DEL)",
-        "destination": "Mumbai (BOM)",
+        "destination": "Kullu (KUU)",
         "departDate": "2026-12-21",
         "departTime": "06:10",
         "arriveTime": "08:25",
@@ -172,200 +65,11 @@
         "notes": "Non-stop · Mon, 21 Dec 2026 · Departure confirmed"
       },
       "status": "created",
-      "orderId": "order_Tog0sTvb9568sj",
-      "createdAt": "2026-10-16T18:21:12.883Z"
-    },
-    "order_Tog5jR7Qp2CgP4": {
-      "bookingId": "BK-148123",
-      "amount": 512000,
-      "currency": "INR",
-      "tripDetails": {
-        "id": "6E-2134",
-        "serviceType": "flights",
-        "title": "IndiGo · 6E-2134",
-        "operator": "IndiGo",
-        "code": "6E-2134",
-        "route": "Delhi (DEL) → Mumbai (BOM)",
-        "origin": "Delhi (DEL)",
-        "destination": "Mumbai (BOM)",
-        "departDate": "2026-12-21",
-        "departTime": "08:30",
-        "arriveTime": "10:40",
-        "duration": "2h 10m",
-        "travelClass": "Economy",
-        "passengers": "1 Traveller · Economy",
-        "passengerCount": 1,
-        "baseRatePerUnit": 5120,
-        "taxAmount": 614,
-        "fareFormatted": "₹ 5,120",
-        "fareAmount": 5120,
-        "refundable": true,
-        "notes": "Non-stop · Mon, 21 Dec 2026 · Departure confirmed"
-      },
-      "status": "created",
-      "orderId": "order_Tog5jR7Qp2CgP4",
-      "createdAt": "2026-10-16T18:25:48.622Z"
+      "orderId": "order_TqUTELpH4bQDDD",
+      "createdAt": "2026-10-21T08:21:44.157Z"
     }
   },
   "payments": {},
   "processedWebhooks": {},
-  "refunds": {
-    "RF-2058722ZAV": {
-      "id": "RF-2058722ZAV",
-      "caseRef": "#RF-2058722ZAV",
-      "bookingId": "BK-148123",
-      "pnr": "BK-148123",
-      "claimAmount": 5120,
-      "claimAmountFormatted": "₹5,120",
-      "currency": "INR",
-      "eligiblePaidAmount": 5120,
-      "reason": "Cancellation or disruption claim reported for booking",
-      "status": "SUBMITTED",
-      "decisionStatus": "Under Human Review",
-      "eligibilityStatus": "Eligible",
-      "riskLevel": "Low Risk",
-      "riskScore": 0.05,
-      "aiConfidence": 92,
-      "humanReviewRequired": true,
-      "assignedAuditor": "Julian Hayes (Lead Auditor)",
-      "traveler": {
-        "name": "Primary Passenger",
-        "initials": "PP",
-        "tier": "Standard Passenger",
-        "color": "bg-primary-container text-on-primary-container"
-      },
-      "carrier": {
-        "name": "IndiGo",
-        "code": "6E-2134",
-        "type": "flight",
-        "route": "Delhi (DEL) → Mumbai (BOM)",
-        "fareClass": "Economy"
-      },
-      "journeyDate": "2026-12-21",
-      "evidence": [],
-      "reasonSummary": "Cancellation or disruption claim reported for booking",
-      "synthesis": "Carrier disruption and claim reason evaluated. Payment of ₹5,120 verified. Claim eligible for refund arbitration.",
-      "evidenceStrength": "Strong (Verified Booking)",
-      "evidenceCount": "2 Core Artifacts",
-      "recommendedAction": "Full Refund (₹5,120)",
-      "recommendedActionLabel": "Full Refund",
-      "finalDecision": "Pending Human Approval",
-      "steps": [
-        {
-          "stepNumber": "01",
-          "codeName": "01. Request",
-          "title": "Request Understanding",
-          "summary": "Claim submitted for BK-148123. Reason: Cancellation or disruption claim reported for booking.",
-          "status": "Complete",
-          "statusLabel": "Investigation Complete"
-        },
-        {
-          "stepNumber": "02",
-          "codeName": "02. Payment",
-          "title": "Transaction Check",
-          "summary": "₹5,120 payment verified successfully. Settlement status: Settled.",
-          "status": "Complete",
-          "statusLabel": "Investigation Complete"
-        },
-        {
-          "stepNumber": "03",
-          "codeName": "03. Policy",
-          "title": "Policy Verification",
-          "summary": "Refund policy reviewed against carrier cancellation rules and consumer protection guidelines.",
-          "status": "Complete",
-          "statusLabel": "Investigation Complete"
-        },
-        {
-          "stepNumber": "04",
-          "codeName": "04. Review",
-          "title": "Auditor Arbitration",
-          "summary": "Case routed to human auditor for authorization and payout dispatch.",
-          "status": "In Progress",
-          "statusLabel": "Under Review"
-        }
-      ],
-      "artifacts": [
-        {
-          "id": "art-1792412205872-1",
-          "title": "Verified Electronic Ticket & Booking Voucher",
-          "icon": "confirmation_number",
-          "iconColor": "text-[#0d6b63]",
-          "verified": true,
-          "content": "Booking Reference BK-148123 confirmed paid. Route: Delhi (DEL) → Mumbai (BOM).",
-          "source": "Ticketing GDS / CRS",
-          "timestamp": "05:46 pm"
-        },
-        {
-          "id": "art-1792412205872-2",
-          "title": "Disruption & Cancellation Record",
-          "icon": "warning",
-          "iconColor": "text-[#b45309]",
-          "verified": true,
-          "content": "Claim reason recorded: Cancellation or disruption claim reported for booking",
-          "source": "Traveller Claim Dossier",
-          "timestamp": "05:46 pm"
-        }
-      ],
-      "originalPayment": {
-        "razorpayPaymentId": "pay_TogBAypoJSOi1K",
-        "razorpayOrderId": "order_Tog5jR7Qp2CgP4",
-        "amount": 5120,
-        "currency": "INR",
-        "verifiedAt": "2026-10-16T18:31:24.095Z"
-      },
-      "auditLog": [
-        {
-          "id": "log-1792420135016",
-          "time": "07:58 pm",
-          "title": "Reviewer Draft Note Saved",
-          "description": "Draft saved by Julian Hayes (Lead Auditor). Pending decision: more_docs. Note: Reviewer audit check: Carrier confirmed schedule delay of 3h15m. Awaiting secondary approval.",
-          "dotColor": "bg-secondary"
-        },
-        {
-          "id": "log-1792419861927",
-          "time": "07:54 pm",
-          "title": "Reviewer Draft Note Saved",
-          "description": "Draft saved by Julian Hayes (Lead Auditor). Pending decision: more_docs. Note: Lead auditor preliminary assessment: Flight IndiGo 6E-2134 delay confirmed via DGCA database. Checking tariff compensation entitlement.",
-          "dotColor": "bg-secondary"
-        },
-        {
-          "id": "log-1792418332809",
-          "time": "07:28 pm",
-          "title": "Reviewer Draft Note Saved",
-          "description": "Draft saved by Julian Hayes (Lead Auditor). Pending decision: eligible. Note: Persistence test - temporary draft note.",
-          "dotColor": "bg-secondary"
-        },
-        {
-          "id": "log-1792418045422",
-          "time": "07:24 pm",
-          "title": "Reviewer Draft Note Saved",
-          "description": "Draft saved by Julian Hayes (Lead Auditor). Pending decision: eligible. Note: Verification draft note — automated check 2026-10-19. GDS carrier logs reviewed.",
-          "dotColor": "bg-secondary"
-        },
-        {
-          "id": "log-1792412205872-1",
-          "time": "05:46 pm",
-          "title": "Refund Claim Submitted: ₹5,120",
-          "description": "Claim submitted for booking BK-148123. Reason: Cancellation or disruption claim reported for booking. Authoritative paid amount verified: ₹5120.",
-          "dotColor": "bg-primary-container"
-        }
-      ],
-      "history": [
-        {
-          "from": null,
-          "to": "SUBMITTED",
-          "action": "SUBMIT_REFUND_CLAIM",
-          "actor": "Customer",
-          "timestamp": "2026-10-19T12:16:45.872Z",
-          "note": "Cancellation or disruption claim reported for booking"
-        }
-      ],
-      "createdAt": "2026-10-19T12:16:45.872Z",
-      "updatedAt": "2026-10-19T14:28:55.016Z",
-      "reviewerDraftNote": "Reviewer audit check: Carrier confirmed schedule delay of 3h15m. Awaiting secondary approval.",
-      "reviewerDraftDecision": "more_docs",
-      "reviewerDraftSavedAt": "2026-10-19T14:28:55.016Z",
-      "reviewerDraftSavedBy": "Julian Hayes (Lead Auditor)"
-    }
-  }
+  "refunds": {}
 }

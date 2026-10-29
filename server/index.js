@@ -9,6 +9,9 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import Razorpay from 'razorpay';
 import { db } from './awsConfig.js';
 
@@ -17,8 +20,11 @@ import refundRouter from './refundRoutes.js';
 import { authService } from './authService.js';
 import { evidenceService } from './evidenceService.js';
 
-
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const DIST_DIR = path.join(__dirname, '../dist');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -122,11 +128,80 @@ const authenticateToken = (req, res, next) => {
 
 const requireRole = (role) => {
   return (req, res, next) => {
-    if (!req.user || req.user.role !== role) {
+    if (!req.user || (req.user.role !== role && req.user.role !== 'admin')) {
       return res.status(403).json({ success: false, error: `Access denied. Requires '${role}' role.` });
     }
     next();
   };
+};
+
+/**
+ * Case authorization middleware:
+ * - Reviewers and Admins can access any case.
+ * - Travelers can only access cases for their own bookings or refund claims.
+ */
+const authorizeCaseAccess = async (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ success: false, error: 'Authentication required.' });
+  }
+
+  // Reviewers and Admins have authorized access across all cases
+  if (req.user.role === 'reviewer' || req.user.role === 'admin') {
+    return next();
+  }
+
+  const caseId = (req.params.id || '').trim().replace(/^#/, '');
+  if (!caseId) {
+    return res.status(400).json({ success: false, error: 'Case ID is required.' });
+  }
+
+  const userSub = (req.user.sub || req.user.id || '').toString();
+  const userEmail = (req.user.email || '').toString().toLowerCase();
+
+  try {
+    // 1. Try finding refund by ID, caseRef, or bookingId
+    let refund = await db.getRefund(caseId);
+    if (!refund && typeof db.getRefundByBookingId === 'function') {
+      refund = await db.getRefundByBookingId(caseId);
+    }
+
+    let isOwner = false;
+    let linkedBookingId = refund?.bookingId;
+
+    if (refund) {
+      isOwner =
+        (refund.userId && userSub && refund.userId.toString() === userSub) ||
+        (refund.customerEmail && userEmail && refund.customerEmail.toLowerCase() === userEmail) ||
+        (refund.contactEmail && userEmail && refund.contactEmail.toLowerCase() === userEmail) ||
+        (refund.traveler?.email && userEmail && refund.traveler.email.toLowerCase() === userEmail);
+    }
+
+    // 2. If not verified via refund, check linked booking or direct booking match
+    const bookingLookupId = linkedBookingId || caseId;
+    if (!isOwner && bookingLookupId) {
+      const booking = await db.getBooking(bookingLookupId);
+      if (booking) {
+        isOwner =
+          (booking.userId && userSub && booking.userId.toString() === userSub) ||
+          (booking.customerEmail && userEmail && booking.customerEmail.toLowerCase() === userEmail) ||
+          (booking.traveler?.email && userEmail && booking.traveler.email.toLowerCase() === userEmail) ||
+          (booking.customer?.email && userEmail && booking.customer.email.toLowerCase() === userEmail) ||
+          (booking.contact?.email && userEmail && booking.contact.email.toLowerCase() === userEmail);
+      }
+    }
+
+    if (!isOwner) {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied: You do not have permission to access evidence or records for this case.',
+      });
+    }
+
+    next();
+  } catch (err) {
+    console.error('[AUTHZ ERROR] authorizeCaseAccess failed:', err);
+    return res.status(500).json({ success: false, error: 'Internal authorization error' });
+  }
 };
 
 // 4. Refunds & Reviewer endpoints
@@ -235,10 +310,10 @@ app.get('/api/catalog/trips/:id', async (req, res) => {
  * POST /api/auth/login
  * Validates credentials and returns signed session token.
  */
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    const authResult = authService.login(email, password);
+    const authResult = await authService.login(email, password);
     return res.json({
       success: true,
       token: authResult.token,
@@ -253,10 +328,10 @@ app.post('/api/auth/login', (req, res) => {
  * POST /api/auth/register
  * Creates a new traveler account with salted PBKDF2 hash.
  */
-app.post('/api/auth/register', (req, res) => {
+app.post('/api/auth/register', async (req, res) => {
   try {
     const { email, password, name, phone } = req.body;
-    const authResult = authService.register({ email, password, name, phone });
+    const authResult = await authService.register({ email, password, name, phone });
     return res.status(201).json({
       success: true,
       token: authResult.token,
@@ -291,8 +366,9 @@ app.post('/api/auth/logout', (req, res) => {
 /**
  * POST /api/cases/:id/evidence
  * Validates size, magic byte headers, and isolates evidence files on private disk.
+ * Protected: Requires authentication and case-level ownership or reviewer privileges.
  */
-app.post('/api/cases/:id/evidence', async (req, res) => {
+app.post('/api/cases/:id/evidence', authenticateToken, authorizeCaseAccess, async (req, res) => {
   try {
     const caseId = req.params.id;
     const { filename, fileBase64, declaredType, uploaderEmail } = req.body;
@@ -305,7 +381,7 @@ app.post('/api/cases/:id/evidence', async (req, res) => {
       filename,
       fileBase64,
       declaredType,
-      uploaderEmail: uploaderEmail || req.user?.email || 'traveler',
+      uploaderEmail: req.user?.email || uploaderEmail || 'traveler',
     });
 
     return res.status(201).json({
@@ -329,8 +405,9 @@ app.post('/api/cases/:id/evidence', async (req, res) => {
 /**
  * GET /api/cases/:id/evidence
  * Lists verified evidence documents for a given case.
+ * Protected: Requires authentication and case-level ownership or reviewer privileges.
  */
-app.get('/api/cases/:id/evidence', (req, res) => {
+app.get('/api/cases/:id/evidence', authenticateToken, authorizeCaseAccess, (req, res) => {
   const caseId = req.params.id;
   const list = evidenceService.listEvidence(caseId);
   return res.json({
@@ -350,8 +427,9 @@ app.get('/api/cases/:id/evidence', (req, res) => {
 /**
  * GET /api/cases/:id/evidence/:fileId
  * Streams private evidence file with proper MIME type.
+ * Protected: Requires authentication and case-level ownership or reviewer privileges.
  */
-app.get('/api/cases/:id/evidence/:fileId', (req, res) => {
+app.get('/api/cases/:id/evidence/:fileId', authenticateToken, authorizeCaseAccess, (req, res) => {
   const { id: caseId, fileId } = req.params;
   const fileObj = evidenceService.getEvidenceFile(caseId, fileId);
 
@@ -367,8 +445,9 @@ app.get('/api/cases/:id/evidence/:fileId', (req, res) => {
 /**
  * GET /api/cases/:id/summary
  * Generates and downloads a summary dossier for the refund case.
+ * Protected: Requires authentication and case-level ownership or reviewer privileges.
  */
-app.get('/api/cases/:id/summary', (req, res) => {
+app.get('/api/cases/:id/summary', authenticateToken, authorizeCaseAccess, (req, res) => {
   const caseId = req.params.id;
   const summaryContent = [
     `============================================================`,
@@ -1048,24 +1127,62 @@ app.get('/api/bookings/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// Payment status lookup
-app.get('/api/bookings/:id/payment-status', async (req, res) => {
-  const booking = await db.getBooking(req.params.id);
-  if (!booking) {
-    return res.status(404).json({ success: false, error: 'Booking not found' });
+// Payment status lookup (Protected: Requires authentication and booking ownership or reviewer/admin role)
+app.get('/api/bookings/:id/payment-status', authenticateToken, async (req, res) => {
+  try {
+    const booking = await db.getBooking(req.params.id);
+    if (!booking) {
+      return res.status(404).json({ success: false, error: 'Booking not found' });
+    }
+
+    const isReviewer = req.user?.role === 'reviewer' || req.user?.role === 'admin';
+    const userSub = (req.user?.sub || req.user?.id || '').toString();
+    const userEmail = (req.user?.email || '').toString().toLowerCase();
+
+    const isOwner =
+      (booking.userId && userSub && booking.userId.toString() === userSub) ||
+      (booking.customerEmail && userEmail && booking.customerEmail.toLowerCase() === userEmail) ||
+      (booking.traveler?.email && userEmail && booking.traveler.email.toLowerCase() === userEmail) ||
+      (booking.customer?.email && userEmail && booking.customer.email.toLowerCase() === userEmail);
+
+    if (!isReviewer && !isOwner) {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied: You do not have permission to view payment status for this booking.',
+      });
+    }
+
+    return res.json({
+      success: true,
+      bookingId: booking.id,
+      paymentStatus: booking.paymentStatus || 'PENDING',
+      razorpayOrderId: booking.razorpayOrderId || null,
+      razorpayPaymentId: booking.razorpayPaymentId || null,
+      amount: booking.amount,
+    });
+  } catch (err) {
+    console.error('[BOOKINGS API ERROR] Failed to retrieve booking payment status:', err);
+    return res.status(500).json({ success: false, error: 'Failed to retrieve payment status' });
   }
-  return res.json({
-    success: true,
-    bookingId: booking.id,
-    paymentStatus: booking.paymentStatus || 'PENDING',
-    razorpayOrderId: booking.razorpayOrderId || null,
-    razorpayPaymentId: booking.razorpayPaymentId || null,
-    amount: booking.amount,
-  });
 });
 
-// Start Express server if run directly
-if (process.env.NODE_ENV !== 'test') {
+// Serve static frontend assets if built
+if (fs.existsSync(DIST_DIR)) {
+  app.use(express.static(DIST_DIR));
+  // Client-side SPA routing fallback for all non-API GET requests
+  app.use((req, res, next) => {
+    if (req.method === 'GET' && !req.path.startsWith('/api')) {
+      return res.sendFile(path.join(DIST_DIR, 'index.html'));
+    }
+    next();
+  });
+}
+
+// Start Express server if run directly (and not imported by Lambda handler or test runner)
+const isDirectRun = process.argv[1] ? path.resolve(process.argv[1]) === path.resolve(__filename) : false;
+const isLambda = Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.LAMBDA_TASK_ROOT || process.env._HANDLER);
+
+if (isDirectRun && process.env.NODE_ENV !== 'test' && !isLambda) {
   app.listen(PORT, () => {
     console.log(`[SERVER] Agent Travel backend running on http://localhost:${PORT}`);
     console.log(`[SERVER] Razorpay Mode: ${RAZORPAY_MODE}`);

@@ -30,58 +30,63 @@ export const InvestigationProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isSearchModalOpen, setIsSearchModalOpen] = useState<boolean>(false);
   const [timeframe, setTimeframe] = useState<string>('Last 30 Days');
 
+  const getAuthHeaders = (): Record<string, string> => {
+    const token =
+      sessionStorage.getItem('agent_travel_token') || localStorage.getItem('agent_travel_token');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
 
   // Load persistent backend refunds on mount and merge with mock data
   useEffect(() => {
     const fetchBackendRefunds = async () => {
-      const endpoints = ['/api/refunds', 'http://localhost:5001/api/refunds'];
-      for (const url of endpoints) {
-        try {
-          const res = await fetch(url);
-          if (res.ok) {
-            const data = await res.json();
-            if (Array.isArray(data.refunds) && data.refunds.length > 0) {
-              setCases((prev) => {
-                const incomingMap = new Map<string, any>(
-                  data.refunds.map((r: any) => [String(r.id || '').toLowerCase(), r])
-                );
+      try {
+        const res = await fetch('/api/refunds', {
+          headers: {
+            ...getAuthHeaders(),
+          },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.refunds) && data.refunds.length > 0) {
+            setCases((prev) => {
+              const incomingMap = new Map<string, any>(
+                data.refunds.map((r: any) => [String(r.id || '').toLowerCase(), r])
+              );
 
-                const updated = prev.map((c) => {
-                  const incoming =
-                    incomingMap.get(c.id.toLowerCase()) ||
-                    incomingMap.get(c.caseRef.toLowerCase().replace('#', ''));
-                  if (incoming) {
-                    return {
-                      ...c,
-                      ...incoming,
-                      decisionStatus: incoming.decisionStatus || c.decisionStatus,
-                      claimAmount: incoming.claimAmount ?? c.claimAmount,
-                      claimAmountFormatted: incoming.claimAmountFormatted || c.claimAmountFormatted,
-                      reviewerDraftNote: incoming.reviewerDraftNote,
-                      reviewerDraftDecision: incoming.reviewerDraftDecision,
-                      reviewerComment: incoming.reviewerComment || c.reviewerComment,
-                      auditLog: incoming.auditLog || c.auditLog,
-                    };
-                  }
-                  return c;
-                });
-
-                const existingIds = new Set(prev.map((c) => c.id.toLowerCase()));
-                const brandNew = data.refunds.filter(
-                  (r: any) =>
-                    r.id &&
-                    !existingIds.has(String(r.id).toLowerCase()) &&
-                    !existingIds.has(String(r.caseRef || '').toLowerCase().replace('#', ''))
-                );
-
-                return [...brandNew, ...updated];
+              const updated = prev.map((c) => {
+                const incoming =
+                  incomingMap.get(c.id.toLowerCase()) ||
+                  incomingMap.get(c.caseRef.toLowerCase().replace('#', ''));
+                if (incoming) {
+                  return {
+                    ...c,
+                    ...incoming,
+                    decisionStatus: incoming.decisionStatus || c.decisionStatus,
+                    claimAmount: incoming.claimAmount ?? c.claimAmount,
+                    claimAmountFormatted: incoming.claimAmountFormatted || c.claimAmountFormatted,
+                    reviewerDraftNote: incoming.reviewerDraftNote,
+                    reviewerDraftDecision: incoming.reviewerDraftDecision,
+                    reviewerComment: incoming.reviewerComment || c.reviewerComment,
+                    auditLog: incoming.auditLog || c.auditLog,
+                  };
+                }
+                return c;
               });
-              break;
-            }
+
+              const existingIds = new Set(prev.map((c) => c.id.toLowerCase()));
+              const brandNew = data.refunds.filter(
+                (r: any) =>
+                  r.id &&
+                  !existingIds.has(String(r.id).toLowerCase()) &&
+                  !existingIds.has(String(r.caseRef || '').toLowerCase().replace('#', ''))
+              );
+
+              return [...brandNew, ...updated];
+            });
           }
-        } catch {
-          // Continue to next endpoint or remain with mock cases
         }
+      } catch (err: any) {
+        console.warn('[REFUND CONTEXT] Failed to load backend refunds on mount:', err.message);
       }
     };
 
@@ -120,29 +125,27 @@ export const InvestigationProvider: React.FC<{ children: React.ReactNode }> = ({
       payload.approvedAmount = approvedAmount;
     }
 
-    const endpoints = [`/api/refunds/${cleanId}/decision`, `http://localhost:5001/api/refunds/${cleanId}/decision`];
-
-    let lastError = 'Unable to reach backend service';
-    for (const url of endpoints) {
-      try {
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        const data = await res.json().catch(() => null);
-        if (res.ok && data?.success) {
-          return { success: true, refund: data.refund };
-        } else if (data?.error) {
-          return { success: false, error: data.error };
-        } else if (!res.ok) {
-          return { success: false, error: `Backend returned HTTP ${res.status}` };
-        }
-      } catch (err: any) {
-        lastError = err?.message || 'Network error connecting to refund service';
+    try {
+      const res = await fetch(`/api/refunds/${cleanId}/decision`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.success) {
+        return { success: true, refund: data.refund };
+      } else if (data?.error) {
+        return { success: false, error: data.error };
+      } else if (!res.ok) {
+        return { success: false, error: `Backend returned HTTP ${res.status}` };
       }
+    } catch (err: any) {
+      return { success: false, error: err?.message || 'Network error connecting to refund service' };
     }
-    return { success: false, error: lastError };
+    return { success: false, error: 'Unable to reach backend service' };
   };
 
   const mapDraftDecisionToBackend = (d?: string): string | null => {
@@ -176,57 +179,55 @@ export const InvestigationProvider: React.FC<{ children: React.ReactNode }> = ({
       reviewerId: 'Julian Hayes (Lead Auditor)',
     };
 
-    const endpoints = [`/api/refunds/${cleanId}/draft`, `http://localhost:5001/api/refunds/${cleanId}/draft`];
-
-    let lastError = 'Unable to reach backend service';
-    for (const url of endpoints) {
-      try {
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        const data = await res.json().catch(() => null);
-        if (res.ok && data?.success) {
-          // Reflect draft note directly in state
-          setCases((prev) =>
-            prev.map((c) => {
-              if (
-                c.id.toLowerCase() === id.toLowerCase() ||
-                c.caseRef.toLowerCase().replace('#', '') === cleanId.toLowerCase()
-              ) {
-                const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                return {
-                  ...c,
-                  reviewerDraftNote: note.trim(),
-                  reviewerDraftDecision: mappedDecision,
-                  reviewerDraftSavedAt: new Date().toISOString(),
-                  auditLog: data.refund?.auditLog || [
-                    {
-                      id: `log-${Date.now()}`,
-                      time: nowTime,
-                      title: 'Reviewer Draft Note Saved',
-                      description: `Draft saved by Julian Hayes. Pending decision: ${mappedDecision || 'not selected'}. Note: ${note.trim()}`,
-                      dotColor: 'bg-secondary',
-                    },
-                    ...c.auditLog,
-                  ],
-                } as any;
-              }
-              return c;
-            })
-          );
-          return { success: true, refund: data.refund };
-        } else if (data?.error) {
-          return { success: false, error: data.error };
-        } else if (!res.ok) {
-          return { success: false, error: `Backend returned HTTP ${res.status}` };
-        }
-      } catch (err: any) {
-        lastError = err?.message || 'Network error connecting to refund service';
+    try {
+      const res = await fetch(`/api/refunds/${cleanId}/draft`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.success) {
+        // Reflect draft note directly in state
+        setCases((prev) =>
+          prev.map((c) => {
+            if (
+              c.id.toLowerCase() === id.toLowerCase() ||
+              c.caseRef.toLowerCase().replace('#', '') === cleanId.toLowerCase()
+            ) {
+              const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              return {
+                ...c,
+                reviewerDraftNote: note.trim(),
+                reviewerDraftDecision: mappedDecision,
+                reviewerDraftSavedAt: new Date().toISOString(),
+                auditLog: data.refund?.auditLog || [
+                  {
+                    id: `log-${Date.now()}`,
+                    time: nowTime,
+                    title: 'Reviewer Draft Note Saved',
+                    description: `Draft saved by Julian Hayes. Pending decision: ${mappedDecision || 'not selected'}. Note: ${note.trim()}`,
+                    dotColor: 'bg-secondary',
+                  },
+                  ...c.auditLog,
+                ],
+              } as any;
+            }
+            return c;
+          })
+        );
+        return { success: true, refund: data.refund };
+      } else if (data?.error) {
+        return { success: false, error: data.error };
+      } else if (!res.ok) {
+        return { success: false, error: `Backend returned HTTP ${res.status}` };
       }
+    } catch (err: any) {
+      return { success: false, error: err?.message || 'Network error connecting to refund service' };
     }
-    return { success: false, error: lastError };
+    return { success: false, error: 'Unable to reach backend service' };
   };
 
   const approveRefund = async (

@@ -55,7 +55,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requir
 
             <div className="p-3 bg-[#fbf9f4] border border-[#e3ded4] rounded-lg text-xs text-[#5c6967] text-left space-y-1">
               <div className="font-semibold text-[#0d3d3a]">Need staff access?</div>
-              <div>Sign in using authorized staff reviewer credentials (e.g., <code>reviewer@agenttravel.com</code>).</div>
+              <div>Sign in using authorized staff reviewer credentials provisioned by your system administrator.</div>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 pt-2">

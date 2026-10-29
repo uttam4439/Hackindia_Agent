@@ -14,9 +14,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const EVIDENCE_DIR = path.join(__dirname, 'data', 'evidence');
 
-// Ensure evidence storage directory exists
-if (!fs.existsSync(EVIDENCE_DIR)) {
-  fs.mkdirSync(EVIDENCE_DIR, { recursive: true });
+// Ensure evidence storage directory exists (guarded for read-only serverless runtimes)
+try {
+  if (!fs.existsSync(EVIDENCE_DIR)) {
+    fs.mkdirSync(EVIDENCE_DIR, { recursive: true });
+  }
+} catch (err) {
+  // Read-only filesystem (e.g. AWS Lambda /var/task)
+  console.warn('[EVIDENCE SERVICE] Evidence directory cannot be initialized on disk (read-only runtime):', err.message);
 }
 
 // In-memory evidence metadata index
@@ -94,12 +99,28 @@ export const evidenceService = {
     const safeDiskName = `${fileId}_${cleanName}`;
 
     const caseDir = path.join(EVIDENCE_DIR, sanitizeFilename(caseId));
-    if (!fs.existsSync(caseDir)) {
-      fs.mkdirSync(caseDir, { recursive: true });
+    const filePath = path.join(caseDir, safeDiskName);
+
+    // Guard against read-only serverless filesystem
+    if (process.env.AWS_LAMBDA_FUNCTION_NAME) {
+      throw new Error(
+        'Document upload is unavailable in serverless demo mode. Persistent evidence storage requires dedicated S3 or object storage approval.'
+      );
     }
 
-    const filePath = path.join(caseDir, safeDiskName);
-    fs.writeFileSync(filePath, buffer);
+    try {
+      if (!fs.existsSync(caseDir)) {
+        fs.mkdirSync(caseDir, { recursive: true });
+      }
+      fs.writeFileSync(filePath, buffer);
+    } catch (fsErr) {
+      if (fsErr.code === 'EROFS') {
+        throw new Error(
+          'Document upload is unavailable in serverless demo mode. Persistent evidence storage requires dedicated S3 or object storage approval.'
+        );
+      }
+      throw fsErr;
+    }
 
     const metadata = {
       fileId,

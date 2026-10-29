@@ -121,7 +121,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ activeTab }) => {
             to="/destinations"
             className={`px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
               isActive('/destinations')
-                ? 'text-[#0d3d3a] font-semibold bg-[#eae4d8]/60'
+                ? 'text-[#0d3d3a] font-bold bg-[#eae4d8]'
                 : 'text-[#42504e] hover:text-[#0d3d3a] hover:bg-[#eae4d8]/40'
             }`}
           >
@@ -298,7 +298,11 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ activeTab }) => {
           <Link
             to="/destinations"
             onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-md text-sm font-medium text-[#42504e] hover:bg-[#eae4d8]"
+            className={`block px-3 py-2 rounded-md text-sm font-medium ${
+              isActive('/destinations')
+                ? 'text-[#0d3d3a] font-bold bg-[#eae4d8]'
+                : 'text-[#42504e] hover:bg-[#eae4d8]'
+            }`}
           >
             Destinations
           </Link>

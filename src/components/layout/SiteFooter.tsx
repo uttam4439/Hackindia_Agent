@@ -1,7 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 export const SiteFooter: React.FC = () => {
+  const [isReviewer] = useState(() => {
+    try {
+      const rawUser = sessionStorage.getItem('agent_travel_user') || localStorage.getItem('agent_travel_user');
+      if (!rawUser) return false;
+      const user: unknown = JSON.parse(rawUser);
+      return typeof user === 'object' && user !== null &&
+        Reflect.get(user, 'signedIn') === true && Reflect.get(user, 'role') === 'reviewer';
+    } catch {
+      return false;
+    }
+  });
+
   return (
     <footer className="w-full bg-[#f1ebe1] border-t border-[#e3ded4] text-left text-[#42504e] mt-auto">
       {/* Top Disclaimer Banner */}
@@ -125,11 +137,13 @@ export const SiteFooter: React.FC = () => {
                   Cancellation policy
                 </Link>
               </li>
-              <li>
-                <Link to="/reviewer" className="text-[#0d6b63] font-semibold hover:underline">
-                  Staff Reviewer Console
-                </Link>
-              </li>
+              {isReviewer && (
+                <li>
+                  <Link to="/reviewer" className="text-[#0d6b63] font-semibold hover:underline">
+                    Staff Reviewer Console
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
         </div>

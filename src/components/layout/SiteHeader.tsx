@@ -53,13 +53,13 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ activeTab }) => {
         </div>
 
         {/* Center Navigation Links */}
-        <nav className="hidden md:flex items-center gap-1 lg:gap-2">
+        <nav className="hidden md:flex items-center gap-0 xl:gap-2">
           {/* Explore with quick services popover */}
           <div className="relative">
             <button
               onClick={() => setServiceNavOpen(!serviceNavOpen)}
               onBlur={() => setTimeout(() => setServiceNavOpen(false), 200)}
-              className={`px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors flex items-center gap-1 ${
+              className={`px-2 lg:px-1 xl:px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors flex items-center gap-1 ${
                 location.pathname === '/' || serviceNavOpen
                   ? 'text-[#0d3d3a] font-semibold bg-[#eae4d8]/60'
                   : 'text-[#42504e] hover:text-[#0d3d3a] hover:bg-[#eae4d8]/40'
@@ -119,7 +119,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ activeTab }) => {
 
           <Link
             to="/destinations"
-            className={`px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
+            className={`px-2 lg:px-1 xl:px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
               isActive('/destinations')
                 ? 'text-[#0d3d3a] font-semibold bg-[#eae4d8]/60'
                 : 'text-[#42504e] hover:text-[#0d3d3a] hover:bg-[#eae4d8]/40'
@@ -130,7 +130,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ activeTab }) => {
 
           <Link
             to="/offers"
-            className={`px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
+            className={`px-2 lg:px-1 xl:px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
               isActive('/offers')
                 ? 'text-[#0d3d3a] font-semibold bg-[#eae4d8]/60'
                 : 'text-[#42504e] hover:text-[#0d3d3a] hover:bg-[#eae4d8]/40'
@@ -141,7 +141,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ activeTab }) => {
 
           <Link
             to="/bookings"
-            className={`px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
+            className={`px-2 lg:px-1 xl:px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
               isActive('/bookings')
                 ? 'text-[#0d3d3a] font-semibold bg-[#eae4d8]/60'
                 : 'text-[#42504e] hover:text-[#0d3d3a] hover:bg-[#eae4d8]/40'
@@ -152,7 +152,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ activeTab }) => {
 
           <Link
             to="/refunds"
-            className={`px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors flex items-center gap-1.5 ${
+            className={`px-2 lg:px-1 xl:px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors flex items-center gap-1.5 ${
               isActive('/refunds') || location.pathname.startsWith('/refunds')
                 ? 'text-[#0d3d3a] font-semibold bg-[#eae4d8]/60'
                 : 'text-[#42504e] hover:text-[#0d3d3a] hover:bg-[#eae4d8]/40'
@@ -164,7 +164,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ activeTab }) => {
 
           <Link
             to="/help"
-            className={`px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
+            className={`px-2 lg:px-1 xl:px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
               isActive('/help')
                 ? 'text-[#0d3d3a] font-semibold bg-[#eae4d8]/60'
                 : 'text-[#42504e] hover:text-[#0d3d3a] hover:bg-[#eae4d8]/40'
@@ -214,14 +214,14 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ activeTab }) => {
             <>
               <Link
                 to="/signin"
-                className="text-[13px] font-medium text-[#42504e] hover:text-[#0d3d3a] px-2.5 py-1.5 rounded-md transition-colors"
+                className="hidden md:inline-flex text-[13px] font-medium text-[#42504e] hover:text-[#0d3d3a] px-2.5 py-1.5 rounded-md transition-colors"
               >
                 Sign in
               </Link>
 
               <Link
                 to="/signup"
-                className="bg-[#0d6b63] text-white text-[13px] font-semibold px-4 py-1.5 rounded-md hover:bg-[#0a534d] transition-colors shadow-sm"
+                className="hidden md:inline-flex bg-[#0d6b63] text-white text-[13px] font-semibold px-4 py-1.5 rounded-md hover:bg-[#0a534d] transition-colors shadow-sm"
               >
                 Sign up
               </Link>

@@ -5,7 +5,14 @@ import { Link, useParams } from 'react-router-dom';
 import { SiteHeader } from '../components/layout/SiteHeader';
 import { SiteFooter } from '../components/layout/SiteFooter';
 import { useInvestigation } from '../context/InvestigationContext';
-import { InvestigationCase } from '../types';
+import { StatusBadge } from '../components/common/StatusBadge';
+import {
+  isRefundCompleted,
+  isRefundApproved,
+  isRefundRejected,
+  getTimelineStepStates,
+} from '../utils/refundStatus';
+import { InvestigationCase, InvestigationStep } from '../types';
 import { primaryCaseAT9842 } from '../data/mockData';
 
 interface EvidenceDoc {
@@ -254,8 +261,9 @@ export const CaseDetailPage: React.FC = () => {
   }
 
   const displayCaseId = currentCase.caseRef.replace('#', '') || currentCase.id;
-  const isApprovedOrDisbursed = currentCase.decisionStatus === 'Approved' || currentCase.decisionStatus === 'Disbursed';
-  const isRejected = currentCase.decisionStatus === 'Rejected';
+  const isCompleted = isRefundCompleted(currentCase.decisionStatus);
+  const isApproved = isRefundApproved(currentCase.decisionStatus);
+  const isRejected = isRefundRejected(currentCase.decisionStatus);
 
   return (
     <div className="min-h-screen bg-[#f7f4ed] flex flex-col font-sans text-[#192524] antialiased">
@@ -285,17 +293,7 @@ export const CaseDetailPage: React.FC = () => {
               <h1 className="text-2xl sm:text-3xl font-bold text-[#0d3d3a] tracking-tight">
                 Refund case #{displayCaseId}
               </h1>
-              <span
-                className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
-                  isApprovedOrDisbursed
-                    ? 'bg-[#ecfdf5] text-[#166534] border-[#bbf7d0]'
-                    : isRejected
-                    ? 'bg-[#fee2e2] text-[#991b1b] border-[#fecaca]'
-                    : 'bg-[#fef3c7] text-[#92400e] border-[#fde68a]'
-                }`}
-              >
-                {currentCase.decisionStatus}
-              </span>
+              <StatusBadge status={currentCase.decisionStatus} size="md" />
             </div>
             <p className="text-xs sm:text-sm text-[#5c6967] mt-1 capitalize">
               {currentCase.carrier.type} · {currentCase.carrier.route} · Journey date: {currentCase.journeyDate}
@@ -311,69 +309,36 @@ export const CaseDetailPage: React.FC = () => {
           </button>
         </div>
 
-        {/* STEPPER PROGRESS BAR (Page 10) */}
+        {/* STEPPER PROGRESS BAR (Authoritative Workflow Pipeline) */}
         <div className="py-6 border-b border-[#e3ded4]">
-          <div className="grid grid-cols-4 gap-2 text-center text-xs">
-            <div className="flex flex-col items-center gap-1.5">
-              <div className="w-8 h-8 rounded-full bg-[#0d6b63] text-white flex items-center justify-center font-bold text-xs">
-                ✓
-              </div>
-              <span className="font-bold text-[#0d3d3a]">Submitted</span>
-              <span className="text-[#889593] text-[11px]">{currentCase.journeyDate}</span>
-            </div>
+          {(() => {
+            const steps = getTimelineStepStates(currentCase);
+            const stepList = [steps.submitted, steps.policy, steps.decision, steps.payout];
 
-            <div className="flex flex-col items-center gap-1.5">
-              <div className="w-8 h-8 rounded-full bg-[#0d6b63] text-white flex items-center justify-center font-bold text-xs ring-4 ring-[#0d6b63]/15">
-                ✓
+            return (
+              <div className="grid grid-cols-4 gap-2 text-center text-xs">
+                {stepList.map((st) => (
+                  <div key={st.stepNumber} className="flex flex-col items-center gap-1.5">
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border ${st.pillClass}`}
+                      aria-label={st.ariaLabel}
+                    >
+                      {st.icon}
+                    </div>
+                    <span className={`font-bold ${st.textColor}`}>
+                      {st.label}
+                    </span>
+                    <span
+                      className="text-[#889593] text-[11px] truncate max-w-full px-1"
+                      title={st.subLabel}
+                    >
+                      {st.subLabel}
+                    </span>
+                  </div>
+                ))}
               </div>
-              <span className="font-bold text-[#0d6b63]">AI review</span>
-              <span className="text-[#889593] text-[11px]">{currentCase.aiConfidence}% Verified</span>
-            </div>
-
-            <div className="flex flex-col items-center gap-1.5">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border ${
-                  isApprovedOrDisbursed
-                    ? 'bg-[#0d6b63] text-white border-[#0d6b63]'
-                    : isRejected
-                    ? 'bg-[#991b1b] text-white border-[#991b1b]'
-                    : 'bg-[#f3eee5] border-[#0d6b63] text-[#0d6b63]'
-                }`}
-              >
-                {isApprovedOrDisbursed ? '✓' : isRejected ? '✕' : '3'}
-              </div>
-              <span className="font-bold text-[#0d3d3a]">Decision</span>
-              <span
-                className={`font-medium text-[11px] ${
-                  isApprovedOrDisbursed
-                    ? 'text-[#166534]'
-                    : isRejected
-                    ? 'text-[#991b1b]'
-                    : 'text-[#b45309]'
-                }`}
-              >
-                {currentCase.decisionStatus}
-              </span>
-            </div>
-
-            <div className="flex flex-col items-center gap-1.5">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
-                  currentCase.decisionStatus === 'Disbursed'
-                    ? 'bg-[#0d6b63] text-white'
-                    : 'bg-[#f3eee5] text-[#889593]'
-                }`}
-              >
-                {currentCase.decisionStatus === 'Disbursed' ? '✓' : '4'}
-              </div>
-              <span className={currentCase.decisionStatus === 'Disbursed' ? 'font-bold text-[#0d3d3a]' : 'text-[#889593]'}>
-                Payout
-              </span>
-              <span className="text-[#889593] text-[11px]">
-                {currentCase.decisionStatus === 'Disbursed' ? 'Completed' : 'Pending'}
-              </span>
-            </div>
-          </div>
+            );
+          })()}
         </div>
 
         {/* MAIN TWO-COLUMN CONTENT LAYOUT */}
@@ -406,32 +371,66 @@ export const CaseDetailPage: React.FC = () => {
                   Arbitration & Evidence Verification Pipeline
                 </h4>
                 {currentCase.steps && currentCase.steps.length > 0 ? (
-                  currentCase.steps.slice(0, 5).map((step, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-start gap-3 p-3.5 rounded-lg bg-[#fbf9f4] border border-[#e3ded4]"
-                    >
-                      <span className="w-5 h-5 rounded-full bg-[#166534] text-white flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
-                        ✓
-                      </span>
-                      <div>
-                        <h4 className="font-bold text-[#0d3d3a] text-xs">
-                          {step.title}
-                        </h4>
-                        <p className="text-xs text-[#5c6967] mt-0.5">
-                          {step.summary}
-                        </p>
+                  currentCase.steps.slice(0, 5).map((step: InvestigationStep, idx: number) => {
+                    const isStepComplete = step.status === 'Complete';
+                    const isStepInProgress = step.status === 'In Progress';
+                    return (
+                      <div
+                        key={idx}
+                        className="flex items-start gap-3 p-3.5 rounded-lg bg-[#fbf9f4] border border-[#e3ded4]"
+                      >
+                        <span
+                          className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5 ${
+                            isStepComplete
+                              ? 'bg-[#166534] text-white'
+                              : isStepInProgress
+                              ? 'bg-[#0d6b63] text-white animate-pulse'
+                              : 'bg-[#e3ded4] text-[#5c6967]'
+                          }`}
+                          aria-label={`Step ${idx + 1} status: ${step.status || 'Pending'}`}
+                        >
+                          {isStepComplete ? '✓' : isStepInProgress ? '●' : String(idx + 1)}
+                        </span>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-bold text-[#0d3d3a] text-xs">
+                              {step.title}
+                            </h4>
+                            <span
+                              className={`text-[10px] px-1.5 py-0.2 rounded font-medium ${
+                                isStepComplete
+                                  ? 'text-[#166534] bg-[#ecfdf5]'
+                                  : isStepInProgress
+                                  ? 'text-[#0d6b63] bg-[#e8f2f0]'
+                                  : 'text-[#6b7775] bg-[#f0ebe1]'
+                              }`}
+                            >
+                              {step.statusLabel || step.status || 'In Progress'}
+                            </span>
+                          </div>
+                          <p className="text-xs text-[#5c6967] mt-0.5">
+                            {step.summary}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 ) : (
                   <div className="flex items-start gap-3 p-3.5 rounded-lg bg-[#fbf9f4] border border-[#e3ded4]">
-                    <span className="w-5 h-5 rounded-full bg-[#166534] text-white flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
-                      ✓
+                    <span
+                      className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5 ${
+                        isApproved || isCompleted
+                          ? 'bg-[#166534] text-white'
+                          : isRejected
+                          ? 'bg-[#991b1b] text-white'
+                          : 'bg-[#0d6b63] text-white'
+                      }`}
+                    >
+                      {isApproved || isCompleted ? '✓' : isRejected ? '✕' : '●'}
                     </span>
                     <div>
                       <h4 className="font-bold text-[#0d3d3a] text-xs">
-                        Carrier operational verification confirmed
+                        Carrier operational verification {isApproved || isCompleted ? 'confirmed' : 'under evaluation'}
                       </h4>
                       <p className="text-xs text-[#5c6967] mt-0.5">
                         {currentCase.reasonSummary}

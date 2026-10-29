@@ -217,8 +217,10 @@ export const BookingsPage: React.FC = () => {
 
                 <span
                   className={`self-start sm:self-auto text-xs font-semibold px-2.5 py-0.5 rounded-full border ${
-                    b.statusColor === 'error'
+                    b.statusColor === 'error' || b.status.toLowerCase().includes('cancel') || b.status.toLowerCase().includes('failed')
                       ? 'bg-[#fee2e2] text-[#991b1b] border-[#fecaca]'
+                      : b.statusColor === 'warning' || b.status.toLowerCase().includes('pending')
+                      ? 'bg-[#fef3c7] text-[#92400e] border-[#fde68a]'
                       : 'bg-[#ecfdf5] text-[#166534] border-[#bbf7d0]'
                   }`}
                 >

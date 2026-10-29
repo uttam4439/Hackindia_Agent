@@ -152,13 +152,12 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({ activeTab }) => {
 
           <Link
             to="/refunds"
-            className={`px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
               isActive('/refunds') || location.pathname.startsWith('/refunds')
                 ? 'text-[#0d3d3a] font-semibold bg-[#eae4d8]/60'
                 : 'text-[#42504e] hover:text-[#0d3d3a] hover:bg-[#eae4d8]/40'
             }`}
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-[#0d6b63]"></span>
             Refunds
           </Link>
 

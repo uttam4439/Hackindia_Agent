@@ -15,6 +15,7 @@ out/
 .vite-backup/
 
 # TypeScript build info / caches
+
 *.tsbuildinfo
 pdf_pages/
 
@@ -47,3 +48,6 @@ Thumbs.db
 # Test-isolated data stores (cleaned by test runner, but guard against accidents)
 server/data/store.refund-test.json
 server/data/store.refund-test.json.tmp
+
+# Test evidence files
+server/data/evidence/TEST-CASE-*/

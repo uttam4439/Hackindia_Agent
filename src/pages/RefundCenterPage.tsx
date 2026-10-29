@@ -78,7 +78,7 @@ export const RefundCenterPage: React.FC = () => {
           return;
         }
 
-        // If booking not found or not eligible in backend, check local mock bookings/cases
+        // If booking not found or not eligible in backend, check local user bookings/cases
         if (submitRes.status === 400 || submitRes.status === 404) {
           const matchedCase = cases.find(
             (c) =>
@@ -107,11 +107,11 @@ export const RefundCenterPage: React.FC = () => {
         }
       }
     } catch (err: any) {
-      console.warn('Backend submit error, checking local mock store:', err);
+      console.warn('Backend submit error:', err);
     }
 
     // Fallback navigation
-    navigate(`/refunds/${cleanPnr.replace('#', '') || 'RF12345'}`);
+    if (cleanPnr) navigate(`/refunds/${cleanPnr.replace('#', '')}`);
     setIsAnalyzing(false);
   };
 
@@ -136,7 +136,7 @@ export const RefundCenterPage: React.FC = () => {
         c.caseRef.replace('#', '').toLowerCase() === cleanId.toLowerCase() ||
         c.pnr.toLowerCase() === cleanId.toLowerCase()
     );
-    navigate(`/refunds/${matched ? matched.id : cleanId || 'RF12345'}`);
+    if (matched || cleanId) navigate(`/refunds/${matched ? matched.id : cleanId}`);
   };
 
   return (

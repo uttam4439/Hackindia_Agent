@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export type ServiceType = 'flights' | 'hotels' | 'trains' | 'buses' | 'cabs' | 'holidays';
 
@@ -103,81 +103,6 @@ const defaultCriteria: TravelSearchCriteria = {
   travelClass: 'Economy',
 };
 
-const initialSampleBookings: StoredBooking[] = [
-  {
-    id: 'BK-1',
-    refLabel: 'PNR · ABC123',
-    serviceType: 'FLIGHT',
-    title: 'Delhi → Mumbai',
-    status: 'Cancelled by airline',
-    statusColor: 'error',
-    hasRefundAlert: true,
-    refundCaseId: 'RF12345',
-    bookingDate: '18 Oct 2026',
-    details: [
-      { label: 'TRAVELLER', value: '1 · Economy' },
-      { label: 'DATE', value: '24 Oct 2026' },
-      { label: 'DEPARTS', value: '06:10' },
-    ],
-  },
-  {
-    id: 'BK-2',
-    refLabel: 'Booking ID · HTL456',
-    serviceType: 'HOTEL',
-    title: 'Goa Beach Resort',
-    status: 'Confirmed',
-    statusColor: 'success',
-    bookingDate: '15 Oct 2026',
-    details: [
-      { label: 'CHECK-IN', value: '12 Dec 2026' },
-      { label: 'CHECK-OUT', value: '16 Dec 2026' },
-      { label: 'GUESTS', value: '2 Guests' },
-    ],
-  },
-  {
-    id: 'BK-3',
-    refLabel: 'PNR · 4521896307',
-    serviceType: 'TRAIN',
-    title: 'New Delhi → Jaipur',
-    status: 'Confirmed',
-    statusColor: 'success',
-    bookingDate: '14 Oct 2026',
-    details: [
-      { label: 'DATE', value: '02 Nov 2026' },
-      { label: 'PASSENGERS', value: '2 · Chair Car' },
-      { label: 'DEPARTS', value: '06:05' },
-    ],
-  },
-  {
-    id: 'BK-4',
-    refLabel: 'Ticket · BUS78231',
-    serviceType: 'BUS',
-    title: 'Bengaluru → Goa',
-    status: 'Confirmed',
-    statusColor: 'success',
-    bookingDate: '16 Oct 2026',
-    details: [
-      { label: 'DATE', value: '06 Nov 2026' },
-      { label: 'SEAT', value: 'Lower berth, L4' },
-      { label: 'DEPARTS', value: '21:30' },
-    ],
-  },
-  {
-    id: 'BK-5',
-    refLabel: 'Booking · CAB55102',
-    serviceType: 'CAB',
-    title: 'Delhi Airport → Connaught Place',
-    status: 'Confirmed',
-    statusColor: 'success',
-    bookingDate: '16 Oct 2026',
-    details: [
-      { label: 'VEHICLE', value: 'Sedan' },
-      { label: 'PICKUP', value: '08:30' },
-      { label: 'DATE', value: '24 Oct 2026' },
-    ],
-  },
-];
-
 const TravelBookingContext = createContext<TravelBookingContextType | undefined>(undefined);
 
 export const TravelBookingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -203,11 +128,61 @@ export const TravelBookingProvider: React.FC<{ children: React.ReactNode }> = ({
       const saved = sessionStorage.getItem('agent_travel_user_bookings');
       if (saved) return JSON.parse(saved);
     } catch {}
-    return initialSampleBookings;
+    return [];
   });
 
   const [summaryModalTrip, setSummaryModalTrip] = useState<SelectedTrip | null>(null);
   const [bookingSuccessAlert, setBookingSuccessAlert] = useState<string | null>(null);
+
+  // Sync real bookings from backend when authenticated session exists
+  useEffect(() => {
+    const fetchLiveBookings = async () => {
+      try {
+        const token = sessionStorage.getItem('agent_travel_token') || localStorage.getItem('agent_travel_token');
+        if (!token) return;
+
+        const res = await fetch('/api/bookings', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.bookings) && data.bookings.length > 0) {
+            const mapped: StoredBooking[] = data.bookings.map((b: any) => ({
+              id: b.id,
+              refLabel: `PNR · ${b.pnr || b.bookingDetails?.code || b.id.replace('BK-', '')}`,
+              serviceType: (b.bookingDetails?.serviceType?.toUpperCase()?.replace(/S$/, '') || 'FLIGHT') as any,
+              title: b.bookingDetails?.route || b.bookingDetails?.title || `${b.bookingDetails?.origin || 'Origin'} → ${b.bookingDetails?.destination || 'Destination'}`,
+              status: b.paymentStatus === 'PAID' ? 'Confirmed' : b.paymentStatus === 'FAILED' ? 'Payment Failed' : 'Payment Pending',
+              statusColor: b.paymentStatus === 'PAID' ? 'success' : 'error',
+              bookingDate: b.createdAt ? new Date(b.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Recent',
+              paymentStatus: b.paymentStatus,
+              razorpayOrderId: b.razorpayOrderId,
+              razorpayPaymentId: b.razorpayPaymentId,
+              razorpaySignature: b.razorpaySignature,
+              paymentVerifiedAt: b.paymentVerifiedAt,
+              details: [
+                { label: 'OPERATOR', value: b.bookingDetails?.operator || 'Carrier' },
+                { label: 'DATE', value: b.bookingDetails?.departDate || 'Confirmed' },
+                { label: 'AMOUNT', value: `₹ ${(b.amount || 0).toLocaleString('en-IN')}` },
+              ],
+            }));
+
+            setUserBookings((prev) => {
+              const backendIds = new Set(mapped.map((m) => m.id));
+              const uniqueSession = prev.filter((p) => !backendIds.has(p.id));
+              const merged = [...uniqueSession, ...mapped];
+              try {
+                sessionStorage.setItem('agent_travel_user_bookings', JSON.stringify(merged));
+              } catch {}
+              return merged;
+            });
+          }
+        }
+      } catch {}
+    };
+
+    fetchLiveBookings();
+  }, []);
 
   // Synchronize search criteria changes with sessionStorage and revalidate selection if needed
   const setSearchCriteria = (newCriteria: Partial<TravelSearchCriteria>) => {

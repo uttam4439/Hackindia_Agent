@@ -6,7 +6,6 @@ import { SiteHeader } from '../components/layout/SiteHeader';
 import { SiteFooter } from '../components/layout/SiteFooter';
 import { useInvestigation } from '../context/InvestigationContext';
 import { InvestigationCase } from '../types';
-import { primaryCaseAT9842 } from '../data/mockData';
 
 interface EvidenceDoc {
   id?: string;
@@ -27,18 +26,19 @@ export const CaseDetailPage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
 
-  const cleanParam = id?.trim().toLowerCase() || 'rf12345';
-  const isMockDefault = cleanParam === 'at-9842' || cleanParam === '482910' || cleanParam === 'rf12345';
+  const cleanParam = id?.trim().toLowerCase() || '';
 
-  const localMatched = cases.find(
-    (c) =>
-      c.id.toLowerCase() === cleanParam ||
-      c.caseRef.toLowerCase().replace('#', '') === cleanParam.replace('#', '') ||
-      c.pnr.toLowerCase() === cleanParam ||
-      (c.bookingId && c.bookingId.toLowerCase() === cleanParam) ||
-      `rf${c.pnr}`.toLowerCase() === cleanParam ||
-      `rf${c.id}`.toLowerCase() === cleanParam
-  );
+  const localMatched = cleanParam
+    ? cases.find(
+        (c) =>
+          c.id.toLowerCase() === cleanParam ||
+          c.caseRef.toLowerCase().replace('#', '') === cleanParam.replace('#', '') ||
+          c.pnr.toLowerCase() === cleanParam ||
+          (c.bookingId && c.bookingId.toLowerCase() === cleanParam) ||
+          ('rf' + c.pnr).toLowerCase() === cleanParam ||
+          ('rf' + c.id).toLowerCase() === cleanParam
+      )
+    : null;
 
   useEffect(() => {
     if (!id) {
@@ -70,7 +70,7 @@ export const CaseDetailPage: React.FC = () => {
     fetchLiveCase();
   }, [id]);
 
-  const currentCase = backendCase || localMatched || (isMockDefault ? primaryCaseAT9842 : null);
+  const currentCase = backendCase || localMatched || null;
 
   // Read current user to check reviewer privileges
   const currentUser = (() => {
@@ -82,10 +82,33 @@ export const CaseDetailPage: React.FC = () => {
     }
   })();
 
-  const [uploadedFiles, setUploadedFiles] = useState<EvidenceDoc[]>([
-    { name: 'cancellation_notice.pdf', size: '245 KB', source: 'Verified in GDS dossier', verified: true },
-    { name: 'carrier_advisory_log.pdf', size: '118 KB', source: 'Verified in GDS dossier', verified: true },
-  ]);
+  const [uploadedFiles, setUploadedFiles] = useState<EvidenceDoc[]>([]);
+
+  useEffect(() => {
+    const caseId = currentCase?.caseRef?.replace('#', '') || currentCase?.id || id?.replace('#', '');
+    if (!caseId) return;
+    const fetchEvidence = async () => {
+      try {
+        const res = await fetch(`/api/cases/${caseId}/evidence`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.evidence) && data.evidence.length > 0) {
+            setUploadedFiles(
+              data.evidence.map((ev: any) => ({
+                id: ev.fileId,
+                name: ev.filename,
+                size: ev.sizeFormatted || `${Math.round((ev.sizeBytes || 0) / 1024)} KB`,
+                source: 'Uploaded evidence · Validated',
+                verified: Boolean(ev.verified),
+                fileId: ev.fileId,
+              }))
+            );
+          }
+        }
+      } catch {}
+    };
+    fetchEvidence();
+  }, [currentCase?.id, id]);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);

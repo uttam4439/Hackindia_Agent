@@ -23,9 +23,6 @@ const testDataFile = path.join(__dirname, '../data/store.payment-test.json');
 // Dedicated, isolated database instance for Payment Tests
 const db = createDatabase({ isTest: true, testDataFile });
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 // Helpers to simulate Express requests/responses in-memory
 const createMockRes = () => {
   const res = {

@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { InvestigationCase, SystemSettings } from '../types';
-import { allMockInvestigations, defaultSettings, primaryCaseAT9842 } from '../data/mockData';
+import { defaultSettings } from '../data/mockData';
 
 interface InvestigationContextType {
   cases: InvestigationCase[];
-  selectedCase: InvestigationCase;
+  selectedCase: InvestigationCase | null;
   settings: SystemSettings;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
@@ -23,15 +23,14 @@ interface InvestigationContextType {
 const InvestigationContext = createContext<InvestigationContextType | undefined>(undefined);
 
 export const InvestigationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [cases, setCases] = useState<InvestigationCase[]>(allMockInvestigations);
-  const [selectedCaseId, setSelectedCaseId] = useState<string>('AT-9842');
+  const [cases, setCases] = useState<InvestigationCase[]>([]);
+  const [selectedCaseId, setSelectedCaseId] = useState<string>('');
   const [settings, setSettings] = useState<SystemSettings>(defaultSettings);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isSearchModalOpen, setIsSearchModalOpen] = useState<boolean>(false);
   const [timeframe, setTimeframe] = useState<string>('Last 30 Days');
 
-
-  // Load persistent backend refunds on mount and merge with mock data
+  // Load persistent backend refunds on mount
   useEffect(() => {
     const fetchBackendRefunds = async () => {
       const endpoints = ['/api/refunds', 'http://localhost:5001/api/refunds'];
@@ -40,47 +39,16 @@ export const InvestigationProvider: React.FC<{ children: React.ReactNode }> = ({
           const res = await fetch(url);
           if (res.ok) {
             const data = await res.json();
-            if (Array.isArray(data.refunds) && data.refunds.length > 0) {
-              setCases((prev) => {
-                const incomingMap = new Map<string, any>(
-                  data.refunds.map((r: any) => [String(r.id || '').toLowerCase(), r])
-                );
-
-                const updated = prev.map((c) => {
-                  const incoming =
-                    incomingMap.get(c.id.toLowerCase()) ||
-                    incomingMap.get(c.caseRef.toLowerCase().replace('#', ''));
-                  if (incoming) {
-                    return {
-                      ...c,
-                      ...incoming,
-                      decisionStatus: incoming.decisionStatus || c.decisionStatus,
-                      claimAmount: incoming.claimAmount ?? c.claimAmount,
-                      claimAmountFormatted: incoming.claimAmountFormatted || c.claimAmountFormatted,
-                      reviewerDraftNote: incoming.reviewerDraftNote,
-                      reviewerDraftDecision: incoming.reviewerDraftDecision,
-                      reviewerComment: incoming.reviewerComment || c.reviewerComment,
-                      auditLog: incoming.auditLog || c.auditLog,
-                    };
-                  }
-                  return c;
-                });
-
-                const existingIds = new Set(prev.map((c) => c.id.toLowerCase()));
-                const brandNew = data.refunds.filter(
-                  (r: any) =>
-                    r.id &&
-                    !existingIds.has(String(r.id).toLowerCase()) &&
-                    !existingIds.has(String(r.caseRef || '').toLowerCase().replace('#', ''))
-                );
-
-                return [...brandNew, ...updated];
-              });
+            if (Array.isArray(data.refunds)) {
+              setCases(data.refunds);
+              if (data.refunds.length > 0 && !selectedCaseId) {
+                setSelectedCaseId(data.refunds[0].id);
+              }
               break;
             }
           }
         } catch {
-          // Continue to next endpoint or remain with mock cases
+          // Continue to next endpoint or remain empty
         }
       }
     };
@@ -91,18 +59,17 @@ export const InvestigationProvider: React.FC<{ children: React.ReactNode }> = ({
   const selectedCase =
     cases.find(
       (c) =>
-        c.id.toLowerCase() === selectedCaseId.toLowerCase() ||
-        c.caseRef.toLowerCase().replace('#', '') === selectedCaseId.toLowerCase().replace('#', '') ||
-        c.pnr.toLowerCase() === selectedCaseId.toLowerCase() ||
-        (Boolean((c as any).bookingId) && String((c as any).bookingId).toLowerCase() === selectedCaseId.toLowerCase())
+        (selectedCaseId && c.id.toLowerCase() === selectedCaseId.toLowerCase()) ||
+        (selectedCaseId && c.caseRef.toLowerCase().replace('#', '') === selectedCaseId.toLowerCase().replace('#', '')) ||
+        (selectedCaseId && c.pnr.toLowerCase() === selectedCaseId.toLowerCase()) ||
+        (selectedCaseId && Boolean((c as any).bookingId) && String((c as any).bookingId).toLowerCase() === selectedCaseId.toLowerCase())
     ) ||
     cases[0] ||
-    primaryCaseAT9842;
+    null;
 
   const selectCaseById = (id: string) => {
     setSelectedCaseId(id);
   };
-
 
   const sendDecisionToBackend = async (
     id: string,

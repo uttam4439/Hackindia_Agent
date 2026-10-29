@@ -319,7 +319,20 @@ export const RefundInvestigationsPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-container-high/40">
-              {filteredInvestigations.map((item) => (
+              {filteredInvestigations.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center text-on-surface-variant">
+                    <span className="material-symbols-outlined text-[36px] text-gray-400 mb-2 block">
+                      inbox
+                    </span>
+                    <p className="font-semibold text-xs text-on-surface">No refund investigations found</p>
+                    <p className="text-[11px] text-on-surface-variant mt-1">
+                      Submitted refund claims and AI audit records will appear here.
+                    </p>
+                  </td>
+                </tr>
+              ) : (
+                filteredInvestigations.map((item) => (
                 <tr key={item.id} className="hover:bg-surface-container-low/60 transition-colors">
                   {/* Case Ref */}
                   <td className="py-space-md px-space-md">
@@ -338,7 +351,7 @@ export const RefundInvestigationsPage: React.FC = () => {
                   <td className="py-space-md px-space-md">
                     <div className="flex items-center gap-space-sm">
                       <div
-                        className={`w-8 h-8 rounded-full ${item.traveler.color} font-label-sm text-xs flex items-center justify-center font-bold`}
+                        className={`w-8 h-8 rounded-full ${item.traveler.color || 'bg-primary-container text-on-primary-container'} font-label-sm text-xs flex items-center justify-center font-bold`}
                       >
                         {item.traveler.initials}
                       </div>
@@ -424,7 +437,7 @@ export const RefundInvestigationsPage: React.FC = () => {
                     </div>
                   </td>
                 </tr>
-              ))}
+              )))} 
             </tbody>
           </table>
         </div>

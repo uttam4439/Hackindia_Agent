@@ -38,6 +38,45 @@ export const DashboardPage: React.FC = () => {
     setTimeout(() => setActionSuccessMsg(null), 3000);
   };
 
+  // Dynamic Metrics computed directly from real database cases
+  const activeCount = cases.filter(c =>
+    ['Under Human Review', 'Pending Human Approval', 'Ready for Payout', 'Awaiting Carrier Evidence', 'Audit In Progress'].includes(c.decisionStatus)
+  ).length;
+
+  const pendingHumanReviewCount = cases.filter(c =>
+    c.humanReviewRequired || c.decisionStatus === 'Under Human Review' || c.decisionStatus === 'Pending Human Approval'
+  ).length;
+
+  const highRiskCases = cases.filter(c => c.riskLevel === 'High Risk');
+  const highRiskCount = highRiskCases.length;
+  const highRiskExposure = highRiskCases.reduce((sum, c) => sum + (c.claimAmount || 0), 0);
+
+  const approvedCases = cases.filter(c => c.decisionStatus === 'Approved' || c.decisionStatus === 'Disbursed');
+  const recoveredApprovedAmount = approvedCases.reduce((sum, c) => sum + (c.claimAmount || 0), 0);
+  const claimsDisbursedCount = approvedCases.length;
+
+  const carrierEvidenceCount = cases.filter(c => c.decisionStatus === 'Awaiting Carrier Evidence').length;
+  const flaggedRejectedCount = cases.filter(c => c.decisionStatus === 'Flagged' || c.decisionStatus === 'Rejected').length;
+
+  const lowRiskCount = cases.filter(c => c.riskLevel === 'Low Risk').length;
+  const mediumRiskCount = cases.filter(c => c.riskLevel === 'Medium Risk').length;
+  const insufficientCount = cases.filter(c => c.riskLevel === 'Insufficient Evidence').length;
+
+  const lowPct = cases.length > 0 ? Math.round((lowRiskCount / cases.length) * 100) : 0;
+  const medPct = cases.length > 0 ? Math.round((mediumRiskCount / cases.length) * 100) : 0;
+  const highPct = cases.length > 0 ? Math.round((highRiskCount / cases.length) * 100) : 0;
+  const insuffPct = cases.length > 0 ? Math.max(0, 100 - lowPct - medPct - highPct) : 0;
+
+  const humanReviewCases = cases.filter(
+    (c) =>
+      c.humanReviewRequired ||
+      c.decisionStatus === 'Under Human Review' ||
+      c.decisionStatus === 'Pending Human Approval' ||
+      c.isHighImpact
+  );
+
+  const activeSpotlightCase = cases[0] || null;
+
   // Filter investigations
   const filteredInvestigations = cases.filter((c) => {
     const matchesSearch =
@@ -120,7 +159,7 @@ export const DashboardPage: React.FC = () => {
 
           {/* New Investigation Button */}
           <button
-            onClick={() => navigate('/refund-investigations/AT-9842')}
+            onClick={() => navigate('/reviewer')}
             className="flex items-center gap-space-xs bg-gradient-to-r from-[#006D77] to-[#20B8B0] hover:from-[#005a63] hover:to-[#1aa39b] text-white font-label-md text-xs sm:text-sm font-bold px-space-lg py-2.5 rounded-full shadow-md hover:shadow-lg transition-all cursor-pointer"
             type="button"
           >
@@ -141,8 +180,8 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
           <div className="mt-space-md flex flex-col">
-            <span className="font-metric-display text-metric-display text-on-surface tracking-tight font-bold">42</span>
-            <span className="font-body-sm text-xs text-on-surface-variant mt-1">8 pending human review</span>
+            <span className="font-metric-display text-metric-display text-on-surface tracking-tight font-bold">{activeCount}</span>
+            <span className="font-body-sm text-xs text-on-surface-variant mt-1">{pendingHumanReviewCount} pending human review</span>
           </div>
           <div className="mt-space-sm pt-space-xs flex items-center justify-between font-label-sm text-xs text-on-surface-variant/80 border-t border-surface-container">
             <span>Resolution Pace</span>
@@ -159,12 +198,12 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
           <div className="mt-space-md flex flex-col">
-            <span className="font-metric-display text-metric-display text-on-surface tracking-tight font-bold">3</span>
-            <span className="font-body-sm text-xs text-error font-medium mt-1">₹12.4L exposure under review</span>
+            <span className="font-metric-display text-metric-display text-on-surface tracking-tight font-bold">{highRiskCount}</span>
+            <span className="font-body-sm text-xs text-error font-medium mt-1">₹{highRiskExposure.toLocaleString('en-IN')} exposure under review</span>
           </div>
           <div className="mt-space-sm pt-space-xs flex items-center justify-between font-label-sm text-xs text-on-surface-variant/80 border-t border-surface-container">
             <span>Risk Signals Detected</span>
-            <span className="font-medium text-on-surface font-semibold">3 Active Holds</span>
+            <span className="font-medium text-on-surface font-semibold">{highRiskCount} Active Hold{highRiskCount === 1 ? '' : 's'}</span>
           </div>
         </div>
 
@@ -177,12 +216,14 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
           <div className="mt-space-md flex flex-col">
-            <span className="font-metric-display text-metric-display text-on-surface tracking-tight font-bold">₹56.8L</span>
-            <span className="font-body-sm text-xs text-primary font-medium mt-1">98.2% automated resolution rate</span>
+            <span className="font-metric-display text-metric-display text-on-surface tracking-tight font-bold">₹{recoveredApprovedAmount.toLocaleString('en-IN')}</span>
+            <span className="font-body-sm text-xs text-primary font-medium mt-1">
+              {cases.length > 0 ? Math.round((approvedCases.length / cases.length) * 100) : 0}% automated resolution rate
+            </span>
           </div>
           <div className="mt-space-sm pt-space-xs flex items-center justify-between font-label-sm text-xs text-on-surface-variant/80 border-t border-surface-container">
             <span>Statutory Claims Disbursed</span>
-            <span className="font-medium text-on-surface">148 claims</span>
+            <span className="font-medium text-on-surface">{claimsDisbursedCount} claims</span>
           </div>
         </div>
 
@@ -195,8 +236,8 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
           <div className="mt-space-md flex flex-col">
-            <span className="font-metric-display text-metric-display text-on-surface tracking-tight font-bold">1,428</span>
-            <span className="font-body-sm text-xs text-on-surface-variant mt-1">Bookings audited across air, rail & bus</span>
+            <span className="font-metric-display text-metric-display text-on-surface tracking-tight font-bold">{cases.length}</span>
+            <span className="font-body-sm text-xs text-on-surface-variant mt-1">Claims audited across air, rail & bus</span>
           </div>
           <div className="mt-space-sm pt-space-xs flex items-center justify-between font-label-sm text-xs text-on-surface-variant/80 border-t border-surface-container">
             <span>Audit Coverage</span>
@@ -219,9 +260,11 @@ export const DashboardPage: React.FC = () => {
                   <h3 className="font-headline-sm text-headline-sm font-bold text-on-surface">
                     Deep-Dive AI Agent Investigation Pipeline
                   </h3>
-                  <span className="px-2.5 py-0.5 rounded-full bg-primary-fixed/40 text-on-primary-fixed-variant font-code-sm text-xs font-semibold">
-                    Live Active Case #AT-9842
-                  </span>
+                  {activeSpotlightCase && (
+                    <span className="px-2.5 py-0.5 rounded-full bg-primary-fixed/40 text-on-primary-fixed-variant font-code-sm text-xs font-semibold">
+                      Case #{activeSpotlightCase.caseRef.replace('#', '') || activeSpotlightCase.id}
+                    </span>
+                  )}
                 </div>
                 <p className="font-body-sm text-xs text-on-surface-variant mt-0.5">
                   8-step AI-assisted investigation of traveler disruption, policy entitlement, and payout clearance
@@ -236,124 +279,138 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
 
-          {/* 8-Step Mini Flow */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-sm">
-            <div className="p-space-sm rounded-xl bg-surface-container-low flex flex-col gap-1 border border-surface-container">
-              <div className="flex items-center justify-between">
-                <span className="font-code-sm text-[11px] text-on-surface-variant font-semibold">01. Request</span>
-                <span className="material-symbols-outlined text-[16px] text-primary">check_circle</span>
-              </div>
-              <span className="font-label-md text-xs font-semibold text-on-surface">Request Understanding</span>
-              <p className="text-[11px] text-on-surface-variant">Carrier cancelled flight AI-805</p>
+          {!activeSpotlightCase ? (
+            <div className="p-8 text-center text-on-surface-variant bg-surface-container-low rounded-2xl border border-surface-container space-y-2">
+              <span className="material-symbols-outlined text-[36px] text-gray-400 block">assignment</span>
+              <p className="font-semibold text-sm text-on-surface">No active refund investigations in pipeline</p>
+              <p className="text-xs text-on-surface-variant max-w-md mx-auto">
+                When refund claims are submitted by travelers, the 8-step AI dispute engine will analyze and display them here.
+              </p>
             </div>
-
-            <div className="p-space-sm rounded-xl bg-surface-container-low flex flex-col gap-1 border border-surface-container">
-              <div className="flex items-center justify-between">
-                <span className="font-code-sm text-[11px] text-on-surface-variant font-semibold">02. Payment</span>
-                <span className="material-symbols-outlined text-[16px] text-primary">check_circle</span>
-              </div>
-              <span className="font-label-md text-xs font-semibold text-on-surface">Transaction Check</span>
-              <p className="text-[11px] text-on-surface-variant">₹9,450 original fare valid, cleared</p>
-            </div>
-
-            <div className="p-space-sm rounded-xl bg-surface-container-low flex flex-col gap-1 border border-surface-container">
-              <div className="flex items-center justify-between">
-                <span className="font-code-sm text-[11px] text-on-surface-variant font-semibold">03. Customer</span>
-                <span className="material-symbols-outlined text-[16px] text-primary">check_circle</span>
-              </div>
-              <span className="font-label-md text-xs font-semibold text-on-surface">Customer Profile</span>
-              <p className="text-[11px] text-on-surface-variant">Tier 1 Corporate, 0 prior disputes</p>
-            </div>
-
-            <div className="p-space-sm rounded-xl bg-surface-container-low flex flex-col gap-1 border border-surface-container">
-              <div className="flex items-center justify-between">
-                <span className="font-code-sm text-[11px] text-on-surface-variant font-semibold">04. Booking</span>
-                <span className="material-symbols-outlined text-[16px] text-primary">check_circle</span>
-              </div>
-              <span className="font-label-md text-xs font-semibold text-on-surface">Booking & Fare Rules</span>
-              <p className="text-[11px] text-on-surface-variant">PNR 482910, refundable economy</p>
-            </div>
-
-            <div className="p-space-sm rounded-xl bg-surface-container-low flex flex-col gap-1 border border-surface-container">
-              <div className="flex items-center justify-between">
-                <span className="font-code-sm text-[11px] text-on-surface-variant font-semibold">05. Policy</span>
-                <span className="material-symbols-outlined text-[16px] text-primary">check_circle</span>
-              </div>
-              <span className="font-label-md text-xs font-semibold text-on-surface">Policy Verification</span>
-              <p className="text-[11px] text-on-surface-variant">DGCA Statutory Rights assertable</p>
-            </div>
-
-            <div className="p-space-sm rounded-xl bg-surface-container-low flex flex-col gap-1 border border-surface-container">
-              <div className="flex items-center justify-between">
-                <span className="font-code-sm text-[11px] text-on-surface-variant font-semibold">06. Evidence</span>
-                <span className="material-symbols-outlined text-[16px] text-primary">check_circle</span>
-              </div>
-              <span className="font-label-md text-xs font-semibold text-on-surface">Evidence Analysis</span>
-              <p className="text-[11px] text-on-surface-variant">Official carrier cancellation verified</p>
-            </div>
-
-            <div className="p-space-sm rounded-xl bg-surface-container-low flex flex-col gap-1 border border-surface-container">
-              <div className="flex items-center justify-between">
-                <span className="font-code-sm text-[11px] text-on-surface-variant font-semibold">07. Risk</span>
-                <span className="material-symbols-outlined text-[16px] text-primary">check_circle</span>
-              </div>
-              <span className="font-label-md text-xs font-semibold text-on-surface">Risk Assessment</span>
-              <p className="text-[11px] text-on-surface-variant">Risk Score: Low (0.04 Anomaly)</p>
-            </div>
-
-            <div className="p-space-sm rounded-xl bg-primary-container/20 flex flex-col gap-1 border border-primary-container/40">
-              <div className="flex items-center justify-between">
-                <span className="font-code-sm text-[11px] text-primary font-bold">08. Action</span>
-                <span className="material-symbols-outlined text-[16px] text-primary animate-pulse">pending</span>
-              </div>
-              <span className="font-label-md text-xs font-bold text-on-surface">Action Recommendation</span>
-              <div className="flex flex-col">
-                <p className="text-[11px] text-primary font-semibold">Recommended: Full Refund</p>
-                <span className="text-[10px] text-on-surface-variant">Human Review if Required</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Obsidian Footer Callout */}
-          <div className="p-space-md rounded-2xl bg-inverse-surface text-inverse-on-surface flex flex-col sm:flex-row items-center justify-between gap-space-md border border-white/10">
-            <div className="flex items-center gap-space-md">
-              <div className="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold shrink-0">
-                <span className="material-symbols-outlined text-[20px]">verified_user</span>
-              </div>
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-label-md text-sm font-bold text-surface-container-lowest">
-                    Case #AT-9842
-                  </span>
-                  <span className="px-2 py-0.5 rounded-full bg-primary-container text-on-primary-container font-code-sm text-[11px] font-semibold">
-                    Risk: LOW
-                  </span>
-                  <span className="px-2 py-0.5 rounded-full bg-surface-container-lowest/15 text-surface-container-lowest font-code-sm text-[11px]">
-                    AI Confidence: 92%
-                  </span>
+          ) : (
+            <>
+              {/* 8-Step Mini Flow */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-sm">
+                <div className="p-space-sm rounded-xl bg-surface-container-low flex flex-col gap-1 border border-surface-container">
+                  <div className="flex items-center justify-between">
+                    <span className="font-code-sm text-[11px] text-on-surface-variant font-semibold">01. Request</span>
+                    <span className="material-symbols-outlined text-[16px] text-primary">check_circle</span>
+                  </div>
+                  <span className="font-label-md text-xs font-semibold text-on-surface">Request Understanding</span>
+                  <p className="text-[11px] text-on-surface-variant">{activeSpotlightCase.carrier.name} claim ingested</p>
                 </div>
-                <p className="text-xs text-tertiary-fixed-dim mt-0.5">
-                  Recommendation: Approve Refund (₹9,450 full statutory refund clearance recommended • Human Review if Required)
-                </p>
+
+                <div className="p-space-sm rounded-xl bg-surface-container-low flex flex-col gap-1 border border-surface-container">
+                  <div className="flex items-center justify-between">
+                    <span className="font-code-sm text-[11px] text-on-surface-variant font-semibold">02. Payment</span>
+                    <span className="material-symbols-outlined text-[16px] text-primary">check_circle</span>
+                  </div>
+                  <span className="font-label-md text-xs font-semibold text-on-surface">Transaction Check</span>
+                  <p className="text-[11px] text-on-surface-variant">{activeSpotlightCase.claimAmountFormatted} fare verified</p>
+                </div>
+
+                <div className="p-space-sm rounded-xl bg-surface-container-low flex flex-col gap-1 border border-surface-container">
+                  <div className="flex items-center justify-between">
+                    <span className="font-code-sm text-[11px] text-on-surface-variant font-semibold">03. Customer</span>
+                    <span className="material-symbols-outlined text-[16px] text-primary">check_circle</span>
+                  </div>
+                  <span className="font-label-md text-xs font-semibold text-on-surface">Customer Profile</span>
+                  <p className="text-[11px] text-on-surface-variant">{activeSpotlightCase.traveler.name}</p>
+                </div>
+
+                <div className="p-space-sm rounded-xl bg-surface-container-low flex flex-col gap-1 border border-surface-container">
+                  <div className="flex items-center justify-between">
+                    <span className="font-code-sm text-[11px] text-on-surface-variant font-semibold">04. Booking</span>
+                    <span className="material-symbols-outlined text-[16px] text-primary">check_circle</span>
+                  </div>
+                  <span className="font-label-md text-xs font-semibold text-on-surface">Booking & Fare Rules</span>
+                  <p className="text-[11px] text-on-surface-variant">PNR: {activeSpotlightCase.pnr}</p>
+                </div>
+
+                <div className="p-space-sm rounded-xl bg-surface-container-low flex flex-col gap-1 border border-surface-container">
+                  <div className="flex items-center justify-between">
+                    <span className="font-code-sm text-[11px] text-on-surface-variant font-semibold">05. Policy</span>
+                    <span className="material-symbols-outlined text-[16px] text-primary">check_circle</span>
+                  </div>
+                  <span className="font-label-md text-xs font-semibold text-on-surface">Policy Verification</span>
+                  <p className="text-[11px] text-on-surface-variant">DGCA & Carrier Rules</p>
+                </div>
+
+                <div className="p-space-sm rounded-xl bg-surface-container-low flex flex-col gap-1 border border-surface-container">
+                  <div className="flex items-center justify-between">
+                    <span className="font-code-sm text-[11px] text-on-surface-variant font-semibold">06. Evidence</span>
+                    <span className="material-symbols-outlined text-[16px] text-primary">check_circle</span>
+                  </div>
+                  <span className="font-label-md text-xs font-semibold text-on-surface">Evidence Analysis</span>
+                  <p className="text-[11px] text-on-surface-variant">{activeSpotlightCase.evidenceStrength || 'Telemetric audit'}</p>
+                </div>
+
+                <div className="p-space-sm rounded-xl bg-surface-container-low flex flex-col gap-1 border border-surface-container">
+                  <div className="flex items-center justify-between">
+                    <span className="font-code-sm text-[11px] text-on-surface-variant font-semibold">07. Risk</span>
+                    <span className="material-symbols-outlined text-[16px] text-primary">check_circle</span>
+                  </div>
+                  <span className="font-label-md text-xs font-semibold text-on-surface">Risk Assessment</span>
+                  <p className="text-[11px] text-on-surface-variant">{activeSpotlightCase.riskLevel} ({activeSpotlightCase.aiConfidence}% Conf.)</p>
+                </div>
+
+                <div className="p-space-sm rounded-xl bg-primary-container/20 flex flex-col gap-1 border border-primary-container/40">
+                  <div className="flex items-center justify-between">
+                    <span className="font-code-sm text-[11px] text-primary font-bold">08. Action</span>
+                    <span className="material-symbols-outlined text-[16px] text-primary animate-pulse">pending</span>
+                  </div>
+                  <span className="font-label-md text-xs font-bold text-on-surface">Action Recommendation</span>
+                  <div className="flex flex-col">
+                    <p className="text-[11px] text-primary font-semibold">{activeSpotlightCase.recommendedActionLabel || activeSpotlightCase.recommendedAction}</p>
+                    <span className="text-[10px] text-on-surface-variant">{activeSpotlightCase.decisionStatus}</span>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-space-sm w-full sm:w-auto">
-              <button
-                onClick={() => handleInspectCase('AT-9842')}
-                className="flex-1 sm:flex-none px-space-md py-2 rounded-full bg-surface-container-lowest/15 hover:bg-surface-container-lowest/25 text-surface-container-lowest font-label-md text-xs transition-colors whitespace-nowrap cursor-pointer"
-                type="button"
-              >
-                View Investigation
-              </button>
-              <button
-                onClick={() => handleQuickApprove('AT-9842')}
-                className="flex-1 sm:flex-none px-space-md py-2 rounded-full bg-primary-container hover:bg-primary-fixed-dim text-on-primary-container font-label-md text-xs font-bold transition-all whitespace-nowrap cursor-pointer shadow-sm"
-                type="button"
-              >
-                Approve Release
-              </button>
-            </div>
-          </div>
+
+              {/* Obsidian Footer Callout */}
+              <div className="p-space-md rounded-2xl bg-inverse-surface text-inverse-on-surface flex flex-col sm:flex-row items-center justify-between gap-space-md border border-white/10">
+                <div className="flex items-center gap-space-md">
+                  <div className="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold shrink-0">
+                    <span className="material-symbols-outlined text-[20px]">verified_user</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-label-md text-sm font-bold text-surface-container-lowest">
+                        Case #{activeSpotlightCase.caseRef.replace('#', '') || activeSpotlightCase.id}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full bg-primary-container text-on-primary-container font-code-sm text-[11px] font-semibold">
+                        {activeSpotlightCase.riskLevel}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full bg-surface-container-lowest/15 text-surface-container-lowest font-code-sm text-[11px]">
+                        AI Confidence: {activeSpotlightCase.aiConfidence}%
+                      </span>
+                    </div>
+                    <p className="text-xs text-tertiary-fixed-dim mt-0.5">
+                      Recommendation: {activeSpotlightCase.recommendedAction} ({activeSpotlightCase.decisionStatus})
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-space-sm w-full sm:w-auto">
+                  <button
+                    onClick={() => handleInspectCase(activeSpotlightCase.id)}
+                    className="flex-1 sm:flex-none px-space-md py-2 rounded-full bg-surface-container-lowest/15 hover:bg-surface-container-lowest/25 text-surface-container-lowest font-label-md text-xs transition-colors whitespace-nowrap cursor-pointer"
+                    type="button"
+                  >
+                    View Investigation
+                  </button>
+                  {activeSpotlightCase.decisionStatus === 'Ready for Payout' && (
+                    <button
+                      onClick={() => handleQuickApprove(activeSpotlightCase.id)}
+                      className="flex-1 sm:flex-none px-space-md py-2 rounded-full bg-primary-container hover:bg-primary-fixed-dim text-on-primary-container font-label-md text-xs font-bold transition-all whitespace-nowrap cursor-pointer shadow-sm"
+                      type="button"
+                    >
+                      Approve Release
+                    </button>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Right Column (4 cols): Risk Distribution */}
@@ -361,7 +418,7 @@ export const DashboardPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-headline-sm text-headline-sm font-bold text-on-surface">Risk Distribution</h3>
-              <p className="font-label-sm text-xs text-on-surface-variant">42 investigations in evaluation queue</p>
+              <p className="font-label-sm text-xs text-on-surface-variant">{cases.length} investigations in evaluation queue</p>
             </div>
             <span className="font-label-sm text-xs font-semibold px-2.5 py-1 rounded-full bg-surface-container-low text-on-surface-variant border border-surface-container">
               Active Batch
@@ -370,10 +427,10 @@ export const DashboardPage: React.FC = () => {
 
           {/* Stacked Risk Bar */}
           <div className="w-full flex h-3.5 rounded-full overflow-hidden gap-1 p-0.5 bg-surface-container-low">
-            <div className="h-full bg-primary rounded-l-full" style={{ width: '74%' }} title="Low Risk: 74%"></div>
-            <div className="h-full bg-secondary-container" style={{ width: '14%' }} title="Medium Risk: 14%"></div>
-            <div className="h-full bg-error" style={{ width: '8%' }} title="High Risk: 8%"></div>
-            <div className="h-full bg-surface-container-highest rounded-r-full" style={{ width: '4%' }} title="Insufficient Evidence: 4%"></div>
+            <div className="h-full bg-primary rounded-l-full" style={{ width: `${lowPct}%` }} title={`Low Risk: ${lowPct}%`}></div>
+            <div className="h-full bg-secondary-container" style={{ width: `${medPct}%` }} title={`Medium Risk: ${medPct}%`}></div>
+            <div className="h-full bg-error" style={{ width: `${highPct}%` }} title={`High Risk: ${highPct}%`}></div>
+            <div className="h-full bg-surface-container-highest rounded-r-full" style={{ width: `${insuffPct}%` }} title={`Insufficient Evidence: ${insuffPct}%`}></div>
           </div>
 
           {/* Risk Detail Cards */}
@@ -387,8 +444,8 @@ export const DashboardPage: React.FC = () => {
                 </div>
               </div>
               <div className="text-right">
-                <span className="font-label-md text-xs font-bold text-on-surface">74%</span>
-                <p className="text-[11px] text-on-surface-variant">31 cases</p>
+                <span className="font-label-md text-xs font-bold text-on-surface">{lowPct}%</span>
+                <p className="text-[11px] text-on-surface-variant">{lowRiskCount} cases</p>
               </div>
             </div>
 
@@ -401,8 +458,8 @@ export const DashboardPage: React.FC = () => {
                 </div>
               </div>
               <div className="text-right">
-                <span className="font-label-md text-xs font-bold text-on-surface">14%</span>
-                <p className="text-[11px] text-on-surface-variant">6 cases</p>
+                <span className="font-label-md text-xs font-bold text-on-surface">{medPct}%</span>
+                <p className="text-[11px] text-on-surface-variant">{mediumRiskCount} cases</p>
               </div>
             </div>
 
@@ -415,8 +472,8 @@ export const DashboardPage: React.FC = () => {
                 </div>
               </div>
               <div className="text-right">
-                <span className="font-label-md text-xs font-bold text-on-surface">8%</span>
-                <p className="text-[11px] text-on-surface-variant">3 cases</p>
+                <span className="font-label-md text-xs font-bold text-on-surface">{highPct}%</span>
+                <p className="text-[11px] text-on-surface-variant">{highRiskCount} cases</p>
               </div>
             </div>
 
@@ -429,8 +486,8 @@ export const DashboardPage: React.FC = () => {
                 </div>
               </div>
               <div className="text-right">
-                <span className="font-label-md text-xs font-bold text-on-surface">4%</span>
-                <p className="text-[11px] text-on-surface-variant">2 cases</p>
+                <span className="font-label-md text-xs font-bold text-on-surface">{insuffPct}%</span>
+                <p className="text-[11px] text-on-surface-variant">{insufficientCount} cases</p>
               </div>
             </div>
           </div>
@@ -448,7 +505,7 @@ export const DashboardPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 <h3 className="font-headline-sm text-headline-sm font-bold text-on-surface">Requires Human Review</h3>
                 <span className="px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-[11px] font-bold">
-                  3 High-Impact Cases
+                  {humanReviewCases.length} Case{humanReviewCases.length === 1 ? '' : 's'}
                 </span>
               </div>
               <p className="font-body-sm text-xs text-on-surface-variant">
@@ -475,101 +532,51 @@ export const DashboardPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-container-high/40">
-              <tr className="hover:bg-surface-container-low/60 transition-colors">
-                <td className="py-space-md px-space-md">
-                  <div className="flex flex-col">
-                    <span className="font-semibold text-on-surface">#RF-1042</span>
-                    <span className="text-xs text-on-surface-variant">Corporate Account</span>
-                  </div>
-                </td>
-                <td className="py-space-md px-space-md font-semibold text-on-surface">₹45,000</td>
-                <td className="py-space-md px-space-md">
-                  <span className="px-2.5 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-xs font-semibold">
-                    HIGH RISK
-                  </span>
-                </td>
-                <td className="py-space-md px-space-md font-code-sm text-xs text-on-surface-variant">
-                  87% Confidence
-                </td>
-                <td className="py-space-md px-space-md">
-                  <span className="text-xs text-on-surface-variant line-clamp-2">
-                    Multiple refund attempts across partner portals + conflicting carrier cancellation logs
-                  </span>
-                </td>
-                <td className="py-space-md px-space-md text-right">
-                  <button
-                    onClick={() => handleReviewHighImpact('RF-1042')}
-                    className="px-space-md py-1.5 rounded-full bg-primary-container text-on-primary-container font-label-md text-xs font-semibold hover:shadow transition-all cursor-pointer"
-                    type="button"
-                  >
-                    Review Case
-                  </button>
-                </td>
-              </tr>
-
-              <tr className="hover:bg-surface-container-low/60 transition-colors">
-                <td className="py-space-md px-space-md">
-                  <div className="flex flex-col">
-                    <span className="font-semibold text-on-surface">#RF-1088</span>
-                    <span className="text-xs text-on-surface-variant">Individual Booking</span>
-                  </div>
-                </td>
-                <td className="py-space-md px-space-md font-semibold text-on-surface">₹52,400</td>
-                <td className="py-space-md px-space-md">
-                  <span className="px-2.5 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-xs font-semibold">
-                    HIGH RISK
-                  </span>
-                </td>
-                <td className="py-space-md px-space-md font-code-sm text-xs text-on-surface-variant">
-                  79% Confidence
-                </td>
-                <td className="py-space-md px-space-md">
-                  <span className="text-xs text-on-surface-variant line-clamp-2">
-                    Disputed no-show attribution vs medical emergency claim without hospitalization proof
-                  </span>
-                </td>
-                <td className="py-space-md px-space-md text-right">
-                  <button
-                    onClick={() => handleReviewHighImpact('RF-1088')}
-                    className="px-space-md py-1.5 rounded-full bg-primary-container text-on-primary-container font-label-md text-xs font-semibold hover:shadow transition-all cursor-pointer"
-                    type="button"
-                  >
-                    Review Case
-                  </button>
-                </td>
-              </tr>
-
-              <tr className="hover:bg-surface-container-low/60 transition-colors">
-                <td className="py-space-md px-space-md">
-                  <div className="flex flex-col">
-                    <span className="font-semibold text-on-surface">#RF-1015</span>
-                    <span className="text-xs text-on-surface-variant">Corporate Account</span>
-                  </div>
-                </td>
-                <td className="py-space-md px-space-md font-semibold text-on-surface">₹28,500</td>
-                <td className="py-space-md px-space-md">
-                  <span className="px-2.5 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-xs font-semibold">
-                    MEDIUM RISK
-                  </span>
-                </td>
-                <td className="py-space-md px-space-md font-code-sm text-xs text-on-surface-variant">
-                  84% Confidence
-                </td>
-                <td className="py-space-md px-space-md">
-                  <span className="text-xs text-on-surface-variant line-clamp-2">
-                    Partial carrier fare waiver issued; manual statutory tax refund clearance required
-                  </span>
-                </td>
-                <td className="py-space-md px-space-md text-right">
-                  <button
-                    onClick={() => handleReviewHighImpact('RF-1015')}
-                    className="px-space-md py-1.5 rounded-full bg-primary-container text-on-primary-container font-label-md text-xs font-semibold hover:shadow transition-all cursor-pointer"
-                    type="button"
-                  >
-                    Review Case
-                  </button>
-                </td>
-              </tr>
+              {humanReviewCases.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-on-surface-variant">
+                    <span className="material-symbols-outlined text-[28px] text-gray-400 mb-1 block">
+                      task_alt
+                    </span>
+                    <p className="font-semibold text-xs text-on-surface">No cases currently require human review</p>
+                    <p className="text-[11px] text-on-surface-variant mt-0.5">
+                      When an AI investigation flags anomalies or exceeds policy risk limits, it will appear here for auditor sign-off.
+                    </p>
+                  </td>
+                </tr>
+              ) : (
+                humanReviewCases.map((c) => (
+                  <tr key={c.id} className="hover:bg-surface-container-low/60 transition-colors">
+                    <td className="py-space-md px-space-md">
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-on-surface">#{c.caseRef.replace('#', '') || c.id}</span>
+                        <span className="text-xs text-on-surface-variant">{c.traveler.tier || c.traveler.name}</span>
+                      </div>
+                    </td>
+                    <td className="py-space-md px-space-md font-semibold text-on-surface">{c.claimAmountFormatted}</td>
+                    <td className="py-space-md px-space-md">
+                      <RiskBadge level={c.riskLevel} size="sm" />
+                    </td>
+                    <td className="py-space-md px-space-md font-code-sm text-xs text-on-surface-variant">
+                      {c.aiConfidence}% Confidence
+                    </td>
+                    <td className="py-space-md px-space-md">
+                      <span className="text-xs text-on-surface-variant line-clamp-2">
+                        {c.reasonSummary || c.synthesis}
+                      </span>
+                    </td>
+                    <td className="py-space-md px-space-md text-right">
+                      <button
+                        onClick={() => handleReviewHighImpact(c.id)}
+                        className="px-space-md py-1.5 rounded-full bg-primary-container text-on-primary-container font-label-md text-xs font-semibold hover:shadow transition-all cursor-pointer"
+                        type="button"
+                      >
+                        Review Case
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -600,26 +607,17 @@ export const DashboardPage: React.FC = () => {
               />
             </div>
 
-            {/* Risk Dropdown */}
+            {/* Risk Dropdown Filter */}
             <select
               value={riskFilter}
               onChange={(e) => setRiskFilter(e.target.value)}
-              className="bg-surface-container-low text-on-surface font-label-md text-xs sm:text-sm px-space-md py-2 rounded-full focus:outline-none border border-surface-container cursor-pointer"
+              className="bg-surface-container-low border border-surface-container px-space-md py-2 rounded-full font-body-sm text-xs text-on-surface focus:outline-none cursor-pointer"
             >
               <option value="all">All Risk Levels</option>
               <option value="low">Low Risk Only</option>
               <option value="medium">Medium Risk Only</option>
               <option value="high">High Risk Only</option>
             </select>
-
-            <button
-              onClick={() => navigate('/refund-investigations')}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-[#006D77] to-[#20B8B0] text-white font-label-md text-xs sm:text-sm font-bold hover:shadow-md transition-all cursor-pointer whitespace-nowrap shadow-xs"
-              type="button"
-            >
-              <span>View Full Ledger</span>
-              <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-            </button>
           </div>
         </div>
 
@@ -634,7 +632,7 @@ export const DashboardPage: React.FC = () => {
             }`}
             type="button"
           >
-            All (42)
+            All ({cases.length})
           </button>
           <button
             onClick={() => setActiveTab('approved')}
@@ -645,7 +643,7 @@ export const DashboardPage: React.FC = () => {
             }`}
             type="button"
           >
-            Approved & Disbursed (28)
+            Approved & Disbursed ({claimsDisbursedCount})
           </button>
           <button
             onClick={() => setActiveTab('review')}
@@ -656,7 +654,7 @@ export const DashboardPage: React.FC = () => {
             }`}
             type="button"
           >
-            Under Human Review (6)
+            Under Human Review ({pendingHumanReviewCount})
           </button>
           <button
             onClick={() => setActiveTab('awaiting')}
@@ -667,7 +665,7 @@ export const DashboardPage: React.FC = () => {
             }`}
             type="button"
           >
-            Awaiting Carrier Evidence (5)
+            Awaiting Carrier Evidence ({carrierEvidenceCount})
           </button>
           <button
             onClick={() => setActiveTab('flagged')}
@@ -678,7 +676,7 @@ export const DashboardPage: React.FC = () => {
             }`}
             type="button"
           >
-            Flagged / Rejected (3)
+            Flagged / Rejected ({flaggedRejectedCount})
           </button>
         </div>
 
@@ -698,71 +696,85 @@ export const DashboardPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-container-high/40">
-              {filteredInvestigations.map((item) => (
-                <tr key={item.id} className="hover:bg-surface-container-low/60 transition-colors">
-                  <td className="py-space-md px-space-md">
-                    <button
-                      onClick={() => handleInspectCase(item.id)}
-                      className="flex flex-col text-left group cursor-pointer"
-                    >
-                      <span className="font-headline-sm text-sm font-bold text-on-surface group-hover:text-primary transition-colors">
-                        {item.caseRef}
-                      </span>
-                      <span className="font-code-sm text-[11px] text-on-surface-variant">PNR: {item.pnr}</span>
-                    </button>
-                  </td>
-                  <td className="py-space-md px-space-md">
-                    <div className="flex items-center gap-space-sm">
-                      <div
-                        className={`w-8 h-8 rounded-full ${item.traveler.color} font-label-sm text-xs flex items-center justify-center font-bold`}
-                      >
-                        {item.traveler.initials}
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="font-label-md text-xs font-semibold text-on-surface">
-                          {item.traveler.name}
-                        </span>
-                        <span className="font-label-sm text-[11px] text-on-surface-variant">
-                          {item.traveler.tier}
-                        </span>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-space-md px-space-md">
-                    <div className="flex items-center gap-space-xs">
-                      <span className="p-1 rounded-md bg-surface-container-high text-on-surface">
-                        <span className="material-symbols-outlined text-[16px]">
-                          {item.carrier.type === 'train' ? 'train' : 'flight'}
-                        </span>
-                      </span>
-                      <span className="font-medium text-on-surface text-xs sm:text-sm">
-                        {item.carrier.name} ({item.carrier.route})
-                      </span>
-                    </div>
-                  </td>
-                  <td className="py-space-md px-space-md">
-                    <span className="font-semibold text-on-surface">{item.claimAmountFormatted}</span>
-                  </td>
-                  <td className="py-space-md px-space-md">
-                    <RiskBadge level={item.riskLevel} size="sm" />
-                  </td>
-                  <td className="py-space-md px-space-md">
-                    <span className="font-code-sm text-xs text-primary font-bold">{item.aiConfidence}%</span>
-                  </td>
-                  <td className="py-space-md px-space-md">
-                    <StatusBadge status={item.decisionStatus} size="sm" />
-                  </td>
-                  <td className="py-space-md px-space-md text-right">
-                    <button
-                      onClick={() => handleInspectCase(item.id)}
-                      className="px-space-md py-1.5 rounded-full bg-surface-container hover:bg-primary-container hover:text-on-primary-container text-on-surface font-label-md text-xs font-semibold transition-all cursor-pointer whitespace-nowrap"
-                      type="button"
-                    >
-                      Inspect Dossier
-                    </button>
+              {filteredInvestigations.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-on-surface-variant">
+                    <span className="material-symbols-outlined text-[36px] text-gray-400 mb-2 block">
+                      inbox
+                    </span>
+                    <p className="font-semibold text-xs text-on-surface">No refund investigations found</p>
+                    <p className="text-[11px] text-on-surface-variant mt-1">
+                      Submitted refund cases will appear here.
+                    </p>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredInvestigations.map((item) => (
+                  <tr key={item.id} className="hover:bg-surface-container-low/60 transition-colors">
+                    <td className="py-space-md px-space-md">
+                      <button
+                        onClick={() => handleInspectCase(item.id)}
+                        className="flex flex-col text-left group cursor-pointer"
+                      >
+                        <span className="font-headline-sm text-sm font-bold text-on-surface group-hover:text-primary transition-colors">
+                          {item.caseRef}
+                        </span>
+                        <span className="font-code-sm text-[11px] text-on-surface-variant">PNR: {item.pnr}</span>
+                      </button>
+                    </td>
+                    <td className="py-space-md px-space-md">
+                      <div className="flex items-center gap-space-sm">
+                        <div
+                          className={`w-8 h-8 rounded-full ${item.traveler.color || 'bg-primary-container text-on-primary-container'} font-label-sm text-xs flex items-center justify-center font-bold`}
+                        >
+                          {item.traveler.initials}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-label-md text-xs font-semibold text-on-surface">
+                            {item.traveler.name}
+                          </span>
+                          <span className="font-label-sm text-[11px] text-on-surface-variant">
+                            {item.traveler.tier}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-space-md px-space-md">
+                      <div className="flex items-center gap-space-xs">
+                        <span className="p-1 rounded-md bg-surface-container-high text-on-surface">
+                          <span className="material-symbols-outlined text-[16px]">
+                            {item.carrier.type === 'train' ? 'train' : 'flight'}
+                          </span>
+                        </span>
+                        <span className="font-medium text-on-surface text-xs sm:text-sm">
+                          {item.carrier.name} ({item.carrier.route})
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-space-md px-space-md">
+                      <span className="font-semibold text-on-surface">{item.claimAmountFormatted}</span>
+                    </td>
+                    <td className="py-space-md px-space-md">
+                      <RiskBadge level={item.riskLevel} size="sm" />
+                    </td>
+                    <td className="py-space-md px-space-md">
+                      <span className="font-code-sm text-xs text-primary font-bold">{item.aiConfidence}%</span>
+                    </td>
+                    <td className="py-space-md px-space-md">
+                      <StatusBadge status={item.decisionStatus} size="sm" />
+                    </td>
+                    <td className="py-space-md px-space-md text-right">
+                      <button
+                        onClick={() => handleInspectCase(item.id)}
+                        className="px-space-md py-1.5 rounded-full bg-surface-container hover:bg-primary-container hover:text-on-primary-container text-on-surface font-label-md text-xs font-semibold transition-all cursor-pointer whitespace-nowrap"
+                        type="button"
+                      >
+                        Inspect Dossier
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -770,7 +782,7 @@ export const DashboardPage: React.FC = () => {
         {/* Pagination Footer */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-space-sm pt-space-xs border-t border-surface-container">
           <span className="font-body-sm text-xs text-on-surface-variant">
-            Showing <strong className="text-on-surface font-semibold">1–{filteredInvestigations.length}</strong> of 42 active investigations
+            Showing <strong className="text-on-surface font-semibold">1–{filteredInvestigations.length}</strong> of {cases.length} active investigations
           </span>
           <div className="flex items-center gap-space-xs">
             <button
@@ -783,18 +795,6 @@ export const DashboardPage: React.FC = () => {
             <span className="px-3 py-1 rounded-full bg-primary-container text-on-primary-container font-label-sm text-xs font-bold">
               1
             </span>
-            <button
-              className="px-3 py-1 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-xs transition-colors cursor-pointer"
-              type="button"
-            >
-              2
-            </button>
-            <button
-              className="px-3 py-1 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-xs transition-colors cursor-pointer"
-              type="button"
-            >
-              3
-            </button>
             <button
               className="flex items-center justify-center w-8 h-8 rounded-full bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors cursor-pointer"
               type="button"

@@ -1,7 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
-
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 import { Link, useParams } from 'react-router-dom';
 import { SiteHeader } from '../components/layout/SiteHeader';
@@ -101,7 +99,7 @@ export const CaseDetailPage: React.FC = () => {
       if (res.ok) {
         textContent = await res.text();
       } else {
-        textContent = `Case Summary Dossier for #${displayCaseId}\nStatus: ${currentCase.decisionStatus}\nCarrier: ${currentCase.carrier.name}\nClaim: ${currentCase.claimAmountFormatted}\nVerified DGCA Mandate Compliance.`;
+        textContent = `Case Summary Dossier for #${displayCaseId}\nStatus: ${currentCase?.decisionStatus || 'Active'}\nCarrier: ${currentCase?.carrier?.name || 'Carrier'}\nClaim: ${currentCase?.claimAmountFormatted || 'N/A'}\nVerified DGCA Mandate Compliance.`;
       }
 
       const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });

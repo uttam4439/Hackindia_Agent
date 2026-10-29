@@ -24,14 +24,33 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 
 // Configuration variables
-const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || '';
-const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || '';
-const RAZORPAY_WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET || '';
-const RAZORPAY_MODE = process.env.RAZORPAY_MODE || 'test';
+const rawRazorpayMode = (process.env.RAZORPAY_MODE || 'test').toLowerCase().trim();
+const RAZORPAY_MODE = rawRazorpayMode === 'live' || rawRazorpayMode === 'production' ? 'live' : 'test';
+const RAZORPAY_KEY_ID = (process.env.RAZORPAY_KEY_ID || '').trim();
+const RAZORPAY_KEY_SECRET = (process.env.RAZORPAY_KEY_SECRET || '').trim();
+const RAZORPAY_WEBHOOK_SECRET = (process.env.RAZORPAY_WEBHOOK_SECRET || '').trim();
 
-// Verify that keys are for test mode only
-if (RAZORPAY_KEY_ID && !RAZORPAY_KEY_ID.startsWith('rzp_test_')) {
-  console.warn('[SECURITY WARNING] RAZORPAY_KEY_ID does not start with "rzp_test_". Test Mode must be used.');
+// Fail-Closed Razorpay Mode Safeguards:
+// Explicitly configured live keys must NEVER be accepted when RAZORPAY_MODE is 'test'.
+if (RAZORPAY_MODE === 'test') {
+  if (RAZORPAY_KEY_ID && (RAZORPAY_KEY_ID.startsWith('rzp_live_') || !RAZORPAY_KEY_ID.startsWith('rzp_test_'))) {
+    throw new Error(
+      `[SECURITY ERROR] Live or unrecognized Razorpay Key ID '${RAZORPAY_KEY_ID.slice(0, 12)}...' supplied while RAZORPAY_MODE is configured as 'test'. ` +
+      `To use live credentials, RAZORPAY_MODE must be deliberately and explicitly set to 'live'. Server startup aborted.`
+    );
+  }
+} else if (RAZORPAY_MODE === 'live') {
+  // Deliberate, explicit configuration path for live mode
+  if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_ID.startsWith('rzp_live_')) {
+    throw new Error(
+      `[SECURITY ERROR] RAZORPAY_MODE is set to 'live', but RAZORPAY_KEY_ID is missing or not a valid 'rzp_live_' key. Server startup aborted.`
+    );
+  }
+  if (!RAZORPAY_KEY_SECRET || RAZORPAY_KEY_SECRET.includes('YOUR_RAZORPAY_KEY_SECRET')) {
+    throw new Error(
+      `[SECURITY ERROR] Live mode requires an authentic RAZORPAY_KEY_SECRET. Server startup aborted.`
+    );
+  }
 }
 
 // Initialize Razorpay SDK instance if keys are provided and not default placeholders
@@ -132,6 +151,82 @@ app.get('/api/config/razorpay', (req, res) => {
     mode: RAZORPAY_MODE,
     currency: 'INR',
   });
+});
+
+// --- TRAVEL CATALOG ENDPOINTS (DEMO SHOWCASE INVENTORY) ---
+
+/**
+ * GET /api/catalog/destinations
+ * Returns curated destination cards with starting prices, categories, and high-res imagery.
+ * Optional query parameter: category ('Mountains' | 'Beaches' | 'Heritage' | 'Backwaters' | 'all')
+ */
+app.get('/api/catalog/destinations', async (req, res) => {
+  try {
+    const category = req.query.category ? String(req.query.category).trim() : 'all';
+    const destinations = await db.getCatalogDestinations(category);
+    return res.json({
+      success: true,
+      count: destinations.length,
+      category,
+      disclaimer: 'Curated Demo Catalog Inventory for Showcase — Not Live Airline/GDS Feed',
+      destinations,
+    });
+  } catch (err) {
+    console.error('[CATALOG ERROR] Failed to fetch destinations:', err);
+    return res.status(500).json({ success: false, error: 'Failed to retrieve catalog destinations' });
+  }
+});
+
+/**
+ * GET /api/catalog/trips
+ * Returns curated demo trips (flights, trains, buses) with authoritative base fares and schedules.
+ * Query parameters: serviceType, origin, destination, date
+ */
+app.get('/api/catalog/trips', async (req, res) => {
+  try {
+    const filters = {
+      serviceType: req.query.serviceType ? String(req.query.serviceType).trim() : 'all',
+      origin: req.query.origin ? String(req.query.origin).trim() : '',
+      destination: req.query.destination ? String(req.query.destination).trim() : '',
+      date: req.query.date ? String(req.query.date).trim() : '',
+    };
+    const trips = await db.getCatalogTrips(filters);
+    return res.json({
+      success: true,
+      count: trips.length,
+      filters,
+      disclaimer: 'Curated Demo Catalog Inventory for Showcase — Not Live Airline/GDS Feed',
+      trips,
+    });
+  } catch (err) {
+    console.error('[CATALOG ERROR] Failed to fetch trips:', err);
+    return res.status(500).json({ success: false, error: 'Failed to retrieve catalog trips' });
+  }
+});
+
+/**
+ * GET /api/catalog/trips/:id
+ * Retrieves a single authoritative trip record by ID or flight/train code.
+ */
+app.get('/api/catalog/trips/:id', async (req, res) => {
+  try {
+    const tripId = req.params.id;
+    const trip = await db.getCatalogTripById(tripId);
+    if (!trip) {
+      return res.status(404).json({
+        success: false,
+        error: `Catalog trip with identifier '${tripId}' not found.`,
+      });
+    }
+    return res.json({
+      success: true,
+      disclaimer: 'Curated Demo Catalog Inventory for Showcase — Not Live Airline/GDS Feed',
+      trip,
+    });
+  } catch (err) {
+    console.error('[CATALOG ERROR] Failed to fetch trip by ID:', err);
+    return res.status(500).json({ success: false, error: 'Failed to retrieve catalog trip' });
+  }
 });
 
 // --- AUTHENTICATION ENDPOINTS ---
@@ -297,7 +392,7 @@ app.get('/api/cases/:id/summary', (req, res) => {
 
 /**
  * POST /api/payment/create-order
- * Validates authoritative booking price and creates Razorpay Order on the backend.
+ * Validates authoritative booking price against DynamoDB catalog and creates Razorpay Order on the backend.
  */
 app.post('/api/payment/create-order', async (req, res) => {
   try {
@@ -307,48 +402,197 @@ app.post('/api/payment/create-order', async (req, res) => {
       return res.status(400).json({ success: false, error: 'tripDetails is required' });
     }
 
-    // 1. Authoritative Price Calculation & Validation
-    let authoritativeAmount = 0;
-    const baseRate = Number(tripDetails.baseRatePerUnit || tripDetails.fareAmount) || 0;
-    const passengerCount = Number(tripDetails.passengerCount || 1);
-    const nights = Number(tripDetails.nights || 1);
-
-    if (tripDetails.serviceType === 'hotels') {
-      authoritativeAmount = (tripDetails.fareAmount ? Number(tripDetails.fareAmount) : baseRate * nights) || 2800;
-    } else if (tripDetails.serviceType === 'flights') {
-      authoritativeAmount = (tripDetails.fareAmount ? Number(tripDetails.fareAmount) : baseRate * passengerCount) || 5400;
-    } else {
-      authoritativeAmount = Number(tripDetails.fareAmount) || 1200;
+    // 1. Authoritative Catalog Trip Lookup from DynamoDB
+    const lookupId = tripDetails.catalogTripId || tripDetails.tripId || tripDetails.id || tripDetails.code;
+    if (!lookupId) {
+      return res.status(400).json({ success: false, error: 'A valid catalog trip identifier is required' });
     }
 
-    if (authoritativeAmount <= 0) {
-      return res.status(400).json({ success: false, error: 'Invalid authoritative payable amount' });
+    const catalogTrip = await db.getCatalogTripById(lookupId);
+    if (!catalogTrip) {
+      return res.status(404).json({
+        success: false,
+        error: `Catalog trip with identifier '${lookupId}' not found in inventory. Cannot create booking for non-existent inventory.`,
+      });
     }
 
+    // 2. Validate Demo Inventory Status
+    if (!catalogTrip.isCatalogDemo && catalogTrip.entityType !== 'CATALOG_TRIP') {
+      return res.status(400).json({
+        success: false,
+        error: 'Selected inventory item is not a recognized catalog trip item.',
+      });
+    }
+
+    // 3. Validate Requested Passenger Count & Inventory Availability
+    const passengerCount = Number(tripDetails.passengerCount ?? 1);
+    if (!Number.isInteger(passengerCount) || passengerCount < 1 || passengerCount > 9) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid passenger count (must be an integer between 1 and 9).',
+      });
+    }
+
+    if (catalogTrip.availableSeats !== undefined && catalogTrip.availableSeats < passengerCount) {
+      return res.status(409).json({
+        success: false,
+        error: `Requested seats (${passengerCount}) exceed available inventory (${catalogTrip.availableSeats}).`,
+      });
+    }
+
+    // 4. Server-Side Authoritative Price Calculation (Never Trust Client Prices)
+    const baseFare = Number(catalogTrip.fareAmount || catalogTrip.basePrice);
+    if (!baseFare || baseFare <= 0) {
+      return res.status(500).json({
+        success: false,
+        error: 'Authoritative catalog fare is corrupted or missing.',
+      });
+    }
+
+    const authoritativeAmount = baseFare * passengerCount;
     // Amount in paise (smallest currency unit: ₹1 = 100 paise)
     const amountInPaise = Math.round(authoritativeAmount * 100);
-    const currency = 'INR';
+    const currency = catalogTrip.currency || 'INR';
 
-    // 2. Prevent Duplicate Order Generation
-    const cleanBookingId = bookingId || `BK-${Date.now().toString().slice(-6)}`;
-    const existingBooking = db.getBooking(cleanBookingId);
-    if (existingBooking?.razorpayOrderId && existingBooking?.paymentStatus === 'PENDING') {
-      const existingOrder = db.getOrder(existingBooking.razorpayOrderId);
-      if (existingOrder && existingOrder.amount === amountInPaise) {
-        return res.json({
-          success: true,
-          orderId: existingOrder.orderId,
-          amount: existingOrder.amount,
-          currency: existingOrder.currency,
-          keyId: RAZORPAY_KEY_ID || 'rzp_test_Tjktt6Bs0TXxDk',
-          reused: true,
-        });
-      }
+    // 5. Unique Non-Colliding Booking Identifier (Always prefixed with BK-)
+    let cleanBookingId = bookingId ? String(bookingId).trim() : '';
+    if (!cleanBookingId || !cleanBookingId.startsWith('BK-')) {
+      cleanBookingId = `BK-${Date.now().toString().slice(-6)}${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
     }
 
-    // 3. Create Order via Razorpay Orders API
-    let razorpayOrder = null;
+    // 6. Customer Identity Extraction (Authenticated session if provided)
+    let authenticatedUser = null;
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : req.headers['x-auth-token'];
+    if (token) {
+      authenticatedUser = authService.verifyToken(token);
+    }
 
+    const customerId = authenticatedUser?.sub || null;
+    const customerEmail = authenticatedUser?.email || travelerDetails?.email || 'traveler@agenttravel.com';
+    const customerName = authenticatedUser?.name || travelerDetails?.name || 'Aarav Sharma';
+
+    // 7. Atomic Booking Claim (Conditional Write to prevent duplicate concurrent order creation)
+    const initialBookingPayload = {
+      catalogTripId: catalogTrip.id,
+      tripId: catalogTrip.tripId,
+      amount: authoritativeAmount,
+      currency,
+      passengerCount,
+      userId: customerId,
+      customerEmail,
+      customerName,
+      bookingDetails: {
+        ...tripDetails,
+        baseFare,
+        fareAmount: authoritativeAmount,
+        operator: catalogTrip.operator,
+        code: catalogTrip.code,
+        flightNo: catalogTrip.flightNo,
+        route: catalogTrip.route,
+        origin: catalogTrip.origin,
+        destination: catalogTrip.destination,
+        departTime: catalogTrip.departTime,
+        arriveTime: catalogTrip.arriveTime,
+        duration: catalogTrip.duration,
+        isCatalogDemo: true,
+      },
+    };
+
+    const claimResult = await db.claimBookingOrderCreation(cleanBookingId, initialBookingPayload);
+
+    if (claimResult.alreadyPaid) {
+      return res.status(409).json({
+        success: false,
+        error: 'This booking has already been paid and finalized. Modification rejected.',
+        bookingId: cleanBookingId,
+        paymentStatus: 'PAID',
+      });
+    }
+
+    if (claimResult.reused) {
+      const existingOrder = claimResult.order;
+      const existingBooking = claimResult.booking;
+
+      // 1. Ensure booking is still unpaid
+      if (existingBooking?.paymentStatus === 'PAID') {
+        return res.status(409).json({
+          success: false,
+          error: 'This booking has already been paid and finalized. Modification rejected.',
+          bookingId: cleanBookingId,
+          paymentStatus: 'PAID',
+        });
+      }
+
+      // 2. Validate existing order record exists
+      if (!existingOrder) {
+        return res.status(409).json({
+          success: false,
+          error: `Pending order reference '${claimResult.orderId}' was not found in database records.`,
+          bookingId: cleanBookingId,
+        });
+      }
+
+      // 3. Validate booking ID binding
+      if (String(existingOrder.bookingId).trim() !== cleanBookingId) {
+        return res.status(409).json({
+          success: false,
+          error: `Order record '${existingOrder.orderId}' is bound to booking '${existingOrder.bookingId}', not '${cleanBookingId}'. Order reuse rejected.`,
+          bookingId: cleanBookingId,
+        });
+      }
+
+      // 4. Validate authoritative amount match
+      if (Number(existingOrder.amount) !== amountInPaise) {
+        return res.status(409).json({
+          success: false,
+          error: `A pending order already exists for this booking with a different amount (₹${Number(existingOrder.amount) / 100} vs authoritative ₹${authoritativeAmount}). Reuse rejected.`,
+          bookingId: cleanBookingId,
+        });
+      }
+
+      // 5. Validate currency match
+      if (existingOrder.currency && existingOrder.currency !== currency) {
+        return res.status(409).json({
+          success: false,
+          error: `A pending order already exists for this booking with a different currency (${existingOrder.currency} vs ${currency}). Reuse rejected.`,
+          bookingId: cleanBookingId,
+        });
+      }
+
+      // 6. Valid order reuse
+      return res.json({
+        success: true,
+        bookingId: cleanBookingId,
+        orderId: existingOrder.orderId || claimResult.orderId,
+        amount: existingOrder.amount,
+        currency: existingOrder.currency,
+        keyId: RAZORPAY_KEY_ID || 'rzp_test_Tjktt6Bs0TXxDk',
+        reused: true,
+        disclaimer: 'Curated Demo Catalog Inventory for Showcase — Not Live Airline/GDS Feed',
+      });
+    }
+
+    if (claimResult.inProgress) {
+      return res.status(409).json({
+        success: false,
+        error: claimResult.error || 'An order creation is currently in progress for this booking. Please retry.',
+        bookingId: cleanBookingId,
+      });
+    }
+
+    if (!claimResult.claimed || !claimResult.claimToken) {
+      return res.status(409).json({
+        success: false,
+        error: 'Unable to claim booking for order creation.',
+        bookingId: cleanBookingId,
+      });
+    }
+
+    const claimToken = claimResult.claimToken;
+
+    // 8. Create Order via Razorpay Orders API (Only the single claimed request reaches here)
+    let razorpayOrder = null;
     if (razorpayInstance) {
       try {
         razorpayOrder = await razorpayInstance.orders.create({
@@ -357,51 +601,124 @@ app.post('/api/payment/create-order', async (req, res) => {
           receipt: `rcpt_${cleanBookingId.replace(/[^a-zA-Z0-9]/g, '').slice(-20)}`,
           notes: {
             bookingId: cleanBookingId,
-            serviceType: tripDetails.serviceType || 'travel',
-            route: tripDetails.route || tripDetails.title || 'Trip',
+            catalogTripId: catalogTrip.id,
+            serviceType: catalogTrip.serviceType || tripDetails.serviceType || 'travel',
+            route: catalogTrip.route || `${catalogTrip.origin} → ${catalogTrip.destination}`,
           },
         });
       } catch (err) {
         console.error('[RAZORPAY ERROR] Failed to create order with provider:', err);
+        // Release the claim using the fencing token so only this request can release its own claim
+        await db.releaseBookingOrderClaim(cleanBookingId, claimToken, err.message || 'Razorpay order creation failed');
         return res.status(502).json({
           success: false,
           error: 'Razorpay order creation failed: ' + (err.error?.description || err.message),
         });
       }
     } else {
-      // In local mode without real secret key, omit orderId so Razorpay Standard Checkout opens in direct mode
       razorpayOrder = null;
     }
 
-    // 4. Persist order relationship in database if order was generated
     const returnedOrderId = razorpayOrder ? razorpayOrder.id : null;
 
-    if (returnedOrderId) {
-      db.saveOrder(returnedOrderId, {
-        bookingId: cleanBookingId,
-        amount: amountInPaise,
+    // 9. Atomically commit order relationship and booking update under token fencing
+    const commitResult = await db.commitBookingOrder(
+      cleanBookingId,
+      claimToken,
+      returnedOrderId,
+      returnedOrderId
+        ? {
+            amount: amountInPaise,
+            currency,
+            catalogTripId: catalogTrip.id,
+            tripDetails: {
+              ...tripDetails,
+              baseFare,
+              fareAmount: authoritativeAmount,
+              operator: catalogTrip.operator,
+              code: catalogTrip.code,
+              flightNo: catalogTrip.flightNo,
+              route: catalogTrip.route,
+            },
+            travelerDetails: travelerDetails || { name: customerName, email: customerEmail },
+            status: 'created',
+          }
+        : null,
+      {
+        id: cleanBookingId,
+        entityType: 'BOOKING',
+        catalogTripId: catalogTrip.id,
+        tripId: catalogTrip.tripId,
+        amount: authoritativeAmount,
         currency,
-        tripDetails,
-        travelerDetails,
-        status: 'created',
+        passengerCount,
+        paymentStatus: 'PENDING',
+        userId: customerId,
+        customerEmail,
+        customerName,
+        bookingDetails: {
+          ...tripDetails,
+          baseFare,
+          fareAmount: authoritativeAmount,
+          operator: catalogTrip.operator,
+          code: catalogTrip.code,
+          flightNo: catalogTrip.flightNo,
+          route: catalogTrip.route,
+          origin: catalogTrip.origin,
+          destination: catalogTrip.destination,
+          departTime: catalogTrip.departTime,
+          arriveTime: catalogTrip.arriveTime,
+          duration: catalogTrip.duration,
+          isCatalogDemo: true,
+        },
+      }
+    );
+
+    if (!commitResult?.success) {
+      if (commitResult?.lostClaim) {
+        console.warn(`[CREATE ORDER CONFLICT] Commit lost claim race for booking ${cleanBookingId}`);
+        return res.status(409).json({
+          success: false,
+          error: 'Order creation attempt expired or was superseded by a concurrent request. Please retry.',
+          bookingId: cleanBookingId,
+        });
+      }
+      if (commitResult?.orderConflict) {
+        console.warn(`[CREATE ORDER CONFLICT] Order ID collision or mismatch for booking ${cleanBookingId}`);
+        return res.status(409).json({
+          success: false,
+          error: commitResult.error || 'A conflicting order record already exists.',
+          bookingId: cleanBookingId,
+        });
+      }
+      return res.status(500).json({
+        success: false,
+        error: commitResult?.error || 'Failed to commit booking and order record.',
+        bookingId: cleanBookingId,
       });
     }
 
-    db.updateBookingPayment(cleanBookingId, {
-      id: cleanBookingId,
-      razorpayOrderId: returnedOrderId,
-      amount: authoritativeAmount,
-      currency,
-      paymentStatus: 'PENDING',
-      bookingDetails: tripDetails,
-    });
+    if (commitResult.reused) {
+      return res.json({
+        success: true,
+        bookingId: cleanBookingId,
+        orderId: returnedOrderId,
+        amount: amountInPaise,
+        currency,
+        keyId: RAZORPAY_KEY_ID || 'rzp_test_Tjktt6Bs0TXxDk',
+        reused: true,
+        disclaimer: 'Curated Demo Catalog Inventory for Showcase — Not Live Airline/GDS Feed',
+      });
+    }
 
     return res.json({
       success: true,
+      bookingId: cleanBookingId,
       orderId: returnedOrderId,
       amount: amountInPaise,
       currency,
       keyId: RAZORPAY_KEY_ID || 'rzp_test_Tjktt6Bs0TXxDk',
+      disclaimer: 'Curated Demo Catalog Inventory for Showcase — Not Live Airline/GDS Feed',
     });
   } catch (error) {
     console.error('[CREATE ORDER ERROR]', error);
@@ -424,18 +741,49 @@ app.post('/api/payment/verify', async (req, res) => {
       });
     }
 
-    // 1. Retrieve the expected Order from trusted backend database
-    const expectedOrder = db.getOrder(razorpay_order_id);
+    // 1. Resolve the stored Razorpay order record from trusted backend database
+    const expectedOrder = await db.getOrder(razorpay_order_id);
     if (!expectedOrder) {
       return res.status(400).json({
         success: false,
-        error: 'Order ID not found in database or does not match internal record',
+        error: `Order ID '${razorpay_order_id}' not found in internal records or is invalid.`,
       });
     }
 
-    const targetBookingId = bookingId || expectedOrder.bookingId;
+    if (!expectedOrder.bookingId) {
+      return res.status(400).json({
+        success: false,
+        error: `Order '${razorpay_order_id}' does not have an associated internal booking identifier.`,
+      });
+    }
 
-    // 2. Perform HMAC-SHA256 Signature Verification
+    const orderLinkedBookingId = String(expectedOrder.bookingId).trim();
+
+    // 2. Reject mismatch: If client supplies a bookingId that differs from the stored order's bookingId
+    if (bookingId && String(bookingId).trim() !== orderLinkedBookingId) {
+      return res.status(400).json({
+        success: false,
+        error: `Supplied booking ID '${bookingId}' does not match the booking ID '${orderLinkedBookingId}' bound to order '${razorpay_order_id}'.`,
+      });
+    }
+
+    // 3. Ensure target booking record exists and is consistently linked
+    const targetBooking = await db.getBooking(orderLinkedBookingId);
+    if (!targetBooking) {
+      return res.status(404).json({
+        success: false,
+        error: `Booking '${orderLinkedBookingId}' bound to order '${razorpay_order_id}' was not found in persistence layer.`,
+      });
+    }
+
+    if (targetBooking.razorpayOrderId && targetBooking.razorpayOrderId !== razorpay_order_id) {
+      return res.status(409).json({
+        success: false,
+        error: `Booking '${orderLinkedBookingId}' is already bound to a conflicting order '${targetBooking.razorpayOrderId}'. Payment rejected.`,
+      });
+    }
+
+    // 4. Perform HMAC-SHA256 Signature Verification
     const secret = RAZORPAY_KEY_SECRET;
     let isSignatureValid = false;
 
@@ -462,7 +810,7 @@ app.post('/api/payment/verify', async (req, res) => {
 
     if (!isSignatureValid) {
       console.warn(`[SECURITY] Signature mismatch for order ${razorpay_order_id} and payment ${razorpay_payment_id}`);
-      db.updateBookingPayment(targetBookingId, {
+      await db.updateBookingPayment(orderLinkedBookingId, {
         paymentStatus: 'FAILED',
         failureReason: 'Invalid signature verification',
       });
@@ -472,23 +820,36 @@ app.post('/api/payment/verify', async (req, res) => {
       });
     }
 
-    // 3. Mark booking as PAID and persist verified identifiers
-    const verifiedBooking = db.updateBookingPayment(targetBookingId, {
+    // 5. Idempotency: If already marked PAID, return existing confirmed state
+    if (targetBooking.paymentStatus === 'PAID') {
+      return res.json({
+        success: true,
+        message: 'Payment already verified and booking confirmed',
+        bookingId: orderLinkedBookingId,
+        paymentId: targetBooking.razorpayPaymentId || razorpay_payment_id,
+        orderId: razorpay_order_id,
+        status: 'PAID',
+        booking: targetBooking,
+      });
+    }
+
+    // 6. Mark booking as PAID and persist verified identifiers
+    const verifiedBooking = await db.updateBookingPayment(orderLinkedBookingId, {
       paymentStatus: 'PAID',
       razorpayPaymentId: razorpay_payment_id,
       razorpayOrderId: razorpay_order_id,
       razorpaySignature: razorpay_signature,
       paymentVerifiedAt: new Date().toISOString(),
-      amount: expectedOrder.amount / 100,
-      currency: expectedOrder.currency,
+      amount: expectedOrder.amount ? expectedOrder.amount / 100 : targetBooking.amount,
+      currency: expectedOrder.currency || targetBooking.currency || 'INR',
     });
 
-    console.log(`[PAYMENT VERIFIED] Booking ${targetBookingId} marked as PAID. Payment ID: ${razorpay_payment_id}`);
+    console.log(`[PAYMENT VERIFIED] Booking ${orderLinkedBookingId} marked as PAID. Payment ID: ${razorpay_payment_id}`);
 
     return res.json({
       success: true,
       message: 'Payment verified and booking confirmed successfully',
-      bookingId: targetBookingId,
+      bookingId: orderLinkedBookingId,
       paymentId: razorpay_payment_id,
       orderId: razorpay_order_id,
       status: 'PAID',
@@ -548,45 +909,63 @@ async function handleWebhook(req, res) {
     const eventId = eventPayload.id || `evt_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
 
     // Idempotency: Ignore duplicate webhook deliveries
-    if (db.isWebhookProcessed(eventId)) {
+    if (await db.isWebhookProcessed(eventId)) {
       console.log(`[WEBHOOK IDEMPOTENT] Event ${eventId} (${eventName}) already processed. Skipping.`);
       return res.status(200).json({ status: 'already_processed' });
     }
 
     // Process Supported Events
+    let orderId = null;
+    let paymentId = null;
+    let paymentStatus = null;
+    let failureReason = null;
+
     if (eventName === 'payment.captured' || eventName === 'order.paid') {
       const paymentEntity = eventPayload.payload?.payment?.entity;
-      const orderId = paymentEntity?.order_id || eventPayload.payload?.order?.entity?.id;
-      const paymentId = paymentEntity?.id;
-
-      if (orderId) {
-        const orderData = db.getOrder(orderId);
-        if (orderData?.bookingId) {
-          db.updateBookingPayment(orderData.bookingId, {
-            paymentStatus: 'PAID',
-            razorpayPaymentId: paymentId,
-            razorpayOrderId: orderId,
-            paymentVerifiedAt: new Date().toISOString(),
-          });
-          console.log(`[WEBHOOK] Booking ${orderData.bookingId} updated to PAID via ${eventName}`);
-        }
-      }
+      orderId = paymentEntity?.order_id || eventPayload.payload?.order?.entity?.id;
+      paymentId = paymentEntity?.id;
+      paymentStatus = 'PAID';
     } else if (eventName === 'payment.failed') {
       const paymentEntity = eventPayload.payload?.payment?.entity;
-      const orderId = paymentEntity?.order_id;
-      if (orderId) {
-        const orderData = db.getOrder(orderId);
-        if (orderData?.bookingId) {
-          db.updateBookingPayment(orderData.bookingId, {
-            paymentStatus: 'FAILED',
-            failureReason: paymentEntity?.error_description || 'Payment failed event from Razorpay',
-          });
-          console.log(`[WEBHOOK] Booking ${orderData.bookingId} marked FAILED via ${eventName}`);
-        }
-      }
+      orderId = paymentEntity?.order_id;
+      paymentId = paymentEntity?.id;
+      paymentStatus = 'FAILED';
+      failureReason = paymentEntity?.error_description || 'Payment failed event from Razorpay';
     }
 
-    db.recordWebhookEvent(eventId, eventName, eventPayload);
+    let bookingId = null;
+    if (orderId) {
+      const orderData = await db.getOrder(orderId);
+      bookingId = orderData?.bookingId || null;
+    }
+
+    if (paymentStatus) {
+      const txResult = await db.transactProcessWebhook({
+        eventId,
+        eventName,
+        payloadSummary: {
+          entity: eventPayload.entity,
+          orderId,
+          paymentId,
+          amount: eventPayload.payload?.payment?.entity?.amount,
+        },
+        bookingId,
+        paymentStatus,
+        paymentId,
+        orderId,
+        failureReason,
+      });
+
+      if (txResult.alreadyProcessed) {
+        return res.status(200).json({ status: 'already_processed' });
+      }
+      if (txResult.bookingConditionIgnored) {
+        console.log(`[WEBHOOK] Booking condition safely ignored (e.g. preserved PAID status) for ${bookingId}`);
+      }
+    } else {
+      await db.recordWebhookEvent(eventId, eventName, eventPayload);
+    }
+
     return res.status(200).json({ status: 'success' });
   } catch (error) {
     console.error('[WEBHOOK ERROR]', error);
@@ -594,9 +973,84 @@ async function handleWebhook(req, res) {
   }
 }
 
+/**
+ * GET /api/bookings
+ * Authenticated booking listing endpoint with role-based owner isolation.
+ * - Requires valid session token via authenticateToken (rejects unauthenticated requests with 401).
+ * - Reviewers / Admins can inspect all booking records across the system.
+ * - Travelers are scoped exclusively to their own bookings (matching userId or email).
+ */
+app.get('/api/bookings', authenticateToken, async (req, res) => {
+  try {
+    const allBookings = await db.listBookings();
+
+    // Reviewers and Admins can view all bookings
+    if (req.user?.role === 'reviewer' || req.user?.role === 'admin') {
+      return res.status(200).json({
+        success: true,
+        count: allBookings.length,
+        bookings: allBookings,
+      });
+    }
+
+    // Traveler isolation: filter strictly by caller identity
+    const userSub = (req.user?.sub || req.user?.id || '').toString();
+    const userEmail = (req.user?.email || '').toString().toLowerCase();
+
+    const userBookings = allBookings.filter((b) => {
+      if (b.userId && userSub && b.userId.toString() === userSub) return true;
+      if (b.customerEmail && userEmail && b.customerEmail.toLowerCase() === userEmail) return true;
+      if (b.traveler?.email && userEmail && b.traveler.email.toLowerCase() === userEmail) return true;
+      if (b.customer?.email && userEmail && b.customer.email.toLowerCase() === userEmail) return true;
+      return false;
+    });
+
+    return res.status(200).json({
+      success: true,
+      count: userBookings.length,
+      bookings: userBookings,
+    });
+  } catch (err) {
+    console.error('[BOOKINGS API ERROR] Failed to list bookings:', err);
+    return res.status(500).json({ success: false, error: 'Failed to retrieve bookings' });
+  }
+});
+
+/**
+ * GET /api/bookings/:id
+ * Retrieve a single booking by ID with ownership validation.
+ */
+app.get('/api/bookings/:id', authenticateToken, async (req, res) => {
+  try {
+    const booking = await db.getBooking(req.params.id);
+    if (!booking) {
+      return res.status(404).json({ success: false, error: 'Booking not found' });
+    }
+
+    const isReviewer = req.user?.role === 'reviewer' || req.user?.role === 'admin';
+    const userSub = (req.user?.sub || req.user?.id || '').toString();
+    const userEmail = (req.user?.email || '').toString().toLowerCase();
+
+    const isOwner =
+      (booking.userId && userSub && booking.userId.toString() === userSub) ||
+      (booking.customerEmail && userEmail && booking.customerEmail.toLowerCase() === userEmail) ||
+      (booking.traveler?.email && userEmail && booking.traveler.email.toLowerCase() === userEmail) ||
+      (booking.customer?.email && userEmail && booking.customer.email.toLowerCase() === userEmail);
+
+    if (!isReviewer && !isOwner) {
+      return res.status(403).json({ success: false, error: 'Access denied: You do not have permission to view this booking.' });
+    }
+
+    return res.json({ success: true, booking });
+  } catch (err) {
+    console.error('[BOOKINGS API ERROR] Failed to retrieve booking:', err);
+    return res.status(500).json({ success: false, error: 'Failed to retrieve booking' });
+  }
+});
+
 // Payment status lookup
-app.get('/api/bookings/:id/payment-status', (req, res) => {
-  const booking = db.getBooking(req.params.id);
+app.get('/api/bookings/:id/payment-status', async (req, res) => {
+  const booking = await db.getBooking(req.params.id);
   if (!booking) {
     return res.status(404).json({ success: false, error: 'Booking not found' });
   }

@@ -6,12 +6,20 @@
  */
 
 import { describe, it, beforeEach, after } from 'node:test';
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
-import { db } from '../awsConfig.js';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { createDatabase, safeCleanup, DynamoDBRepository } from '../awsConfig.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const testDataFile = path.join(__dirname, '../data/store.payment-test.json');
+
+// Dedicated, isolated database instance for Payment Tests
+const db = createDatabase({ isTest: true, testDataFile });
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -38,27 +46,13 @@ const createMockRes = () => {
   return res;
 };
 
-// Atomically reserve a run-unique test store using exclusive creation flag 'wx' (O_CREAT | O_EXCL)
-const runId = crypto.randomUUID();
-const testStoreFilename = `store.test.${runId}.json`;
-const testStorePath = path.resolve(__dirname, '../data', testStoreFilename);
 
-let reservedByThisProcess = false;
-let testStoreFile = null;
-try {
-  fs.writeFileSync(testStorePath, '{}', { flag: 'wx' });
-  reservedByThisProcess = true;
-  testStoreFile = db._useTestStore(testStoreFilename);
-} catch (err) {
-  // ONLY unlink if THIS process successfully completed atomic 'wx' reservation
-  if (reservedByThisProcess) {
-    try { fs.unlinkSync(testStorePath); } catch {}
-  }
-  throw err;
-}
+beforeEach(async () => {
+  await db._reset();
+});
 
-beforeEach(() => {
-  db._reset();
+after(() => {
+  safeCleanup(testDataFile);
 });
 
 after(() => {
@@ -85,7 +79,7 @@ describe('Razorpay Test Mode Backend Integration Tests', () => {
     assert.equal(config.webhookSecret, undefined, 'Must NEVER expose webhookSecret');
   });
 
-  it('2. Order Creation & Authoritative Amount Calculation', () => {
+  it('2. Order Creation & Authoritative Amount Calculation', async () => {
     const tripDetails = {
       serviceType: 'flights',
       route: 'Delhi (DEL) → Mumbai (BOM)',
@@ -103,14 +97,14 @@ describe('Razorpay Test Mode Backend Integration Tests', () => {
     const orderId = `order_test_${Date.now()}_abc`;
 
     // Persist order in DB
-    db.saveOrder(orderId, {
+    await db.saveOrder(orderId, {
       bookingId,
       amount: amountInPaise,
       currency: 'INR',
       status: 'created',
     });
 
-    db.updateBookingPayment(bookingId, {
+    await db.updateBookingPayment(bookingId, {
       id: bookingId,
       razorpayOrderId: orderId,
       amount: authoritativeAmount,
@@ -118,39 +112,39 @@ describe('Razorpay Test Mode Backend Integration Tests', () => {
       paymentStatus: 'PENDING',
     });
 
-    const storedOrder = db.getOrder(orderId);
+    const storedOrder = await db.getOrder(orderId);
     assert.ok(storedOrder);
     assert.equal(storedOrder.bookingId, bookingId);
     assert.equal(storedOrder.amount, 1080000);
 
-    const storedBooking = db.getBooking(bookingId);
+    const storedBooking = await db.getBooking(bookingId);
     assert.ok(storedBooking);
     assert.equal(storedBooking.paymentStatus, 'PENDING');
   });
 
-  it('3. Duplicate Order Prevention: Reuses valid pending order for identical booking', () => {
+  it('3. Duplicate Order Prevention: Reuses valid pending order for identical booking', async () => {
     const bookingId = 'BK-DUP-1';
     const orderId = 'order_first_1';
     const amountInPaise = 420000;
 
     // Simulate first order creation
-    db.saveOrder(orderId, {
+    await db.saveOrder(orderId, {
       orderId,
       bookingId,
       amount: amountInPaise,
       currency: 'INR',
     });
 
-    db.updateBookingPayment(bookingId, {
+    await db.updateBookingPayment(bookingId, {
       id: bookingId,
       razorpayOrderId: orderId,
       paymentStatus: 'PENDING',
     });
 
     // Check duplicate detection logic
-    const existingBooking = db.getBooking(bookingId);
+    const existingBooking = await db.getBooking(bookingId);
     assert.equal(existingBooking.paymentStatus, 'PENDING');
-    const existingOrder = db.getOrder(existingBooking.razorpayOrderId);
+    const existingOrder = await db.getOrder(existingBooking.razorpayOrderId);
     assert.ok(existingOrder);
     assert.equal(existingOrder.amount, amountInPaise);
 
@@ -158,7 +152,7 @@ describe('Razorpay Test Mode Backend Integration Tests', () => {
     assert.equal(existingOrder.orderId, orderId);
   });
 
-  it('4. Payment Verification: Validates HMAC-SHA256 signature using timingSafeEqual', () => {
+  it('4. Payment Verification: Validates HMAC-SHA256 signature using timingSafeEqual', async () => {
     const testSecret = 'secret_test_key_999';
     const orderId = 'order_valid_123';
     const paymentId = 'pay_test_456';
@@ -190,15 +184,15 @@ describe('Razorpay Test Mode Backend Integration Tests', () => {
     assert.equal(isTamperedValid, false, 'Tampered signature must be rejected');
   });
 
-  it('5. Payment Verification: Confirms booking payment state transition to PAID', () => {
+  it('5. Payment Verification: Confirms booking payment state transition to PAID', async () => {
     const bookingId = 'BK-VERIFY-1';
     const orderId = 'order_test_ver_1';
     const paymentId = 'pay_verified_999';
 
-    db.saveBooking({ id: bookingId, paymentStatus: 'PENDING' });
-    db.saveOrder(orderId, { orderId, bookingId, amount: 945000 });
+    await db.saveBooking({ id: bookingId, paymentStatus: 'PENDING' });
+    await db.saveOrder(orderId, { orderId, bookingId, amount: 945000 });
 
-    const updated = db.updateBookingPayment(bookingId, {
+    const updated = await db.updateBookingPayment(bookingId, {
       paymentStatus: 'PAID',
       razorpayPaymentId: paymentId,
       razorpayOrderId: orderId,
@@ -211,7 +205,7 @@ describe('Razorpay Test Mode Backend Integration Tests', () => {
     assert.ok(updated.paymentVerifiedAt);
   });
 
-  it('6. Webhooks: Raw-Body HMAC-SHA256 verification and idempotent processing', () => {
+  it('6. Webhooks: Raw-Body HMAC-SHA256 verification and idempotent processing', async () => {
     const webhookSecret = 'test_webhook_secret_abc';
     const payloadObject = {
       entity: 'event',
@@ -243,24 +237,229 @@ describe('Razorpay Test Mode Backend Integration Tests', () => {
     assert.equal(isValid, true, 'Raw body webhook signature must match');
 
     // Idempotency check
-    assert.equal(db.isWebhookProcessed('evt_captured_1'), false);
-    db.recordWebhookEvent('evt_captured_1', 'payment.captured', payloadObject);
-    assert.equal(db.isWebhookProcessed('evt_captured_1'), true, 'Must record as processed');
+    assert.equal(await db.isWebhookProcessed('evt_captured_1'), false);
+    await db.recordWebhookEvent('evt_captured_1', 'payment.captured', payloadObject);
+    assert.equal(await db.isWebhookProcessed('evt_captured_1'), true, 'Must record as processed');
   });
 
-  it('7. Payment State Protection: Never downgrades PAID booking on stale failure', () => {
+  it('7. Payment State Protection: Never downgrades PAID booking on stale failure', async () => {
     const bookingId = 'BK-SAFE-1';
 
     // 1. Mark as PAID
-    db.saveBooking({ id: bookingId, paymentStatus: 'PAID' });
-    assert.equal(db.getBooking(bookingId).paymentStatus, 'PAID');
+    await db.saveBooking({ id: bookingId, paymentStatus: 'PAID' });
+    const booking = await db.getBooking(bookingId);
+    assert.equal(booking.paymentStatus, 'PAID');
 
     // 2. Attempt to update with FAILED (e.g. out-of-order or late event)
-    const result = db.updateBookingPayment(bookingId, {
+    const result = await db.updateBookingPayment(bookingId, {
       paymentStatus: 'FAILED',
       failureReason: 'Stale error delivery',
     });
 
     assert.equal(result.paymentStatus, 'PAID', 'State must remain PAID and refuse downgrade');
+  });
+
+  it('8. Atomic Webhook Processing: transactProcessWebhook atomically updates booking and prevents duplicate processing', async () => {
+    const bookingId = 'BK-WH-ATOMIC-1';
+    await db.saveBooking({ id: bookingId, paymentStatus: 'PENDING' });
+
+    // 1. First event delivery succeeds and marks booking PAID
+    const tx1 = await db.transactProcessWebhook({
+      eventId: 'evt_atomic_1',
+      eventName: 'payment.captured',
+      payloadSummary: { amount: 5000 },
+      bookingId,
+      paymentStatus: 'PAID',
+      paymentId: 'pay_atomic_1',
+      orderId: 'order_atomic_1',
+    });
+    assert.equal(tx1.success, true);
+    assert.equal(tx1.processed, true);
+
+    const b1 = await db.getBooking(bookingId);
+    assert.equal(b1.paymentStatus, 'PAID');
+    assert.equal(b1.razorpayPaymentId, 'pay_atomic_1');
+
+    // 2. Duplicate delivery of same eventId is detected as alreadyProcessed
+    const tx2 = await db.transactProcessWebhook({
+      eventId: 'evt_atomic_1',
+      eventName: 'payment.captured',
+      payloadSummary: { amount: 5000 },
+      bookingId,
+      paymentStatus: 'PAID',
+      paymentId: 'pay_atomic_1',
+      orderId: 'order_atomic_1',
+    });
+    assert.equal(tx2.success, true);
+    assert.equal(tx2.alreadyProcessed, true);
+
+    // 3. Stale failed payment event does NOT downgrade booking from PAID
+    const tx3 = await db.transactProcessWebhook({
+      eventId: 'evt_atomic_stale_failed',
+      eventName: 'payment.failed',
+      payloadSummary: { amount: 5000 },
+      bookingId,
+      paymentStatus: 'FAILED',
+      failureReason: 'Customer card declined late',
+    });
+    assert.equal(tx3.success, true);
+    assert.equal(tx3.bookingConditionIgnored, true);
+
+    const b2 = await db.getBooking(bookingId);
+    assert.equal(b2.paymentStatus, 'PAID', 'Must remain PAID');
+    assert.equal(
+      await db.isWebhookProcessed('evt_atomic_stale_failed'),
+      true,
+      'Stale failed event must still be durably recorded'
+    );
+
+    // 4. Missing booking on PAID event throws and never leaves event marked processed
+    await assert.rejects(
+      async () => {
+        await db.transactProcessWebhook({
+          eventId: 'evt_missing_booking',
+          eventName: 'payment.captured',
+          payloadSummary: { amount: 1000 },
+          bookingId: 'BK-NONEXISTENT',
+          paymentStatus: 'PAID',
+          paymentId: 'pay_missing',
+          orderId: 'order_missing',
+        });
+      },
+      /Required booking update failed/
+    );
+    assert.equal(await db.isWebhookProcessed('evt_missing_booking'), false, 'Event must NOT be marked processed if update failed');
+  });
+
+  it('9. Atomic Order Commit & Key Mutation Defense: commitBookingOrder excludes primary key `id` from UpdateExpression and guarantees atomic commit', async () => {
+    // A. Verify DynamoDBRepository TransactWrite parameter compilation & strict primary key defense
+    const repo = new DynamoDBRepository();
+    let capturedTransactItems = null;
+
+    repo.docClient = {
+      send: async (command) => {
+        capturedTransactItems = command.input?.TransactItems;
+        // Strictly emulate DynamoDB engine rule: Cannot update attribute id (part of key)
+        const updateOp = capturedTransactItems?.[0]?.Update;
+        if (updateOp) {
+          const keyNames = Object.keys(updateOp.Key || {});
+          const exprNames = updateOp.ExpressionAttributeNames || {};
+          const updateExpr = updateOp.UpdateExpression || '';
+
+          for (const key of keyNames) {
+            for (const [placeholder, actualAttr] of Object.entries(exprNames)) {
+              if (actualAttr === key && updateExpr.includes(placeholder)) {
+                const err = new Error(`ValidationError: Cannot update attribute ${key}. This attribute is part of the key`);
+                err.name = 'ValidationException';
+                throw err;
+              }
+            }
+          }
+        }
+        return {};
+      },
+    };
+
+    const bookingId = 'BK-REGRESS-ATOMIC-1';
+    const claimToken = 'claim_token_valid_456';
+    const orderId = 'order_valid_789';
+
+    // Mock getBooking on repo so commitBookingOrder resolves successfully
+    repo.getBooking = async (id) => ({
+      id,
+      entityType: 'BOOKING',
+      orderClaimStatus: 'COMPLETED',
+      razorpayOrderId: orderId,
+      amount: 4872,
+    });
+
+    // Booking payload passed by server/index.js contains `id: cleanBookingId`
+    const bookingPayloadWithId = {
+      id: bookingId,
+      entityType: 'BOOKING',
+      catalogTripId: 'trip#flights#AI-805',
+      amount: 4872,
+      passengerCount: 1,
+      customerName: 'Aarav Sharma',
+      customerEmail: 'aarav@example.com',
+    };
+
+    const commitResult = await repo.commitBookingOrder(
+      bookingId,
+      claimToken,
+      orderId,
+      {
+        amount: 487200,
+        currency: 'INR',
+        catalogTripId: 'trip#flights#AI-805',
+        status: 'created',
+      },
+      bookingPayloadWithId
+    );
+
+    assert.equal(commitResult.success, true, 'commitBookingOrder must succeed without throwing ValidationError');
+    assert.ok(capturedTransactItems, 'TransactItems must be dispatched');
+    assert.equal(capturedTransactItems.length, 2, 'Must atomically bundle exactly 2 operations (Update booking + Put order)');
+
+    // 1. Inspect Booking Update operation
+    const updateOp = capturedTransactItems[0].Update;
+    assert.equal(updateOp.Key.id, bookingId, 'Primary key in Key object must match bookingId');
+
+    const attrValues = Object.values(updateOp.ExpressionAttributeNames || {});
+    assert.equal(
+      attrValues.includes('id'),
+      false,
+      'Primary key attribute `id` must NOT be present in ExpressionAttributeNames'
+    );
+    for (const [placeholder, actualAttr] of Object.entries(updateOp.ExpressionAttributeNames || {})) {
+      assert.notEqual(
+        actualAttr,
+        'id',
+        `Primary key 'id' must not have attribute name placeholder ${placeholder}`
+      );
+    }
+
+    // 2. Verify fencing conditions are preserved
+    assert.match(
+      updateOp.ConditionExpression,
+      /#claimToken\s*=\s*:claimToken/,
+      'Claim fencing token must be verified'
+    );
+    assert.match(
+      updateOp.ConditionExpression,
+      /paymentStatus\s*<>\s*:paid/,
+      'Must check booking is not already paid'
+    );
+
+    // 3. Inspect Order Put operation in the same transaction
+    const putOp = capturedTransactItems[1].Put;
+    assert.equal(putOp.Item.id, `order#${orderId}`);
+    assert.equal(putOp.Item.bookingId, bookingId);
+    assert.equal(putOp.ConditionExpression, 'attribute_not_exists(id)', 'Must prevent order overwrites');
+
+    // B. Verify InMemoryRepository atomic commit and primary key integrity
+    await db.saveBooking({
+      id: bookingId,
+      entityType: 'BOOKING',
+      orderClaimToken: claimToken,
+      paymentStatus: 'PENDING',
+    });
+
+    const inMemResult = await db.commitBookingOrder(
+      bookingId,
+      claimToken,
+      orderId,
+      { amount: 487200, currency: 'INR' },
+      bookingPayloadWithId
+    );
+
+    assert.equal(inMemResult.success, true);
+    assert.equal(inMemResult.booking.id, bookingId, 'Canonical booking id must be preserved');
+    assert.equal(inMemResult.booking.orderClaimStatus, 'COMPLETED');
+    assert.equal(inMemResult.booking.razorpayOrderId, orderId);
+
+    const savedOrder = await db.getOrder(orderId);
+    assert.ok(savedOrder);
+    assert.equal(savedOrder.bookingId, bookingId);
   });
 });

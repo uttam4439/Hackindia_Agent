@@ -1,8 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { SiteHeader } from '../components/layout/SiteHeader';
 import { SiteFooter } from '../components/layout/SiteFooter';
 import { useTravelBooking } from '../context/TravelBookingContext';
+
+interface TrainClass {
+  name: string;
+  status: string;
+  fare: string;
+  rawFare: number;
+}
+
+interface TrainItem {
+  id: string;
+  catalogTripId?: string;
+  name: string;
+  number: string;
+  frequency: string;
+  depTime: string;
+  fromStation: string;
+  duration: string;
+  arrTime: string;
+  toStation: string;
+  classes: TrainClass[];
+}
 
 export const TrainsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -15,6 +36,12 @@ export const TrainsPage: React.FC = () => {
 
   const [selectedClasses, setSelectedClasses] = useState<string[]>(['Chair Car']);
   const [selectedTimes, setSelectedTimes] = useState<string[]>(['Early morning · 04–08', 'Morning · 08–12']);
+  const [trains, setTrains] = useState<TrainItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [disclaimer, setDisclaimer] = useState<string>(
+    'Curated Demo Catalog Inventory for Showcase — Not Live Airline/GDS Feed'
+  );
 
   const displayDateFormatted = (() => {
     const d = new Date(departDate + 'T00:00:00');
@@ -23,62 +50,71 @@ export const TrainsPage: React.FC = () => {
       : departDate;
   })();
 
-  const trains = [
-    {
-      id: '12015',
-      name: 'Ajmer Shatabdi',
-      number: '12015',
-      frequency: 'Runs daily',
-      depTime: '06:05',
-      fromStation: origin,
-      duration: '4h 35m',
-      arrTime: '10:40',
-      toStation: destination,
-      classes: [
-        { name: 'Chair Car (CC)', status: 'AVAILABLE 42', fare: '₹ 945' },
-        { name: 'Exec Chair (EC)', status: 'AVAILABLE 12', fare: '₹ 1,785' },
-      ],
-    },
-    {
-      id: '20978',
-      name: 'Vande Bharat Express',
-      number: '20978',
-      frequency: 'Runs daily except Wed',
-      depTime: '06:10',
-      fromStation: origin,
-      duration: '3h 45m',
-      arrTime: '09:55',
-      toStation: destination,
-      classes: [
-        { name: 'Chair Car (CC)', status: 'AVAILABLE 18', fare: '₹ 1,050' },
-        { name: 'Exec Chair (EC)', status: 'AVAILABLE 06', fare: '₹ 1,980' },
-      ],
-    },
-    {
-      id: '12986',
-      name: 'Double Decker Express',
-      number: '12986',
-      frequency: 'Runs daily',
-      depTime: '17:35',
-      fromStation: origin,
-      duration: '4h 30m',
-      arrTime: '22:05',
-      toStation: destination,
-      classes: [
-        { name: 'Chair Car (CC)', status: 'AVAILABLE 84', fare: '₹ 580' },
-        { name: 'Exec Chair (EC)', status: 'WL 04', fare: '₹ 1,320' },
-      ],
-    },
-  ];
+  const mapCatalogToTrain = (t: any): TrainItem => ({
+    id: t.tripId || t.code || t.id,
+    catalogTripId: t.id,
+    name: t.operator || 'Express',
+    number: t.code || t.tripId,
+    frequency: 'Runs daily',
+    depTime: t.departTime || '06:05',
+    fromStation: t.origin || origin,
+    duration: t.duration || '4h 30m',
+    arrTime: t.arriveTime || '12:40',
+    toStation: t.destination || destination,
+    classes: [
+      {
+        name: t.travelClass || 'Chair Car (CC)',
+        status: `AVAILABLE ${t.availableSeats || 42}`,
+        fare: t.fareFormatted || `₹ ${(t.fareAmount || t.basePrice || 945).toLocaleString('en-IN')}`,
+        rawFare: Number(t.fareAmount || t.basePrice || 945),
+      },
+      {
+        name: 'Exec Chair (EC)',
+        status: `AVAILABLE ${Math.max(4, Math.floor((t.availableSeats || 20) / 3))}`,
+        fare: `₹ ${(Math.round((t.fareAmount || t.basePrice || 945) * 1.8)).toLocaleString('en-IN')}`,
+        rawFare: Math.round((t.fareAmount || t.basePrice || 945) * 1.8),
+      },
+    ],
+  });
 
-  const handleBook = (train: typeof trains[0], classItem: typeof trains[0]['classes'][0]) => {
-    const baseFare = parseInt(classItem.fare.replace(/[^0-9]/g, '')) || 945;
+  const fetchTrains = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/catalog/trips?serviceType=trains');
+      if (!res.ok) {
+        throw new Error(`Catalog API responded with HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      if (data.success && Array.isArray(data.trips)) {
+        setTrains(data.trips.map(mapCatalogToTrain));
+        if (data.disclaimer) {
+          setDisclaimer(data.disclaimer);
+        }
+      } else {
+        throw new Error(data.error || 'Invalid catalog response format');
+      }
+    } catch (err: any) {
+      console.warn('[CATALOG] Failed to fetch live trains:', err.message);
+      setError(err.message || 'Unable to connect to train catalog');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTrains();
+  }, [origin, destination]);
+
+  const handleBook = (train: TrainItem, classItem: TrainClass) => {
+    const baseFare = classItem.rawFare || parseInt(classItem.fare.replace(/[^0-9]/g, '')) || 945;
     const matchPassengers = passengers.match(/(\d+)/);
     const passengerCount = matchPassengers ? Math.max(1, parseInt(matchPassengers[1], 10)) : 1;
     const totalFare = baseFare * passengerCount;
 
     openBookingSummary({
       id: `${train.id}-${classItem.name}`,
+      catalogTripId: train.catalogTripId || train.id,
       serviceType: 'trains',
       title: `${train.name} (${train.number})`,
       operator: `${train.name} · ${classItem.name}`,
@@ -97,6 +133,7 @@ export const TrainsPage: React.FC = () => {
       fareFormatted: `₹ ${totalFare.toLocaleString('en-IN')}`,
       fareAmount: totalFare,
       refundable: true,
+      isCatalogDemo: true,
     });
   };
 
@@ -222,11 +259,68 @@ export const TrainsPage: React.FC = () => {
 
           {/* Right Train Cards */}
           <div className="lg:col-span-9 space-y-4">
-            <div className="text-xs text-[#6b7775]">
-              Showing 3 trains · Fares per passenger · Sample data
+            {/* Demo Catalog Disclaimer Banner */}
+            <div className="py-2.5 px-4 rounded-xl bg-[#ecfdf5] border border-[#a7f3d0] text-xs text-[#065f46] flex items-center justify-between shadow-sm">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px] text-[#059669]">info</span>
+                <span className="font-medium">{disclaimer}</span>
+              </div>
+              <span className="hidden sm:inline-block text-[11px] font-semibold text-[#047857] uppercase tracking-wider bg-white/70 px-2 py-0.5 rounded">
+                Verified AWS DynamoDB Catalog
+              </span>
             </div>
 
-            {trains.map((train) => (
+            {/* Error State */}
+            {error && (
+              <div className="p-4 rounded-xl bg-[#fef2f2] border border-[#fecaca] text-xs sm:text-sm text-[#991b1b] flex items-center justify-between shadow-sm">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[20px] text-[#dc2626]">error</span>
+                  <span>Failed to load train inventory: {error}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={fetchTrains}
+                  className="bg-[#dc2626] text-white px-3 py-1 rounded-md text-xs font-semibold hover:bg-[#b91c1c] transition-colors"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+
+            {/* Loading Skeletons */}
+            {loading && (
+              <div className="space-y-4">
+                {[1, 2].map((i) => (
+                  <div key={i} className="bg-white rounded-xl border border-[#e3ded4] p-5 shadow-sm animate-pulse space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-2">
+                        <div className="h-4 bg-[#e5e0d8] rounded w-48" />
+                        <div className="h-3 bg-[#e5e0d8] rounded w-32" />
+                      </div>
+                      <div className="h-6 bg-[#e5e0d8] rounded w-28" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {!loading && !error && trains.length === 0 && (
+              <div className="bg-white rounded-xl border border-[#e3ded4] p-10 text-center space-y-3 shadow-sm">
+                <span className="material-symbols-outlined text-[42px] text-[#889593]">train</span>
+                <h3 className="font-bold text-[#0d3d3a] text-base">No trains available in catalog</h3>
+                <p className="text-xs text-[#6b7775] max-w-md mx-auto">
+                  No scheduled demo train routes currently found.
+                </p>
+              </div>
+            )}
+
+            {!loading && trains.length > 0 && (
+              <div className="text-xs text-[#6b7775]">
+                Showing {trains.length} trains · Fares per passenger · Curated Demo Catalog
+              </div>
+            )}
+
+            {!loading && trains.map((train) => (
               <div
                 key={train.id}
                 className="bg-white rounded-xl border border-[#e3ded4] p-5 shadow-sm hover:border-[#0d6b63]/60 transition-all space-y-4"

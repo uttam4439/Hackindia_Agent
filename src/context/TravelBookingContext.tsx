@@ -4,6 +4,7 @@ export type ServiceType = 'flights' | 'hotels' | 'trains' | 'buses' | 'cabs' | '
 
 export interface SelectedTrip {
   id: string;
+  catalogTripId?: string;
   serviceType: ServiceType;
   title: string;
   operator: string;
@@ -27,6 +28,7 @@ export interface SelectedTrip {
   fareAmount: number;
   refundable: boolean;
   notes?: string;
+  isCatalogDemo?: boolean;
 }
 
 export interface StoredBooking {
@@ -70,6 +72,7 @@ interface TravelBookingContextType {
   addBooking: (
     trip: SelectedTrip,
     paymentData?: {
+      bookingId?: string;
       razorpayOrderId?: string;
       razorpayPaymentId?: string;
       razorpaySignature?: string;
@@ -80,6 +83,7 @@ interface TravelBookingContextType {
   openBookingSummary: (trip: SelectedTrip) => void;
   closeBookingSummary: () => void;
   confirmBooking: (paymentData?: {
+    bookingId?: string;
     razorpayOrderId?: string;
     razorpayPaymentId?: string;
     razorpaySignature?: string;
@@ -263,6 +267,7 @@ export const TravelBookingProvider: React.FC<{ children: React.ReactNode }> = ({
   const addBooking = (
     trip: SelectedTrip,
     paymentData?: {
+      bookingId?: string;
       razorpayOrderId?: string;
       razorpayPaymentId?: string;
       razorpaySignature?: string;
@@ -335,7 +340,7 @@ export const TravelBookingProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     const newBooking: StoredBooking = {
-      id: `BK-${Date.now().toString().slice(-6)}`,
+      id: paymentData?.bookingId || `BK-${Date.now().toString().slice(-6)}`,
       refLabel: `PNR · ${randomPnr}`,
       serviceType: serviceTypeMap[trip.serviceType] || 'FLIGHT',
       title: trip.route || trip.title,
@@ -362,6 +367,7 @@ export const TravelBookingProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const confirmBooking = (paymentData?: {
+    bookingId?: string;
     razorpayOrderId?: string;
     razorpayPaymentId?: string;
     razorpaySignature?: string;

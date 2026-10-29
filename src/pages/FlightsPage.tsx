@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { SiteHeader } from '../components/layout/SiteHeader';
 import { SiteFooter } from '../components/layout/SiteFooter';
@@ -6,6 +6,7 @@ import { useTravelBooking } from '../context/TravelBookingContext';
 
 interface FlightItem {
   id: string;
+  catalogTripId?: string;
   airline: string;
   code: string;
   flightNo: string;
@@ -19,6 +20,8 @@ interface FlightItem {
   priceFormatted: string;
   refundable: boolean;
   logo: string;
+  availableSeats?: number;
+  isCatalogDemo?: boolean;
 }
 
 const parseLocalDate = (isoStr: string) => {
@@ -97,88 +100,93 @@ export const FlightsPage: React.FC = () => {
   const activeDateEntry = dates.find((d) => d.iso === departDate) || dates[0];
   const activeBasePrice = activeDateEntry ? activeDateEntry.rawPrice : 4872;
 
-  const flights: FlightItem[] = [
-    {
-      id: 'AI-805',
-      airline: 'Air India',
-      code: 'AI',
-      flightNo: 'AI-805',
-      fromTime: '06:10',
-      toTime: '08:25',
-      fromCode: origin.includes('(') ? origin.split('(')[1].replace(')', '') : 'DEL',
-      toCode: destination.includes('(') ? destination.split('(')[1].replace(')', '') : 'BOM',
-      duration: '2h 15m',
-      stops: 'Non-stop',
-      price: activeBasePrice,
-      priceFormatted: `₹ ${activeBasePrice.toLocaleString('en-IN')}`,
-      refundable: true,
-      logo: 'flight_takeoff',
-    },
-    {
-      id: '6E-2134',
-      airline: 'IndiGo',
-      code: '6E',
-      flightNo: '6E-2134',
-      fromTime: '08:30',
-      toTime: '10:40',
-      fromCode: origin.includes('(') ? origin.split('(')[1].replace(')', '') : 'DEL',
-      toCode: destination.includes('(') ? destination.split('(')[1].replace(')', '') : 'BOM',
-      duration: '2h 10m',
-      stops: 'Non-stop',
-      price: activeBasePrice + 248,
-      priceFormatted: `₹ ${(activeBasePrice + 248).toLocaleString('en-IN')}`,
-      refundable: true,
-      logo: 'flight_takeoff',
-    },
-    {
-      id: 'UK-995',
-      airline: 'Vistara',
-      code: 'UK',
-      flightNo: 'UK-995',
-      fromTime: '10:20',
-      toTime: '12:35',
-      fromCode: origin.includes('(') ? origin.split('(')[1].replace(')', '') : 'DEL',
-      toCode: destination.includes('(') ? destination.split('(')[1].replace(')', '') : 'BOM',
-      duration: '2h 15m',
-      stops: 'Non-stop',
-      price: activeBasePrice + 1578,
-      priceFormatted: `₹ ${(activeBasePrice + 1578).toLocaleString('en-IN')}`,
-      refundable: true,
-      logo: 'flight_takeoff',
-    },
-    {
-      id: 'QP-1102',
-      airline: 'Akasa Air',
-      code: 'QP',
-      flightNo: 'QP-1102',
-      fromTime: '14:15',
-      toTime: '16:35',
-      fromCode: origin.includes('(') ? origin.split('(')[1].replace(')', '') : 'DEL',
-      toCode: destination.includes('(') ? destination.split('(')[1].replace(')', '') : 'BOM',
-      duration: '2h 20m',
-      stops: 'Non-stop',
-      price: activeBasePrice + 38,
-      priceFormatted: `₹ ${(activeBasePrice + 38).toLocaleString('en-IN')}`,
-      refundable: true,
-      logo: 'flight_takeoff',
-    },
-    {
-      id: '6E-5321',
-      airline: 'IndiGo',
-      code: '6E',
-      flightNo: '6E-5321',
-      fromTime: '17:45',
-      toTime: '20:00',
-      fromCode: origin.includes('(') ? origin.split('(')[1].replace(')', '') : 'DEL',
-      toCode: destination.includes('(') ? destination.split('(')[1].replace(')', '') : 'BOM',
-      duration: '2h 15m',
-      stops: 'Non-stop',
-      price: activeBasePrice + 618,
-      priceFormatted: `₹ ${(activeBasePrice + 618).toLocaleString('en-IN')}`,
-      refundable: true,
-      logo: 'flight_takeoff',
-    },
-  ];
+  const [flights, setFlights] = useState<FlightItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [disclaimer, setDisclaimer] = useState<string>(
+    'Curated Demo Catalog Inventory for Showcase — Not Live Airline/GDS Feed'
+  );
+
+  const mapCatalogTripToFlight = (t: any): FlightItem => {
+    const fromCode = t.origin?.includes('(') ? t.origin.split('(')[1].replace(')', '') : 'DEL';
+    const toCode = t.destination?.includes('(') ? t.destination.split('(')[1].replace(')', '') : 'BOM';
+    const airline = t.operator || 'Air India';
+    const code =
+      t.operator === 'Air India'
+        ? 'AI'
+        : t.operator === 'IndiGo'
+        ? '6E'
+        : t.operator === 'Vistara'
+        ? 'UK'
+        : t.operator === 'SpiceJet'
+        ? 'SG'
+        : t.code?.slice(0, 2) || 'AI';
+    const price = Number(t.fareAmount || t.basePrice) || activeBasePrice;
+    return {
+      id: t.tripId || t.code || t.id,
+      catalogTripId: t.id,
+      airline,
+      code,
+      flightNo: t.flightNo || t.code || t.tripId,
+      fromTime: t.departTime || '06:10',
+      toTime: t.arriveTime || '08:25',
+      fromCode,
+      toCode,
+      duration: t.duration || '2h 15m',
+      stops: t.stops || 'Non-stop',
+      price,
+      priceFormatted: t.fareFormatted || `₹ ${price.toLocaleString('en-IN')}`,
+      refundable: t.refundable ?? true,
+      logo: t.logo || 'flight_takeoff',
+      availableSeats: t.availableSeats,
+      isCatalogDemo: t.isCatalogDemo,
+    };
+  };
+
+  const fetchFlights = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const originCity = origin.includes('(') ? origin.split('(')[0].trim() : origin.trim();
+      const destCity = destination.includes('(') ? destination.split('(')[0].trim() : destination.trim();
+
+      const res = await fetch(
+        `/api/catalog/trips?serviceType=flights&origin=${encodeURIComponent(originCity)}&destination=${encodeURIComponent(destCity)}`
+      );
+      if (!res.ok) {
+        throw new Error(`Catalog API responded with HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      if (data.success && Array.isArray(data.trips)) {
+        if (data.trips.length > 0) {
+          setFlights(data.trips.map(mapCatalogTripToFlight));
+        } else {
+          // If specific route returned no flights, query all flights in catalog so user has options
+          const allRes = await fetch('/api/catalog/trips?serviceType=flights');
+          const allData = await allRes.json();
+          if (allData.success && Array.isArray(allData.trips)) {
+            setFlights(allData.trips.map(mapCatalogTripToFlight));
+          } else {
+            setFlights([]);
+          }
+        }
+        if (data.disclaimer) {
+          setDisclaimer(data.disclaimer);
+        }
+      } else {
+        throw new Error(data.error || 'Invalid catalog response format');
+      }
+    } catch (err: any) {
+      console.warn('[CATALOG] Failed to fetch live flights:', err.message);
+      setError(err.message || 'Unable to connect to flight catalog');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchFlights();
+  }, [origin, destination, departDate]);
 
   const toggleAirline = (name: string) => {
     setSelectedAirlines((prev) =>
@@ -196,6 +204,7 @@ export const FlightsPage: React.FC = () => {
     const totalFare = flight.price * passengerCount;
     openBookingSummary({
       id: flight.id,
+      catalogTripId: flight.catalogTripId || flight.id,
       serviceType: 'flights',
       title: `${flight.airline} · ${flight.flightNo}`,
       operator: flight.airline,
@@ -216,6 +225,7 @@ export const FlightsPage: React.FC = () => {
       fareAmount: totalFare,
       refundable: flight.refundable,
       notes: `${flight.stops} · ${displayDateFormatted} · Departure confirmed`,
+      isCatalogDemo: true,
     });
   };
 
@@ -551,7 +561,55 @@ export const FlightsPage: React.FC = () => {
 
           {/* Right Flight Results Column */}
           <div className="lg:col-span-9 space-y-4">
-            {filteredFlights.length === 0 ? (
+            {/* Demo Catalog Disclaimer Banner */}
+            <div className="py-2.5 px-4 rounded-xl bg-[#ecfdf5] border border-[#a7f3d0] text-xs text-[#065f46] flex items-center justify-between shadow-sm">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px] text-[#059669]">info</span>
+                <span className="font-medium">{disclaimer}</span>
+              </div>
+              <span className="hidden sm:inline-block text-[11px] font-semibold text-[#047857] uppercase tracking-wider bg-white/70 px-2 py-0.5 rounded">
+                Verified AWS DynamoDB Catalog
+              </span>
+            </div>
+
+            {/* Error State */}
+            {error && (
+              <div className="p-4 rounded-xl bg-[#fef2f2] border border-[#fecaca] text-xs sm:text-sm text-[#991b1b] flex items-center justify-between shadow-sm">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[20px] text-[#dc2626]">error</span>
+                  <span>Failed to load flight inventory: {error}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={fetchFlights}
+                  className="bg-[#dc2626] text-white px-3 py-1 rounded-md text-xs font-semibold hover:bg-[#b91c1c] transition-colors"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+
+            {/* Loading Skeletons */}
+            {loading && (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="bg-white rounded-xl border border-[#e3ded4] p-5 shadow-sm animate-pulse space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-lg bg-[#e5e0d8]" />
+                        <div className="space-y-2">
+                          <div className="h-4 bg-[#e5e0d8] rounded w-48" />
+                          <div className="h-3 bg-[#e5e0d8] rounded w-64" />
+                        </div>
+                      </div>
+                      <div className="h-8 bg-[#e5e0d8] rounded w-28" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {!loading && !error && filteredFlights.length === 0 ? (
               <div className="bg-white rounded-xl border border-[#e3ded4] p-10 text-center space-y-3 shadow-sm">
                 <span className="material-symbols-outlined text-[42px] text-[#889593]">flight_takeoff</span>
                 <h3 className="font-bold text-[#0d3d3a] text-base">No flights match your filter criteria</h3>
@@ -569,7 +627,7 @@ export const FlightsPage: React.FC = () => {
                   Reset all filters
                 </button>
               </div>
-            ) : (
+            ) : !loading && (
               filteredFlights.map((flight) => (
                 <div
                   key={flight.id}

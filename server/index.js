@@ -19,6 +19,7 @@ import refundRouter from './refundRoutes.js';
 
 import { authService } from './authService.js';
 import { evidenceService } from './evidenceService.js';
+import { loginRateLimiter, registerRateLimiter } from './rateLimiter.js';
 
 dotenv.config();
 
@@ -309,8 +310,9 @@ app.get('/api/catalog/trips/:id', async (req, res) => {
 /**
  * POST /api/auth/login
  * Validates credentials and returns signed session token.
+ * Protected by loginRateLimiter against brute-force and credential-stuffing attacks.
  */
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', loginRateLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
     const authResult = await authService.login(email, password);
@@ -327,8 +329,9 @@ app.post('/api/auth/login', async (req, res) => {
 /**
  * POST /api/auth/register
  * Creates a new traveler account with salted PBKDF2 hash.
+ * Protected by registerRateLimiter against automated registration flooding.
  */
-app.post('/api/auth/register', async (req, res) => {
+app.post('/api/auth/register', registerRateLimiter, async (req, res) => {
   try {
     const { email, password, name, phone } = req.body;
     const authResult = await authService.register({ email, password, name, phone });

@@ -28,6 +28,7 @@ import { fileURLToPath } from 'node:url';
 import { app } from '../index.js';
 import { db } from '../awsConfig.js';
 import { authService, resolveJwtSecret } from '../authService.js';
+import { loginRateLimiter, registerRateLimiter } from '../rateLimiter.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -35,6 +36,14 @@ const __dirname = path.dirname(__filename);
 // Helper to invoke Express app in-process without opening TCP ports
 const invokeApp = (method, url, body = null, headers = {}) => {
   return new Promise((resolve, reject) => {
+    let resolved = false;
+    const safeResolve = (val) => {
+      if (!resolved) {
+        resolved = true;
+        resolve(val);
+      }
+    };
+
     const req = new EventEmitter();
     req.method = method;
     req.url = url;
@@ -50,20 +59,23 @@ const invokeApp = (method, url, body = null, headers = {}) => {
     res.status = (code) => { res.statusCode = code; return res; };
     res.json = (data) => {
       res.bodyData = data;
-      resolve({ status: res.statusCode, body: data, headers: res.headers });
+      safeResolve({ status: res.statusCode, body: data, headers: res.headers });
       return res;
     };
     res.send = (data) => {
       res.bodyData = data;
-      resolve({ status: res.statusCode, body: data, headers: res.headers });
+      safeResolve({ status: res.statusCode, body: data, headers: res.headers });
       return res;
     };
     res.end = () => {
-      resolve({ status: res.statusCode, body: res.bodyData, headers: res.headers });
+      safeResolve({ status: res.statusCode, body: res.bodyData, headers: res.headers });
     };
 
     app.handle(req, res, (err) => {
-      if (err) reject(err);
+      if (err) return reject(err);
+      if (!resolved) {
+        safeResolve({ status: 404, body: { error: 'Not Found' }, headers: res.headers });
+      }
     });
   });
 };
@@ -113,6 +125,9 @@ describe('Pre-Deployment Security & Role-Based Authorization Tests', () => {
     // Reset test database and seed booking + refund owned by Traveler A
     await db._reset();
 
+    loginRateLimiter.reset();
+    registerRateLimiter.reset();
+
     await db.saveBooking({
       id: bookingId,
       userId: travelerA.id,
@@ -143,10 +158,19 @@ describe('Pre-Deployment Security & Role-Based Authorization Tests', () => {
   });
 
   after(() => {
-    // Clean up any test evidence written to disk
+    // Clean up test evidence files created during this test run
     const testDir = path.join(__dirname, `../data/evidence/${caseId}`);
     if (fs.existsSync(testDir)) {
-      fs.rmSync(testDir, { recursive: true, force: true });
+      const files = fs.readdirSync(testDir);
+      for (const file of files) {
+        if (file !== 'ev_mvtulgal_6ea4a463_boarding_pass.pdf') {
+          try {
+            fs.unlinkSync(path.join(testDir, file));
+          } catch {
+            // ignore
+          }
+        }
+      }
     }
   });
 

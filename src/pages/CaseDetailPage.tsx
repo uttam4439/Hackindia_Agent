@@ -46,15 +46,15 @@ export const CaseDetailPage: React.FC = () => {
       return;
     }
     const cleanId = id.trim().replace(/^#/, '');
+
     const fetchLiveCase = async () => {
       setIsLoading(true);
       try {
-        let res: Response | null = null;
-        try {
-          res = await fetch(`/api/refunds/${cleanId}`);
-        } catch {
-          res = await fetch(`http://localhost:5001/api/refunds/${cleanId}`);
-        }
+        const res = await fetch(`/api/refunds/${cleanId}`, {
+          headers: {
+            ...getAuthHeaders(),
+          },
+        });
         if (res && res.ok) {
           const data = await res.json();
           if (data.refund) {
@@ -82,19 +82,30 @@ export const CaseDetailPage: React.FC = () => {
     }
   })();
 
+  const getAuthHeaders = (): Record<string, string> => {
+    const token =
+      sessionStorage.getItem('agent_travel_token') || localStorage.getItem('agent_travel_token');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   const [uploadedFiles, setUploadedFiles] = useState<EvidenceDoc[]>([
     { name: 'cancellation_notice.pdf', size: '245 KB', source: 'Verified in GDS dossier', verified: true },
     { name: 'carrier_advisory_log.pdf', size: '118 KB', source: 'Verified in GDS dossier', verified: true },
   ]);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [viewingFileId, setViewingFileId] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadNotice, setUploadNotice] = useState<string | null>(null);
 
   // Download official case arbitration dossier as actual file
   const handleDownload = async () => {
     try {
-      const res = await fetch(`/api/cases/${displayCaseId}/summary`);
+      const res = await fetch(`/api/cases/${displayCaseId}/summary`, {
+        headers: {
+          ...getAuthHeaders(),
+        },
+      });
       let textContent = '';
       if (res.ok) {
         textContent = await res.text();
@@ -117,6 +128,50 @@ export const CaseDetailPage: React.FC = () => {
     } catch (err) {
       setDownloadSuccess(true);
       setTimeout(() => setDownloadSuccess(false), 4000);
+    }
+  };
+
+  // Secure evidence file download/view via Authorization Bearer header + Blob URL
+  const handleViewEvidence = async (fileId?: string, fileName?: string) => {
+    if (!fileId) return;
+    try {
+      setViewingFileId(fileId);
+      setUploadError(null);
+      const res = await fetch(`/api/cases/${displayCaseId}/evidence/${fileId}`, {
+        headers: {
+          ...getAuthHeaders(),
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error(`Failed to load evidence (HTTP ${res.status})`);
+      }
+
+      const contentType = res.headers.get('content-type') || 'application/octet-stream';
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(new Blob([blob], { type: contentType }));
+
+      // Open in a new tab safely without query-string token
+      const win = window.open(objectUrl, '_blank', 'noopener,noreferrer');
+      if (!win) {
+        // If popup is blocked by browser, trigger download fallback
+        const link = document.createElement('a');
+        link.href = objectUrl;
+        link.download = fileName || `evidence_${fileId}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+
+      // Clean up object URL after 60 seconds
+      setTimeout(() => {
+        URL.revokeObjectURL(objectUrl);
+      }, 60000);
+    } catch (err: any) {
+      console.warn('Error loading evidence document:', err);
+      setUploadError(err.message || 'Unable to view evidence document');
+    } finally {
+      setViewingFileId(null);
     }
   };
 
@@ -161,7 +216,10 @@ export const CaseDetailPage: React.FC = () => {
         try {
           const res = await fetch(`/api/cases/${displayCaseId}/evidence`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              ...getAuthHeaders(),
+            },
             body: JSON.stringify({
               filename: file.name,
               fileBase64: base64Data,
@@ -519,16 +577,18 @@ export const CaseDetailPage: React.FC = () => {
                         Verified
                       </span>
                       {file.fileId && (
-                        <a
-                          href={`/api/cases/${displayCaseId}/evidence/${file.fileId}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[#0d6b63] hover:underline text-[11px] font-semibold flex items-center gap-0.5"
+                        <button
+                          type="button"
+                          onClick={() => handleViewEvidence(file.fileId, file.name)}
+                          disabled={viewingFileId === file.fileId}
+                          className="text-[#0d6b63] hover:underline text-[11px] font-semibold flex items-center gap-0.5 cursor-pointer disabled:opacity-50"
                           title="View verified document"
                         >
-                          <span className="material-symbols-outlined text-[14px]">visibility</span>
-                          View
-                        </a>
+                          <span className="material-symbols-outlined text-[14px]">
+                            {viewingFileId === file.fileId ? 'sync' : 'visibility'}
+                          </span>
+                          {viewingFileId === file.fileId ? 'Loading...' : 'View'}
+                        </button>
                       )}
                     </div>
                   </div>

@@ -5,22 +5,11 @@ import { SiteFooter } from '../components/layout/SiteFooter';
 
 export const SignInPage: React.FC = () => {
   const navigate = useNavigate();
-  const [emailOrPhone, setEmailOrPhone] = useState('aarav.sharma@example.com');
-  const [password, setPassword] = useState('Password@123');
+  const [emailOrPhone, setEmailOrPhone] = useState('');
+  const [password, setPassword] = useState('');
   const [keepSignedIn, setKeepSignedIn] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  const setDemoCredentials = (role: 'traveler' | 'reviewer') => {
-    setErrorMessage(null);
-    if (role === 'traveler') {
-      setEmailOrPhone('aarav.sharma@example.com');
-      setPassword('Password@123');
-    } else {
-      setEmailOrPhone('reviewer@agenttravel.com');
-      setPassword('Reviewer@123');
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,38 +17,21 @@ export const SignInPage: React.FC = () => {
     setErrorMessage(null);
 
     try {
-      let authData: any = null;
-      try {
-        const response = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: emailOrPhone.trim(),
-            password: password,
-          }),
-        });
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: emailOrPhone.trim(),
+          password: password,
+        }),
+      });
 
-        const data = await response.json();
-        if (!response.ok || !data.success) {
-          throw new Error(data.error || 'Invalid credentials');
-        }
-        authData = data;
-      } catch (networkErr: any) {
-        if (networkErr.message?.includes('Invalid credentials') || networkErr.message?.includes('password')) {
-          throw networkErr;
-        }
-        // Fallback simulation if backend server is unreachable
-        const isReviewer = emailOrPhone.toLowerCase().includes('reviewer') || emailOrPhone.toLowerCase().includes('julian');
-        authData = {
-          token: `sim_token_${Date.now()}`,
-          user: {
-            id: isReviewer ? 'usr_reviewer_local' : 'usr_traveler_local',
-            name: isReviewer ? 'Meera Iyer' : 'Aarav Sharma',
-            email: emailOrPhone,
-            role: isReviewer ? 'reviewer' : 'traveler',
-          },
-        };
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Invalid credentials');
       }
+
+      const authData = data;
 
       const sessionPayload = {
         ...authData.user,
@@ -141,37 +113,6 @@ export const SignInPage: React.FC = () => {
                 >
                   Sign up
                 </Link>
-              </div>
-            </div>
-
-            {/* Quick Demo Role Selector */}
-            <div className="bg-[#fbf9f4] p-3 rounded-lg border border-[#e3ded4] space-y-1.5 text-xs">
-              <span className="text-[11px] font-bold text-[#0d3d3a] uppercase tracking-wider block">
-                Quick Test Credentials
-              </span>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setDemoCredentials('traveler')}
-                  className={`flex-1 py-1.5 px-2 rounded text-xs font-semibold border transition-all ${
-                    emailOrPhone.includes('aarav')
-                      ? 'bg-[#0d6b63] text-white border-[#0d6b63] shadow-xs'
-                      : 'bg-white text-[#42504e] border-[#e3ded4] hover:bg-[#f0ebe1]'
-                  }`}
-                >
-                  Traveler (Aarav)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDemoCredentials('reviewer')}
-                  className={`flex-1 py-1.5 px-2 rounded text-xs font-semibold border transition-all ${
-                    emailOrPhone.includes('reviewer')
-                      ? 'bg-[#0a3635] text-white border-[#0a3635] shadow-xs'
-                      : 'bg-white text-[#42504e] border-[#e3ded4] hover:bg-[#f0ebe1]'
-                  }`}
-                >
-                  Reviewer (Meera)
-                </button>
               </div>
             </div>
 

@@ -17,6 +17,7 @@ import {
   REFUND_STATUSES,
 } from '../refundService.js';
 import { createRefundRouter } from '../refundRoutes.js';
+import { authService } from '../authService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -32,15 +33,23 @@ const {
   listRefunds,
   saveDraftNote,
 } = refundService;
-const refundRouter = createRefundRouter(refundService);
+const refundRouter = createRefundRouter(refundService, { db, authService });
+
+const reviewerToken = authService.generateToken({
+  id: 'usr_reviewer_test',
+  email: 'reviewer@agenttravel.com',
+  name: 'Auditor Julian',
+  role: 'reviewer',
+});
+const reviewerHeaders = { authorization: `Bearer ${reviewerToken}` };
 
 // In-process invocation helper to test Express routes without binding TCP ports (sandbox safe)
-const invokeRefundRoute = (app, method, url, body = null) => {
+const invokeRefundRoute = (app, method, url, body = null, headers = {}) => {
   return new Promise((resolve, reject) => {
     const req = new EventEmitter();
     req.method = method;
     req.url = url;
-    req.headers = { 'content-type': 'application/json' };
+    req.headers = { 'content-type': 'application/json', ...headers };
     if (body) req.body = body;
 
     const res = new EventEmitter();
@@ -358,7 +367,7 @@ describe('Refund Backend & Persistence Tests (Person 3)', () => {
     const refundId = submitRes.body.refund.id;
 
     // 2. Query GET /api/refunds/:id
-    const getRes = await invokeRefundRoute(app, 'GET', `/api/refunds/${refundId}`);
+    const getRes = await invokeRefundRoute(app, 'GET', `/api/refunds/${refundId}`, null, reviewerHeaders);
     assert.equal(getRes.status, 200);
     assert.equal(getRes.body.refund.id, refundId);
 
@@ -367,12 +376,12 @@ describe('Refund Backend & Persistence Tests (Person 3)', () => {
       decision: 'APPROVE',
       note: 'Weather alert cross-referenced with METAR logs',
       reviewerId: 'Auditor Julian',
-    });
+    }, reviewerHeaders);
     assert.equal(decRes.status, 200);
     assert.equal(decRes.body.refund.decisionStatus, 'Approved');
 
     // 4. List GET /api/refunds
-    const listRes = await invokeRefundRoute(app, 'GET', '/api/refunds');
+    const listRes = await invokeRefundRoute(app, 'GET', '/api/refunds', null, reviewerHeaders);
     assert.equal(listRes.status, 200);
     assert.equal(listRes.body.count, 1);
   });
@@ -452,7 +461,7 @@ describe('Refund Backend & Persistence Tests (Person 3)', () => {
     app.use(express.json());
     app.use('/api/refunds', refundRouter);
 
-    const httpRes = await invokeRefundRoute(app, 'GET', '/api/refunds/BK-148123');
+    const httpRes = await invokeRefundRoute(app, 'GET', '/api/refunds/BK-148123', null, reviewerHeaders);
     assert.equal(httpRes.status, 200);
     assert.equal(httpRes.body.success, true);
     assert.equal(httpRes.body.refund.bookingId, 'BK-148123');
@@ -530,7 +539,7 @@ describe('Refund Backend & Persistence Tests (Person 3)', () => {
     app.use('/api/refunds', refundRouter);
 
     // GET by refund ID
-    const getRes = await invokeRefundRoute(app, 'GET', `/api/refunds/${refundId}`);
+    const getRes = await invokeRefundRoute(app, 'GET', `/api/refunds/${refundId}`, null, reviewerHeaders);
     assert.equal(getRes.status, 200);
     assert.equal(getRes.body.refund.reviewerDraftNote, draftNote);
 
@@ -539,7 +548,7 @@ describe('Refund Backend & Persistence Tests (Person 3)', () => {
     const postDraftRes = await invokeRefundRoute(app, 'POST', `/api/refunds/${refundId}/draft`, {
       reviewerNote: updatedNote,
       draftDecision: 'eligible',
-    });
+    }, reviewerHeaders);
     assert.equal(postDraftRes.status, 200);
     assert.equal(postDraftRes.body.success, true);
     assert.equal(postDraftRes.body.refund.reviewerDraftNote, updatedNote);

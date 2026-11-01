@@ -29,6 +29,11 @@ export const RefundCenterPage: React.FC = () => {
     setSubmitError(null);
 
     const cleanPnr = pnr.trim();
+    const getAuthHeaders = (): Record<string, string> => {
+      const token =
+        sessionStorage.getItem('agent_travel_token') || localStorage.getItem('agent_travel_token');
+      return token ? { Authorization: `Bearer ${token}` } : {};
+    };
 
     try {
       // 1. Submit refund claim to backend API
@@ -36,7 +41,10 @@ export const RefundCenterPage: React.FC = () => {
       try {
         submitRes = await fetch('/api/refunds/submit', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeaders(),
+          },
           body: JSON.stringify({
             bookingId: cleanPnr,
             contact: contact.trim(),
@@ -44,20 +52,8 @@ export const RefundCenterPage: React.FC = () => {
             currency: 'INR',
           }),
         });
-      } catch {
-        // Fallback to direct localhost if proxy was bypassed
-        try {
-          submitRes = await fetch('http://localhost:5001/api/refunds/submit', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              bookingId: cleanPnr,
-              contact: contact.trim(),
-              reason: disruptionReason,
-              currency: 'INR',
-            }),
-          });
-        } catch {}
+      } catch (err: any) {
+        console.warn('[REFUND SUBMIT] Network request failed:', err.message);
       }
 
       if (submitRes) {
@@ -118,9 +114,18 @@ export const RefundCenterPage: React.FC = () => {
   const handleTrackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanId = trackCaseId.trim().replace('#', '');
+    const getAuthHeaders = (): Record<string, string> => {
+      const token =
+        sessionStorage.getItem('agent_travel_token') || localStorage.getItem('agent_travel_token');
+      return token ? { Authorization: `Bearer ${token}` } : {};
+    };
 
     try {
-      const res = await fetch(`/api/refunds/${cleanId}`);
+      const res = await fetch(`/api/refunds/${cleanId}`, {
+        headers: {
+          ...getAuthHeaders(),
+        },
+      });
       if (res.ok) {
         const data = await res.json();
         if (data.refund?.id) {

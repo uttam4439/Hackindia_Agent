@@ -274,6 +274,109 @@ export function createAuthService(database = defaultDb, options = {}) {
       };
     },
 
+    /**
+     * Google OAuth Authentication Handler.
+     * Checks if a user already exists with the given verified email.
+     * If user exists: logs them in, preserving their role (reviewer/traveler).
+     * If user is new: provisions a new traveler account with 'traveler' role in persistent storage.
+     */
+    async loginOrRegisterWithGoogle({ googleId, email, name, picture }) {
+      if (!email) {
+        throw new Error('Google account email is required');
+      }
+
+      const normalizedEmail = email.toLowerCase().trim();
+
+      // Check persistent database for existing user
+      let existingUser = null;
+      if (database && typeof database.getUserByEmail === 'function') {
+        try {
+          existingUser = await database.getUserByEmail(normalizedEmail);
+        } catch (dbErr) {
+          console.warn(`[AUTH] Database lookup error for Google user ${normalizedEmail}:`, dbErr.message);
+          throw new Error('Authentication service temporarily unavailable');
+        }
+      }
+
+      if (existingUser) {
+        // User already exists: Log them in
+        const token = this.generateToken(existingUser);
+        return {
+          isNewUser: false,
+          token,
+          user: {
+            id: existingUser.id || existingUser.userId,
+            email: existingUser.email,
+            name: existingUser.name,
+            role: existingUser.role,
+            phone: existingUser.phone || '',
+            picture: picture || existingUser.picture || '',
+          },
+        };
+      }
+
+      // New User: Provision a traveler account
+      const userId = `usr_g_${Date.now().toString(36)}_${crypto.randomBytes(4).toString('hex')}`;
+      const newUser = {
+        id: userId,
+        userId,
+        email: normalizedEmail,
+        name: (name || normalizedEmail.split('@')[0] || 'Traveler').trim(),
+        phone: '',
+        role: 'traveler', // Defense-in-depth: Self-registration strictly provisions traveler accounts
+        authProvider: 'google',
+        googleId: googleId || '',
+        picture: picture || '',
+        createdAt: new Date().toISOString(),
+      };
+
+      if (database && typeof database.saveUser === 'function') {
+        try {
+          await database.saveUser(newUser);
+        } catch (err) {
+          if (
+            err.name === 'ConditionalCheckFailedException' ||
+            err.code === 'USER_EXISTS' ||
+            err.name === 'DuplicateUserException'
+          ) {
+            // Concurrency race: Another request just registered this user, fetch and log in
+            const raceUser = await database.getUserByEmail(normalizedEmail);
+            if (raceUser) {
+              const token = this.generateToken(raceUser);
+              return {
+                isNewUser: false,
+                token,
+                user: {
+                  id: raceUser.id || raceUser.userId,
+                  email: raceUser.email,
+                  name: raceUser.name,
+                  role: raceUser.role,
+                  phone: raceUser.phone || '',
+                  picture: picture || raceUser.picture || '',
+                },
+              };
+            }
+          }
+          console.warn('[AUTH] Database error during Google user registration:', err.message);
+          throw new Error('Unable to complete Google registration at this time');
+        }
+      }
+
+      const token = this.generateToken(newUser);
+      return {
+        isNewUser: true,
+        token,
+        user: {
+          id: newUser.id,
+          email: newUser.email,
+          name: newUser.name,
+          role: newUser.role,
+          phone: newUser.phone,
+          picture: newUser.picture,
+        },
+      };
+    },
+
     async getUserByEmail(email) {
       if (!email) return null;
       const normalizedEmail = email.toLowerCase().trim();

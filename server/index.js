@@ -364,6 +364,133 @@ app.post('/api/auth/logout', (req, res) => {
   return res.json({ success: true, message: 'Signed out successfully' });
 });
 
+/**
+ * GET /api/config/auth
+ * GET /api/auth/google/config
+ * Returns public Google OAuth client configuration (no secrets).
+ */
+app.get(['/api/config/auth', '/api/auth/google/config'], (req, res) => {
+  const googleClientId = process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || '';
+  return res.json({
+    success: true,
+    googleClientId,
+    clientId: googleClientId,
+  });
+});
+
+/**
+ * POST /api/auth/google
+ * Cryptographically verifies Google OAuth credential with Google Identity servers,
+ * retrieves/creates persistent user record, and issues internal HMAC-SHA256 session token.
+ */
+app.post('/api/auth/google', loginRateLimiter, async (req, res) => {
+  try {
+    const { accessToken, idToken, credential } = req.body || {};
+    const token = accessToken || idToken || credential;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        error: 'Google authentication credential is required',
+      });
+    }
+
+    let googleProfile = null;
+
+    if (accessToken) {
+      // 1. Verify Access Token via Google OAuth2 UserInfo API
+      try {
+        const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${accessToken}` },
+          signal: AbortSignal.timeout(8000),
+        });
+
+        if (!userInfoRes.ok) {
+          const errBody = await userInfoRes.text();
+          console.warn('[AUTH GOOGLE] Google userinfo verification failed:', userInfoRes.status, errBody);
+          return res.status(401).json({
+            success: false,
+            error: 'Invalid or expired Google OAuth access token',
+          });
+        }
+
+        googleProfile = await userInfoRes.json();
+      } catch (netErr) {
+        console.error('[AUTH GOOGLE] Network error during token verification:', netErr.message);
+        return res.status(503).json({
+          success: false,
+          error: 'Unable to reach Google authentication service. Please check network connection.',
+        });
+      }
+    } else {
+      // 2. Verify ID Token / Credential via Google TokenInfo API
+      const rawIdToken = idToken || credential;
+      try {
+        const tokenInfoRes = await fetch(
+          `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(rawIdToken)}`,
+          { signal: AbortSignal.timeout(8000) }
+        );
+
+        if (!tokenInfoRes.ok) {
+          const errBody = await tokenInfoRes.text();
+          console.warn('[AUTH GOOGLE] Google tokeninfo verification failed:', tokenInfoRes.status, errBody);
+          return res.status(401).json({
+            success: false,
+            error: 'Invalid or expired Google ID credential',
+          });
+        }
+
+        googleProfile = await tokenInfoRes.json();
+      } catch (netErr) {
+        console.error('[AUTH GOOGLE] Network error during ID token verification:', netErr.message);
+        return res.status(503).json({
+          success: false,
+          error: 'Unable to reach Google authentication service. Please check network connection.',
+        });
+      }
+    }
+
+    if (!googleProfile || !googleProfile.email) {
+      return res.status(400).json({
+        success: false,
+        error: 'Google account does not provide a valid email address',
+      });
+    }
+
+    // Optional verification of Google Client ID audience if configured
+    const configuredClientId = process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID;
+    if (configuredClientId && googleProfile.aud && googleProfile.aud !== configuredClientId) {
+      console.warn('[AUTH GOOGLE] Audience mismatch:', { aud: googleProfile.aud, configured: configuredClientId });
+      return res.status(401).json({
+        success: false,
+        error: 'Google credential was issued for a different application client ID',
+      });
+    }
+
+    // Authenticate existing user or provision new traveler account
+    const authResult = await authService.loginOrRegisterWithGoogle({
+      googleId: googleProfile.sub,
+      email: googleProfile.email,
+      name: googleProfile.name || googleProfile.email.split('@')[0],
+      picture: googleProfile.picture || '',
+    });
+
+    return res.json({
+      success: true,
+      token: authResult.token,
+      user: authResult.user,
+      isNewUser: authResult.isNewUser,
+    });
+  } catch (err) {
+    console.error('[AUTH GOOGLE] Unexpected error during Google authentication:', err);
+    return res.status(500).json({
+      success: false,
+      error: err.message || 'An unexpected error occurred during Google authentication',
+    });
+  }
+});
+
+
 // --- EVIDENCE SECURITY & UPLOAD ENDPOINTS ---
 
 /**

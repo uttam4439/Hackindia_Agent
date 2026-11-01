@@ -24,6 +24,7 @@ import { HelpPage } from './pages/HelpPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { SignInPage } from './pages/SignInPage';
 import { SignUpPage } from './pages/SignUpPage';
+import { GoogleAuthCallbackPage } from './pages/GoogleAuthCallbackPage';
 import { TicketPage } from './pages/TicketPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
@@ -76,6 +77,7 @@ export const App: React.FC = () => {
               />
               <Route path="/signin" element={<SignInPage />} />
               <Route path="/signup" element={<SignUpPage />} />
+              <Route path="/auth/google/callback" element={<GoogleAuthCallbackPage />} />
 
               {/* Internal Reviewer Console (PDF Mockups: Pages 11 & 12 - Protected: Reviewer role required) */}
               <Route

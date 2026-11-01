@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { SiteHeader } from '../components/layout/SiteHeader';
 import { SiteFooter } from '../components/layout/SiteFooter';
-
 export const SignInPage: React.FC = () => {
   const navigate = useNavigate();
   const [emailOrPhone, setEmailOrPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [keepSignedIn, setKeepSignedIn] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -146,13 +146,26 @@ export const SignInPage: React.FC = () => {
                     Forgot password?
                   </a>
                 </div>
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full border border-[#e3ded4] rounded-md px-3 py-2 text-xs focus:outline-none focus:border-[#0d6b63]"
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full border border-[#e3ded4] rounded-md pl-3 pr-10 py-2 text-xs focus:outline-none focus:border-[#0d6b63]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    title={showPassword ? 'Hide password' : 'Show password'}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#6b7775] hover:text-[#0d3d3a] transition-colors cursor-pointer focus:outline-none"
+                  >
+                    <span className="material-symbols-outlined text-[18px] select-none">
+                      {showPassword ? 'visibility_off' : 'visibility'}
+                    </span>
+                  </button>
+                </div>
               </div>
 
               <div className="flex items-center gap-2 pt-1">
@@ -183,33 +196,6 @@ export const SignInPage: React.FC = () => {
                 )}
               </button>
             </form>
-
-            {/* Social Logins */}
-            <div className="space-y-3 pt-2">
-              <div className="relative flex items-center justify-center">
-                <div className="border-t border-[#e3ded4] w-full"></div>
-                <span className="bg-white px-3 text-[11px] text-[#889593] absolute">
-                  or continue with
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => navigate('/bookings')}
-                  className="border border-[#e3ded4] rounded-md py-2 px-3 text-xs font-semibold text-[#0d3d3a] hover:bg-[#fbf9f4] transition-colors flex items-center justify-center gap-2"
-                >
-                  <span className="font-bold text-red-500">G</span> Google
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate('/bookings')}
-                  className="border border-[#e3ded4] rounded-md py-2 px-3 text-xs font-semibold text-[#0d3d3a] hover:bg-[#fbf9f4] transition-colors flex items-center justify-center gap-2"
-                >
-                  <span className="font-bold text-blue-500">M</span> Microsoft
-                </button>
-              </div>
-            </div>
 
             <div className="text-center text-xs text-[#6b7775] pt-2">
               New to Agent Travel?{' '}

@@ -32,10 +32,10 @@ export const RefundCenterPage: React.FC = () => {
 
   // Form states
   const [bookingType, setBookingType] = useState<ModeType>('Flight');
-  const [pnr, setPnr] = useState('ABC123');
-  const [contact, setContact] = useState('aarav.sharma@example.com');
-  const [disruptionReason, setDisruptionReason] = useState('Cancelled by airline / operator (Flight AI-805)');
-  const [trackCaseId, setTrackCaseId] = useState('RF12345');
+  const [pnr, setPnr] = useState('');
+  const [contact, setContact] = useState('');
+  const [disruptionReason, setDisruptionReason] = useState('');
+  const [trackCaseId, setTrackCaseId] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -244,10 +244,11 @@ export const RefundCenterPage: React.FC = () => {
         }
       }
     } catch (err: any) {
-      console.warn('Backend submit error, checking local store:', err);
+      console.warn('Backend submit error:', err);
     }
 
-    navigate(`/refunds/${cleanPnr.replace('#', '') || 'RF12345'}`);
+    // If backend submission failed entirely, show error instead of navigating to a fake case
+    setSubmitError('Unable to verify eligibility. Please check your booking reference and try again.');
     setIsAnalyzing(false);
   };
 
@@ -272,7 +273,11 @@ export const RefundCenterPage: React.FC = () => {
         c.caseRef?.replace('#', '').toLowerCase() === cleanId.toLowerCase() ||
         c.pnr?.toLowerCase() === cleanId.toLowerCase()
     );
-    navigate(`/refunds/${matched ? matched.id : cleanId || 'RF12345'}`);
+    if (matched || cleanId) {
+      navigate(`/refunds/${matched ? matched.id : cleanId}`);
+    } else {
+      // No case found — don't navigate to a fabricated ID
+    }
   };
 
   return (
@@ -890,10 +895,14 @@ export const RefundCenterPage: React.FC = () => {
                   <select
                     value={disruptionReason}
                     onChange={(e) => setDisruptionReason(e.target.value)}
+                    required
                     className="w-full border border-[#e3ded4] rounded-md px-3 py-2 text-xs font-medium focus:outline-none focus:border-[#0d6b63] bg-white cursor-pointer"
                   >
-                    <option value="Cancelled by airline / operator (Flight AI-805)">
-                      Cancelled by airline / operator (Flight AI-805)
+                    <option value="" disabled>
+                      Select disruption reason...
+                    </option>
+                    <option value="Cancelled by airline / operator">
+                      Cancelled by airline / operator
                     </option>
                     <option value="Major delay exceeding 3 hours">
                       Major delay exceeding 3 hours

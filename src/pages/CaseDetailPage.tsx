@@ -13,7 +13,7 @@ import {
   getTimelineStepStates,
 } from '../utils/refundStatus';
 import { InvestigationCase, InvestigationStep } from '../types';
-import { primaryCaseAT9842 } from '../data/mockData';
+
 
 interface EvidenceDoc {
   id?: string;
@@ -34,8 +34,7 @@ export const CaseDetailPage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
 
-  const cleanParam = id?.trim().toLowerCase() || 'rf12345';
-  const isMockDefault = cleanParam === 'at-9842' || cleanParam === '482910' || cleanParam === 'rf12345';
+  const cleanParam = id?.trim().toLowerCase() || '';
 
   const localMatched = cases.find(
     (c) =>
@@ -77,7 +76,7 @@ export const CaseDetailPage: React.FC = () => {
     fetchLiveCase();
   }, [id]);
 
-  const currentCase = backendCase || localMatched || (isMockDefault ? primaryCaseAT9842 : null);
+  const currentCase = backendCase || localMatched || null;
 
   // Read current user to check reviewer privileges
   const currentUser = (() => {
@@ -89,10 +88,35 @@ export const CaseDetailPage: React.FC = () => {
     }
   })();
 
-  const [uploadedFiles, setUploadedFiles] = useState<EvidenceDoc[]>([
-    { name: 'cancellation_notice.pdf', size: '245 KB', source: 'Verified in GDS dossier', verified: true },
-    { name: 'carrier_advisory_log.pdf', size: '118 KB', source: 'Verified in GDS dossier', verified: true },
-  ]);
+  // Initialize evidence documents from backend case data, not hardcoded files
+  const initialEvidence: EvidenceDoc[] = React.useMemo(() => {
+    const docs = backendCase?.evidenceSummary?.documents || backendCase?.evidence || [];
+    if (Array.isArray(docs) && docs.length > 0) {
+      return docs.map((d: any) => ({
+        id: d.id || d.fileId,
+        name: d.name || d.filename || 'Evidence Document',
+        size: d.size,
+        source: d.source || `Status: ${d.status || 'Submitted'}`,
+        verified: d.status === 'Verified' || d.verified === true,
+        fileId: d.fileId || d.id,
+      }));
+    }
+    return [];
+  }, [backendCase]);
+  const [uploadedFiles, setUploadedFiles] = useState<EvidenceDoc[]>(initialEvidence);
+
+  // Sync evidence state when backend data loads
+  React.useEffect(() => {
+    if (initialEvidence.length > 0) {
+      setUploadedFiles((prev) => {
+        // Only reset if current list is still the default empty or matches initialEvidence length
+        if (prev.length === 0 || (prev.length === initialEvidence.length && prev.every((p, i) => p.name === initialEvidence[i]?.name))) {
+          return initialEvidence;
+        }
+        return prev;
+      });
+    }
+  }, [initialEvidence]);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);

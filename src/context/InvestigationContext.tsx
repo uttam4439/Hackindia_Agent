@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { InvestigationCase, SystemSettings } from '../types';
-import { allMockInvestigations, defaultSettings, primaryCaseAT9842 } from '../data/mockData';
+import { defaultSettings } from '../data/mockData';
 
 interface InvestigationContextType {
   cases: InvestigationCase[];
@@ -23,7 +23,7 @@ interface InvestigationContextType {
 const InvestigationContext = createContext<InvestigationContextType | undefined>(undefined);
 
 export const InvestigationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [cases, setCases] = useState<InvestigationCase[]>(allMockInvestigations);
+  const [cases, setCases] = useState<InvestigationCase[]>([]);
   const [selectedCaseId, setSelectedCaseId] = useState<string>('AT-9842');
   const [settings, setSettings] = useState<SystemSettings>(defaultSettings);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -96,8 +96,7 @@ export const InvestigationProvider: React.FC<{ children: React.ReactNode }> = ({
         c.pnr.toLowerCase() === selectedCaseId.toLowerCase() ||
         (Boolean((c as any).bookingId) && String((c as any).bookingId).toLowerCase() === selectedCaseId.toLowerCase())
     ) ||
-    cases[0] ||
-    primaryCaseAT9842;
+    cases[0];
 
   const selectCaseById = (id: string) => {
     setSelectedCaseId(id);

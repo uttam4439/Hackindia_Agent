@@ -9,11 +9,13 @@
     "preview": "vite preview",
     "server": "node server/index.js",
     "seed:catalog": "node server/scripts/seedCatalog.js",
+    "provision:user": "node server/scripts/provisionUser.js",
     "test:server": "node --test server/test/*.test.js"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.1154.0",
     "@aws-sdk/lib-dynamodb": "^3.1154.0",
+    "@codegenie/serverless-express": "^5.0.0",
     "cors": "^2.8.6",
     "dotenv": "^18.0.8",
     "express": "^5.3.0",

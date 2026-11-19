@@ -29,6 +29,7 @@ export const DATA_FILE = path.join(DATA_DIR, 'store.json');
 export const REGION = process.env.AWS_REGION || 'ap-southeast-2';
 export const BOOKINGS_TABLE = process.env.DYNAMODB_TABLE_BOOKINGS || 'AgentTravelBookings';
 export const CASES_TABLE = process.env.DYNAMODB_TABLE_CASES || 'AgentTravelCases';
+export const USERS_TABLE = process.env.DYNAMODB_TABLE_USERS || 'AgentTravelUsers';
 
 export const isRealStore = (file) => Boolean(file && path.resolve(file) === path.resolve(DATA_FILE));
 
@@ -422,6 +423,7 @@ export class DynamoDBRepository {
     });
     this.bookingsTable = BOOKINGS_TABLE;
     this.casesTable = CASES_TABLE;
+    this.usersTable = process.env.DYNAMODB_TABLE_USERS || USERS_TABLE;
     this.region = REGION;
   }
 
@@ -1652,6 +1654,56 @@ export class DynamoDBRepository {
       ) || null
     );
   }
+
+  // --- Users ---
+  async saveUser(user) {
+    if (!user || !user.email) throw new Error('User must have an email');
+    const normalizedEmail = user.email.toLowerCase().trim();
+    const nowIso = new Date().toISOString();
+    const item = {
+      entityType: 'USER',
+      ...user,
+      email: normalizedEmail,
+      updatedAt: nowIso,
+      createdAt: user.createdAt || nowIso,
+    };
+
+    try {
+      await this.docClient.send(
+        new PutCommand({
+          TableName: this.usersTable,
+          Item: item,
+          ConditionExpression: 'attribute_not_exists(email)',
+        })
+      );
+      return item;
+    } catch (err) {
+      if (err.name === 'ConditionalCheckFailedException') {
+        const dupErr = new Error('An account with this email already exists');
+        dupErr.name = 'ConditionalCheckFailedException';
+        dupErr.code = 'USER_EXISTS';
+        throw dupErr;
+      }
+      throw err;
+    }
+  }
+
+  async getUserByEmail(email) {
+    if (!email) return null;
+    const cleanEmail = email.toLowerCase().trim();
+    try {
+      const res = await this.docClient.send(
+        new GetCommand({
+          TableName: this.usersTable,
+          Key: { email: cleanEmail },
+        })
+      );
+      return res.Item || null;
+    } catch (err) {
+      console.warn(`[DB] getUserByEmail error for ${cleanEmail}:`, err.message);
+      throw err;
+    }
+  }
 }
 
 /**
@@ -1659,8 +1711,8 @@ export class DynamoDBRepository {
  * Guarantees zero AWS calls, zero disk writes, and zero cross-suite interference.
  */
 class InMemoryTestRepository {
-  constructor() {
-    this.store = {
+  constructor(options = {}) {
+    this.store = options.store || {
       bookings: {},
       orders: {},
       payments: {},
@@ -1668,12 +1720,16 @@ class InMemoryTestRepository {
       refunds: {},
       catalogDestinations: {},
       catalogTrips: {},
+      users: {},
     };
-    for (const d of DEMO_CATALOG_DESTINATIONS) {
-      this.store.catalogDestinations[d.destinationId] = { ...d };
-    }
-    for (const t of DEMO_CATALOG_TRIPS) {
-      this.store.catalogTrips[t.tripId] = { ...t };
+    if (!options.store) {
+      this.store.users = this.store.users || {};
+      for (const d of DEMO_CATALOG_DESTINATIONS) {
+        this.store.catalogDestinations[d.destinationId] = { ...d };
+      }
+      for (const t of DEMO_CATALOG_TRIPS) {
+        this.store.catalogTrips[t.tripId] = { ...t };
+      }
     }
   }
 
@@ -2277,6 +2333,35 @@ class InMemoryTestRepository {
     };
   }
 
+  // --- Users ---
+  async saveUser(user) {
+    if (!user || !user.email) throw new Error('User must have an email');
+    const cleanEmail = user.email.toLowerCase().trim();
+    if (this.store.users && this.store.users[cleanEmail]) {
+      const dupErr = new Error('An account with this email already exists');
+      dupErr.name = 'ConditionalCheckFailedException';
+      dupErr.code = 'USER_EXISTS';
+      throw dupErr;
+    }
+    const nowIso = new Date().toISOString();
+    const item = {
+      entityType: 'USER',
+      ...user,
+      email: cleanEmail,
+      updatedAt: nowIso,
+      createdAt: user.createdAt || nowIso,
+    };
+    if (!this.store.users) this.store.users = {};
+    this.store.users[cleanEmail] = item;
+    return item;
+  }
+
+  async getUserByEmail(email) {
+    if (!email) return null;
+    const cleanEmail = email.toLowerCase().trim();
+    return (this.store.users && this.store.users[cleanEmail]) ? { ...this.store.users[cleanEmail] } : null;
+  }
+
   async _reset() {
     this.store = {
       bookings: {},
@@ -2286,6 +2371,7 @@ class InMemoryTestRepository {
       refunds: {},
       catalogDestinations: {},
       catalogTrips: {},
+      users: {},
     };
     for (const d of DEMO_CATALOG_DESTINATIONS) {
       this.store.catalogDestinations[d.destinationId] = { ...d };
@@ -2310,7 +2396,14 @@ export function createRepository(arg1 = {}, arg2 = {}) {
     options = arg1;
   }
 
-  if (options.isTest || options.testDataFile || process.env.NODE_ENV === 'test') {
+  const isTestRun =
+    options.isTest ||
+    options.testDataFile ||
+    process.env.NODE_ENV === 'test' ||
+    process.execArgv.includes('--test') ||
+    process.argv.some((a) => a.includes('.test.') || a.includes('/test/'));
+
+  if (isTestRun) {
     return new InMemoryTestRepository(options);
   }
 
